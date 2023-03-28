@@ -1,0 +1,9 @@
+services:
+  openai_forward:
+    image: beidongjiedeguang/openai-forward:latest
+    container_name: openai_forward_container
+    ports:
+      - "8000:8000"
+    command:
+      - --port=8000
+      - --workers=1
