@@ -38,7 +38,7 @@ https://api.openai.com/v1/chat/completions
 http://{ip}:{port}/v1/chat/completions
 ```
 
-本人搭建的代理服务(仅供测试):  
+个人搭建的代理服务(仅供测试):  
 http://2.56.125.247:9999/v1/chat/completions  
 http://2.56.125.247:9999/dashboard/billing/credit_grants 
 
