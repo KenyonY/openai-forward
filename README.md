@@ -22,7 +22,7 @@ pip install openai-forward
 **运行转发服务**  
 可通过`--port`指定端口号，默认为`8000`，可通过`--workers`指定工作进程数，默认为`1`
 ```bash
-openai_forward run --port 8000 --worders=1
+openai_forward run --port=8000 --worders=1
 ```
 
 ### 方式二: Docker compose
