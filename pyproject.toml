@@ -10,7 +10,7 @@ authors = [
 ]
 requires-python = ">=3.6"
 readme = "README.md"
-keywords = [""]
+keywords = ["openai", "chatgpt", "forward", "chatbot",]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Operating System :: OS Independent",
@@ -23,20 +23,26 @@ dependencies = [
     "fastapi",
     "uvicorn",
     "orjson",
+    "python-dotenv",
 ]
 
 dynamic = ["version"]
 
 [project.urls]
-Homepage = "https://"
-Documentation = "https://"
-Issues = "https://"
-Source = "https://"
+Homepage = "https://github.com/beidongjiedeguang/openai-forward"
+Documentation = "https://github.com/beidongjiedeguang/openai-forward#openai-forwarding-agent"
+Issues = "https://github.com/beidongjiedeguang/openai-forward/issues"
+Source = "https://github.com/beidongjiedeguang/openai-forward"
 
 [project.optional-dependencies]
-dev = [
-    "numpy",
-    "pandas",
+chatgpt = [
+    "revChatGPT",
+]
+bard = [
+    "GoogleBard",
+]
+edge = [
+    "EdgeGPT",
 ]
 
 [project.scripts]
