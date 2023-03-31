@@ -1,10 +1,13 @@
 from ._base import OpenaiBase, Request
+from dotenv import load_dotenv
 import os
+
+load_dotenv()
 
 
 class Openai(OpenaiBase):
     def __init__(self):
-        self.defualt_auth = os.environ.get("OPENAI_API_KEY", None)
+        self.defualt_auth = os.environ.get("OPENAI_API_KEY", "")
 
     async def credit_grants(self, request: Request):
         url = os.path.join(self.base_url, "dashboard/billing/credit_grants")
