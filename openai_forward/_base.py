@@ -1,18 +1,10 @@
-from fastapi import Request, Response, HTTPException
-from fastapi.responses import StreamingResponse, RedirectResponse, FileResponse
+from fastapi import Request, Response, HTTPException, status
+from fastapi.responses import StreamingResponse, RedirectResponse, FileResponse, JSONResponse
 import requests
 from loguru import logger
-from sparrow import relp
-import sys
+from .config import setting_log
 
-log_path = relp("../Log/openai_forward.log")
-config = {
-    "handlers": [
-        {"sink": sys.stdout},
-        {"sink": log_path, "enqueue": True, "rotation": "100 MB"},
-    ],
-}
-logger.configure(**config)
+setting_log(log_name="openai_forward.log")
 
 
 class OpenaiBase:
@@ -62,7 +54,14 @@ class OpenaiBase:
             if default_openai_auth:
                 auth = default_openai_auth
             else:
-                raise HTTPException(status_code=403, detail="No auth provided")
+                return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
+                    "error": {
+                        "message": "You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.",
+                        "type": "invalid_request_error",
+                        "param": None,
+                        "code": None
+                    }
+                })
         headers = {
             "Content-Type": "application/json",
             "Authorization": auth
