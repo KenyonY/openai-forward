@@ -1,6 +1,7 @@
 .idea/
 .vscode/
 
+tests/
 Log/
 dist/
 # Byte-compiled / optimized / DLL files
