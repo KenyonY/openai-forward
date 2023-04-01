@@ -7,8 +7,12 @@ openai 接口转发服务.
 ### 已实现转发的接口
 `https://api.openai.com`
 
-- [x] `/v1/chat/completions`
 - [x] `/dashboard/billing/credit_grants`
+- [x] `/v1/chat/completions`
+- [x] `/v1/models`
+- [x] `/v1/models/{model}`
+- [x] `/v1/completions`
+- [x] `/v1/edits`
 
 
 ## 服务部署
