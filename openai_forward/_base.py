@@ -12,7 +12,7 @@ class OpenaiBase:
     stream_timeout = 1.5
     allow_ips = []
 
-    def set_request_ip(self, ip: str):
+    def add_allowed_ip(self, ip: str):
         if ip == "*":
             ...
         else:
@@ -22,7 +22,8 @@ class OpenaiBase:
         if ip == "*" or ip in self.allow_ips:
             return True
         else:
-            return False
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail=f"Forbidden, please add {ip=} to `allow_ips`")
 
     @staticmethod
     def try_get_response(n, url, method, headers, payload, stream, timeout):
@@ -34,14 +35,21 @@ class OpenaiBase:
                     return requests.request(method, url, headers=headers, timeout=timeout)
             except:
                 ...
-        return False
+        raise HTTPException(status_code=status.HTTP_408_REQUEST_TIMEOUT, detail="Request Timeout")
 
-    async def forwarding(self, url, request: Request, default_openai_auth=None, non_stream_timeout=30):
+    async def forwarding(self, url, request: Request, data=None, default_openai_auth=None, non_stream_timeout=30):
         method = request.method.lower()
-        try:
-            payload = await request.json()
-        except:
-            payload = {}
+        if data is not None:
+            payload_tmp = data.dict()
+            payload = payload_tmp.copy()
+            for key, value in payload_tmp.items():
+                if value is None:
+                    payload.pop(key)
+        else:
+            try:
+                payload = await request.json()
+            except:
+                payload = {}
         stream = payload.get('stream')
         timeout = self.stream_timeout if stream else non_stream_timeout
 
@@ -49,10 +57,9 @@ class OpenaiBase:
         posted_auth = geted_headers.get("authorization")
         if posted_auth and str(posted_auth).startswith("Bearer sk-"):
             auth = posted_auth
-            # logger.info(f"auth from request: {auth}")
         else:
             if default_openai_auth:
-                auth = default_openai_auth
+                auth = "Bearer " + default_openai_auth
             else:
                 return JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content={
                     "error": {
@@ -66,15 +73,18 @@ class OpenaiBase:
             "Content-Type": "application/json",
             "Authorization": auth
         }
-        logger.debug(f"{payload.get('messages')}")
-
-        response = self.try_get_response(3, url, method=method, headers=headers, payload=payload, stream=stream,
+        logger.debug(f"{payload.get('messages')=}")
+        # logger.debug(f"{headers=}")
+        response = self.try_get_response(n=3, url=url, method=method,
+                                         headers=headers, payload=payload, stream=stream,
                                          timeout=timeout)
-
         if response.status_code != 200:
             raise HTTPException(status_code=response.status_code, detail=response.text)
         if stream:
-            return StreamingResponse(response.iter_content(chunk_size=32),
+            return StreamingResponse(content=response.iter_content(chunk_size=32),
+                                     status_code=response.status_code,
                                      media_type=response.headers.get("content-type"))
         else:
-            return Response(content=response.content, status_code=response.status_code, headers=response.headers)
+            return Response(content=response.content,
+                            status_code=response.status_code,
+                            media_type=response.headers.get("content-type"))
