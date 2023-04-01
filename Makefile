@@ -1,4 +1,7 @@
-.PHONY: build push run down twine
+.PHONY: start build push run down test twine
+
+start:
+	openai_forward run
 
 image = "beidongjiedeguang/openai-forward:latest"
 build:
