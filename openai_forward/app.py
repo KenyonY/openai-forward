@@ -12,3 +12,9 @@ app.include_router(router_v1)
 @app.get("/dashboard/billing/credit_grants", tags=['public'])
 async def credit_grants(request: Request):
     return await openai.credit_grants(request)
+
+
+@app.get("/dashboard/billing/usage", tags=['public'])
+async def billing_usage(start_date: str, end_date: str, request: Request):
+    params = {"start_date": start_date, "end_date": end_date}
+    return await openai.billing_usage(params, request)

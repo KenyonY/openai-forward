@@ -22,7 +22,13 @@ class Openai(OpenaiBase):
 
     async def credit_grants(self, request: Request):
         url = os.path.join(self.base_url, "dashboard/billing/credit_grants")
-        return await self.forwarding(url, request, non_stream_timeout=3, default_openai_auth=self.defualt_auth)
+        return await self.forwarding(url, request=request, non_stream_timeout=3,
+                                     default_openai_auth=self.defualt_auth)
+
+    async def billing_usage(self, params: dict, request: Request):
+        url = os.path.join(self.base_url, "dashboard/billing/usage")
+        return await self.forwarding(url, request=request, params=params, non_stream_timeout=3,
+                                     default_openai_auth=self.defualt_auth)
 
     async def v1_chat_completions(self, data: OpenAIV1ChatCompletion, request: Request, validate_host=False):
         return await self._forward("v1/chat/completions", request, data, validate_host)

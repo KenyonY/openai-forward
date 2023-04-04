@@ -26,18 +26,25 @@ class OpenaiBase:
                                 detail=f"Forbidden, please add {ip=} to `allow_ips`")
 
     @staticmethod
-    def try_get_response(n, url, method, headers, payload, stream, timeout):
+    def try_get_response(n, url, method, headers, params, payload, stream, timeout):
+        if params is None:
+            params = {}
         for _ in range(n):
             try:
-                if payload:
-                    return requests.request(method, url, headers=headers, json=payload, stream=stream, timeout=timeout)
+                if method == 'post':
+                    return requests.post(url, headers=headers, params=params, json=payload, stream=stream,
+                                         timeout=timeout)
+                elif method == 'get':
+                    return requests.get(url, params=params, headers=headers, timeout=timeout)
                 else:
-                    return requests.request(method, url, headers=headers, timeout=timeout)
+                    logger.error(f"method {method} not supported")
+                    raise NotImplementedError
             except:
                 ...
         raise HTTPException(status_code=status.HTTP_408_REQUEST_TIMEOUT, detail="Request Timeout")
 
-    async def forwarding(self, url, request: Request, data=None, default_openai_auth=None, non_stream_timeout=30):
+    async def forwarding(self, url, request: Request, params=None, data=None, default_openai_auth=None,
+                         non_stream_timeout=30):
         method = request.method.lower()
         if data is not None:
             payload_tmp = data.dict()
@@ -76,6 +83,7 @@ class OpenaiBase:
         logger.debug(f"{payload.get('messages')=}")
         # logger.debug(f"{headers=}")
         response = self.try_get_response(n=3, url=url, method=method,
+                                         params=params,
                                          headers=headers, payload=payload, stream=stream,
                                          timeout=timeout)
         if response.status_code != 200:
