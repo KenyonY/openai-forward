@@ -24,4 +24,5 @@ test:
 	pytest -v tests
 
 twine:
-	twine upload dist/*
+	@twine upload dist/*
+	@rm -rf dist/*
