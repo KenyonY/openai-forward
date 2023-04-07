@@ -1,9 +1,12 @@
 import fire
 import uvicorn
+import os
+from sparrow import relp
 
 
 class Cli:
-    def run(self, port=8000, workers=1):
+    @staticmethod
+    def run(port=8000, workers=1):
         uvicorn.run(
             app="openai_forward.app:app",
             host="0.0.0.0",
@@ -11,6 +14,11 @@ class Cli:
             workers=workers,
             app_dir='..'
         )
+
+    @staticmethod
+    def node(port=8000, base_url="https://api.openai.com/"):
+        os.system(f"PORT={port} BASE_URL={base_url} node {relp('web/index.js')}")
+
 
 def main():
     fire.Fire(Cli)

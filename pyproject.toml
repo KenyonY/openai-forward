@@ -61,9 +61,9 @@ include = [
 exclude = [
 ]
 
-#artifacts = [
-#    "*.yaml",
-#]
+artifacts = [
+    "openai_forward/web/index.js",
+]
 
 
 [tool.hatch.build.targets.wheel]
