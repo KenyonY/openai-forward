@@ -39,7 +39,7 @@ async def edits(data, request: Request):
     return openai.v1_edits(data, request)
 
 
-@router.post("images/generations")
+@router.post("/images/generations")
 async def image_generations(data, request: Request):
     """Creates an image given a prompt.
     """

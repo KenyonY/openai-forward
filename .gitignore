@@ -1,5 +1,6 @@
 .idea/
 .vscode/
+third-party/
 
 tests/
 Log/

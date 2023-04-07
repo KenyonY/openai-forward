@@ -3,3 +3,6 @@
 .idea/
 .vscode/
 __pycache__/
+dist/
+Log/
+third-party/

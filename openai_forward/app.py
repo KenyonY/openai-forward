@@ -4,6 +4,8 @@ from sparrow.api import create_app
 from fastapi import Request, APIRouter
 import pretty_errors
 
+Openai.stream_timeout = 18
+Openai.non_stream_timeout = 30
 openai = Openai()
 app = create_app(title="openai_forward", version="1.0")
 app.include_router(router_v1)
