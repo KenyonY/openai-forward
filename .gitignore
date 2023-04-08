@@ -1,6 +1,8 @@
 .idea/
 .vscode/
 third-party/
+run.sh
+ssl/
 
 tests/
 Log/

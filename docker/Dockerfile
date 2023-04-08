@@ -6,6 +6,6 @@ WORKDIR /home
 RUN ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
 COPY . /home/openai-forward
 WORKDIR /home/openai-forward
-RUN pip install -e . --no-cache-dir
+RUN pip install -e . --no-cache-dir && mv openai_forward .. && rm -rf /home/openai-forward/* && mv ../openai_forward .
 
 ENTRYPOINT ["openai_forward", "run"]

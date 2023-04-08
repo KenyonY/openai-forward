@@ -2,14 +2,19 @@ from fastapi import Request, Response, HTTPException, status
 from fastapi.responses import StreamingResponse, RedirectResponse, FileResponse, JSONResponse
 import requests
 from loguru import logger
+import httpx
+from starlette.background import BackgroundTask
+import os
 from .config import setting_log
 
 setting_log(log_name="openai_forward.log")
 
 
 class OpenaiBase:
-    base_url = "https://api.openai.com"
-    stream_timeout = 18
+    default_api_key = os.environ.get("OPENAI_API_KEY", "")
+    base_url = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com")
+    stream_timeout = 20
+    timeout = 30
     non_stream_timeout = 30
     allow_ips = []
 
@@ -26,10 +31,44 @@ class OpenaiBase:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                 detail=f"Forbidden, please add {ip=} to `allow_ips`")
 
+    @classmethod
+    async def _reverse_proxy(cls, request: Request):
+        client: httpx.AsyncClient = request.app.state.client
+        url = httpx.URL(path=request.url.path, query=request.url.query.encode('utf-8'))
+        headers = dict(request.headers)
+        auth = headers.pop("authorization", None)
+        if auth and str(auth).startswith("Bearer sk-"):
+            tmp_headers = {'Authorization': auth}
+        elif cls.default_api_key:
+            auth = "Bearer " + cls.default_api_key
+            tmp_headers = {'Authorization': auth}
+        else:
+            tmp_headers = {}
+
+        headers.pop("host", None)
+        headers.pop("user-agent", None)
+        headers.update(tmp_headers)
+
+        req = client.build_request(
+            request.method, url, headers=headers,
+            content=request.stream(),
+            timeout=cls.timeout,
+        )
+        r = await client.send(req, stream=True)
+
+        return StreamingResponse(
+            r.aiter_bytes(),
+            status_code=r.status_code,
+            # headers=r.headers,
+            media_type=r.headers.get("content-type"),
+            background=BackgroundTask(r.aclose)
+        )
+
     @staticmethod
     def try_get_response(url, method, headers, params, payload, stream, timeout):
         if params is None:
             params = {}
+
         def _exec(time_out):
             if method == 'post':
                 return requests.post(url, headers=headers, params=params, json=payload, stream=stream,
@@ -39,10 +78,11 @@ class OpenaiBase:
             else:
                 logger.error(f"method {method} not supported")
                 raise NotImplementedError
+
         if stream:
             for i, current_timeout in enumerate([1.5, timeout, 2.5, 2.5, 1.5]):
                 try:
-                    logger.debug(f"try {i+1} times, timeout={current_timeout}")
+                    logger.debug(f"try {i + 1} times, timeout={current_timeout}")
                     return _exec(time_out=current_timeout)
                 except:
                     ...

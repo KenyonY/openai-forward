@@ -2,20 +2,32 @@
 ## 简介
 OpenAI 接口转发服务.   
 用途： 
-解决国内无法直接访问OpenAI的问题，将该服务部署在海外服务器上，通过该服务转发OpenAI的请求。即搭建反向代理服务
-测试地址：http://2.56.125.247:9999/v1/chat/completions  
+解决国内无法直接访问OpenAI的问题，将该服务部署在海外服务器上，通过该服务转发OpenAI的请求。即搭建反向代理服务  
+测试地址：https://caloi.top/v1/chat/completions 
 
 ### 转发接口示例
 `https://api.openai.com`
 - [x] `/dashboard/billing/usage`
-- [x] `/dashboard/billing/credit_grants`
 - [x] `/v1/chat/completions`
 - [x] `/v1/completions`
-- [x] `/v1/models`
-- [x] `/v1/models/{model}`
+- [x] ......
 
+默认转发所有接口。
 
-## 服务部署
+## 应用
+> 这里以个人搭建好的代理地址 https://caloi.top 为例
+### [chatgpt-web](https://github.com/Chanzhaoyu/chatgpt-web)
+修改 [Docker Compose](https://github.com/Chanzhaoyu/chatgpt-web#docker-compose) 中的`OPENAI_API_BASE_URL`为我们搭建的代理服务地址即可：
+```bash
+OPENAI_API_BASE_URL: https://caloi.top 
+```
+
+### [ChatGPT-Next-Web](https://github.com/Yidadaa/ChatGPT-Next-Web)
+```bash
+docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-xxx" -e CODE="<your password>" -e BASE_URL="caloi.top" yidadaa/chatgpt-next-web
+```
+
+## 服务搭建
 提供两种服务部署方式,选择一种即可
 
 ### 方式一:  pip
@@ -29,6 +41,8 @@ pip install openai-forward
 ```bash
 openai_forward run --port=9999 --workers=1
 ```
+服务就搭建完成了，使用方式只需将`https://api.openai.com` 替换为服务所在端口`http://{ip}:{port}` 即可。  
+
 当然也可以将 OPENAI_API_KEY 作为环境变量传入作为默认api key， 这样客户端在请求相关路由时可以无需在Header中传入Authorization。
 带默认api key的启动方式：
 ```bash
@@ -37,18 +51,17 @@ OPENAI_API_KEY="sk-xxx" openai_forward run --port=9999 --workers=1
 注: 如果既存在默认api key又在请求头中传入了api key，则以请求头中的api key会覆盖默认api key.
 
 ### Option 2
-另一种使用nodejs的部署方式，环境中需已安装node, 优点是默认转发`https://api.openai.com`的所有接口路由，但是不支持设定默认api key。
+另一种使用nodejs的部署方式，环境中需已安装node, 也是默认转发`https://api.openai.com`的所有接口路由，但目前不支持设定默认api key。
 启动方式
 ```bash
 openai_forward node --port=9999
 ```
 
-### 方式二: Docker compose
-下载项目根目录下的`docker-compose.yaml`文件，然后在文件路径下执行以下命令即可。
+### 方式二: Docker 
 ```bash
-docker-compose up -d
+docker run -itd -p 9999:9999 beidongjiedeguang/openai-forward:latest --port=9999 --workers=1
 ```
-注：同样可以在docker-compose.yaml文件中传入环境变量OPENAI_API_KEY=sk-xxx作为默认api key
+注：同样可以在启动命令中通过-e传入环境变量OPENAI_API_KEY=sk-xxx作为默认api key
 
 ## 服务调用
 替换openai的api地址为该服务的地址即可，如：
@@ -60,17 +73,3 @@ https://api.openai.com/v1/chat/completions
 http://{ip}:{port}/v1/chat/completions
 ```
 
-个人搭建的代理服务(仅供测试, 不带默认api key):  
-http://2.56.125.247:9999/v1/chat/completions  
-
-## 应用
-### [chatgpt-web](https://github.com/Chanzhaoyu/chatgpt-web) 
-修改 [Docker Compose](https://github.com/Chanzhaoyu/chatgpt-web#docker-compose) 中的`OPENAI_API_BASE_URL`为我们搭建的代理服务地址即可：
-```bash
-OPENAI_API_BASE_URL: http://2.56.125.247:9999 
-```
-
-### [ChatGPT-Next-Web](https://github.com/Yidadaa/ChatGPT-Next-Web)
-```bash
-docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-xxx" -e CODE="<your password>" BASE_URL="2.56.125.247:9999" PROTOCOL="http" yidadaa/chatgpt-next-web
-```

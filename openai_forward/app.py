@@ -1,22 +1,22 @@
 from .openai import Openai
 from .routers.openai_v1 import router as router_v1
 from sparrow.api import create_app
-from fastapi import Request, APIRouter
-import pretty_errors
+import httpx
 
-Openai.stream_timeout = 18
-Openai.non_stream_timeout = 30
-openai = Openai()
 app = create_app(title="openai_forward", version="1.0")
+openai = Openai()
+
+
+@app.on_event('startup')
+async def startup_event():
+    app.state.client = httpx.AsyncClient(base_url=Openai.base_url)
+
+
+@app.on_event('shutdown')
+async def shutdown_event():
+    await app.state.client.aclose()
+
+
+app.add_route('/{api_path:path}', openai.reverse_proxy,
+              ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'HEAD', 'PATCH', 'TRACE'])
 app.include_router(router_v1)
-
-
-@app.get("/dashboard/billing/credit_grants", tags=['public'])
-async def credit_grants(request: Request):
-    return await openai.credit_grants(request)
-
-
-@app.get("/dashboard/billing/usage", tags=['public'])
-async def billing_usage(start_date: str, end_date: str, request: Request):
-    params = {"start_date": start_date, "end_date": end_date}
-    return await openai.billing_usage(params, request)
