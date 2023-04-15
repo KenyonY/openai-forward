@@ -29,6 +29,18 @@ OPENAI_API_BASE_URL: https://caloi.top
 docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-xxx" -e CODE="<your password>" -e BASE_URL="caloi.top" yidadaa/chatgpt-next-web
 ```
 
+### Image Generation (DALL-E):
+```bash
+curl --location 'https://caloi.top/v1/images/generations' \
+--header 'Authorization: Bearer sk-***[OUR_API_KEY]***' \
+--header 'Content-Type: application/json' \
+--data '{
+    "prompt": "A photo of a cat",
+    "n": 1,
+    "size": "512x512",
+}'
+```
+
 ### 在模块中使用
 
 **Used in JS/TS**
@@ -46,17 +58,6 @@ const configuration = new Configuration({
 import openai
 openai.api_base = "https://caloi.top"
 openai.api_key = "sk-******"
-```
-### Image Generation (DALL-E):
-```bash
-curl --location 'https://caloi.top/v1/images/generations' \
---header 'Authorization: Bearer sk-***[OUR_API_KEY]***' \
---header 'Content-Type: application/json' \
---data '{
-    "prompt": "A photo of a cat",
-    "n": 1,
-    "size": "512x512",
-}'
 ```
 
 ## 服务搭建
