@@ -16,15 +16,47 @@ OpenAI 接口转发服务.
 
 ## 应用
 > 这里以个人搭建好的代理地址 https://caloi.top 为例
+ 
 ### [chatgpt-web](https://github.com/Chanzhaoyu/chatgpt-web)
-修改 [Docker Compose](https://github.com/Chanzhaoyu/chatgpt-web#docker-compose) 中的`OPENAI_API_BASE_URL`为我们搭建的代理服务地址即可：
+修改 [Docker Compose](https://github.com/Chanzhaoyu/chatgpt-web#docker-compose) 中的`OPENAI_API_BASE_URL`为我们搭建的代理服务地址:
 ```bash
 OPENAI_API_BASE_URL: https://caloi.top 
 ```
 
 ### [ChatGPT-Next-Web](https://github.com/Yidadaa/ChatGPT-Next-Web)
+替换docker启动命令中的 `BASE_URL`为我们搭建的代理服务地址
 ```bash
 docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-xxx" -e CODE="<your password>" -e BASE_URL="caloi.top" yidadaa/chatgpt-next-web
+```
+
+### 在模块中使用
+
+**Used in JS/TS**
+```typescript
+import { Configuration } from "openai";
+
+const configuration = new Configuration({
+    basePath: "https://caloi.top",
+    apiKey: "sk-******",
+    
+});
+```
+**Used in Python**  
+```python
+import openai
+openai.api_base = "https://caloi.top"
+openai.api_key = "sk-******"
+```
+### Image Generation (DALL-E):
+```bash
+curl --location 'https://caloi.top/v1/images/generations' \
+--header 'Authorization: Bearer sk-***[OUR_API_KEY]***' \
+--header 'Content-Type: application/json' \
+--data '{
+    "prompt": "A photo of a cat",
+    "n": 1,
+    "size": "512x512",
+}'
 ```
 
 ## 服务搭建
@@ -36,7 +68,6 @@ docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-xxx" -e CODE="<your password>" 
 pip install openai-forward
 ```
 **运行转发服务**  
-### Option 1
 可通过`--port`指定端口号，默认为`9999`，可通过`--workers`指定工作进程数，默认为`1`
 ```bash
 openai_forward run --port=9999 --workers=1
@@ -50,17 +81,12 @@ OPENAI_API_KEY="sk-xxx" openai_forward run --port=9999 --workers=1
 ```
 注: 如果既存在默认api key又在请求头中传入了api key，则以请求头中的api key会覆盖默认api key.
 
-### Option 2
-另一种使用nodejs的部署方式，环境中需已安装node, 也是默认转发`https://api.openai.com`的所有接口路由，但目前不支持设定默认api key。
-启动方式
-```bash
-openai_forward node --port=9999
-```
 
-### 方式二: Docker 
+### 方式二: Docker(推荐) 
 ```bash
-docker run -itd -p 9999:9999 beidongjiedeguang/openai-forward:latest --port=9999 --workers=1
+docker run --name="openai-forward" -d -p 9999:8000 beidongjiedeguang/openai-forward:latest 
 ```
+将映射宿主机的9999端口，通过`http://{ip}:9999`访问服务。  
 注：同样可以在启动命令中通过-e传入环境变量OPENAI_API_KEY=sk-xxx作为默认api key
 
 ## 服务调用

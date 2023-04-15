@@ -12,11 +12,10 @@ RUN pip install --no-cache-dir  \
     "python-dotenv" \
     "httpx"
 
-RUN pip install "sparrow-python>=0.1.1" --no-cache-dir
 WORKDIR /home
 COPY . /home/openai-forward
 WORKDIR /home/openai-forward
 
 RUN pip install . --no-cache-dir && rm -rf /home/openai-forward/*
-
+EXPOSE 8000
 ENTRYPOINT ["openai_forward", "run"]
