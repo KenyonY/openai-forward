@@ -1,7 +1,11 @@
 .PHONY: start build push run down test twine
 
+
+container = "openai-forward-container"
 start:
-	openai_forward run
+	docker run --name=$(container) -p 8000:8000 $(image)
+rm:
+	docker rm -f $(container)
 
 image = "beidongjiedeguang/openai-forward:latest"
 build:
@@ -35,3 +39,5 @@ build-web:
 start-web:
 	@openai_forward node --port=9099 --base_url="https://api.openai.com"
 
+build-push:
+	docker buildx build --push --platform linux/arm64/v8,linux/amd64 --tag $(image) -f docker/Dockerfile .
