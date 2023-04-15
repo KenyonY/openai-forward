@@ -69,7 +69,7 @@ openai.api_key = "sk-******"
 pip install openai-forward
 ```
 **运行转发服务**  
-可通过`--port`指定端口号，默认为`9999`，可通过`--workers`指定工作进程数，默认为`1`
+可通过`--port`指定端口号，默认为`8000`，可通过`--workers`指定工作进程数，默认为`1`
 ```bash
 openai_forward run --port=9999 --workers=1
 ```
