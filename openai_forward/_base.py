@@ -1,6 +1,5 @@
 from fastapi import Request, Response, HTTPException, status
 from fastapi.responses import StreamingResponse, RedirectResponse, FileResponse, JSONResponse
-import requests
 from loguru import logger
 import httpx
 from starlette.background import BackgroundTask
@@ -66,6 +65,7 @@ class OpenaiBase:
 
     @staticmethod
     def try_get_response(url, method, headers, params, payload, stream, timeout):
+        import requests
         if params is None:
             params = {}
 

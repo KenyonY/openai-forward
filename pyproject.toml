@@ -19,7 +19,7 @@ classifiers = [
 
 dependencies = [
     "loguru",
-    "sparrow-python",
+    "sparrow-python>=0.1.1",
     "fastapi",
     "uvicorn",
     "orjson",
