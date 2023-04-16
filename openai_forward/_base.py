@@ -132,15 +132,18 @@ class OpenaiBase:
         # headers.pop("user-agent", None)
         headers.update(tmp_headers)
         if cls.LOG_CHAT:
-            input_info = await request.json()
-            msgs = input_info['messages']
-            cls._current_chat_info.append(
-                {
-                    "model": input_info['model'],
-                    "messages": [{msg['role']: msg['content']} for msg in msgs],
-                }
-            )
-            logger.info(f"{input_info}")
+            try:
+                input_info = await request.json()
+                msgs = input_info['messages']
+                cls._current_chat_info.append(
+                    {
+                        "model": input_info['model'],
+                        "messages": [{msg['role']: msg['content']} for msg in msgs],
+                    }
+                )
+                logger.info(f"{input_info}")
+            except Exception as e:
+                logger.warning(e)
         req = client.build_request(
             request.method, url, headers=headers,
             content=request.stream(),
