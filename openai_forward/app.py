@@ -5,11 +5,12 @@ import httpx
 
 app = create_app(title="openai_forward", version="1.0")
 openai = Openai()
+use_http2 = False
 
 
 @app.on_event('startup')
 async def startup_event():
-    app.state.client = httpx.AsyncClient(base_url=Openai.base_url)
+    app.state.client = httpx.AsyncClient(base_url=Openai.base_url, http2=use_http2)
 
 
 @app.on_event('shutdown')

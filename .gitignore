@@ -3,6 +3,8 @@
 third-party/
 run.sh
 ssl/
+chat.yaml
+chat_*.yaml
 
 tests/
 Log/

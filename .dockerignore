@@ -1,8 +1,8 @@
 .idea/
 .vscode/
 third-party/
-run.sh
 ssl/
+chat.yaml
 
 tests/
 Log/

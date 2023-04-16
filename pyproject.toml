@@ -51,6 +51,8 @@ edge = [
 
 [project.scripts]
 openai_forward = "openai_forward.__main__:main"
+openai-forward = "openai_forward.__main__:main"
+aifwd = "openai_forward.__main__:main"
 
 [tool.hatch.version]
 path = "openai_forward/__init__.py"
