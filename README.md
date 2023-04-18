@@ -12,7 +12,13 @@ OpenAI 接口转发服务.
 - [x] `/v1/completions`
 - [x] ......
 
-默认转发所有接口。
+默认转发(包含流式转发)所有接口。
+
+### 一键部署
+```bash
+docker run --name="openai-forward" -d -p 9999:8000 beidongjiedeguang/openai-forward:latest 
+```
+通过`http://{ip}:9999`访问服务。
 
 ## 应用
 > 这里以个人搭建好的代理地址 https://caloi.top 为例
