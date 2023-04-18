@@ -1,24 +1,49 @@
-# OpenAI Forward
-## 简介
-OpenAI 接口转发服务.   
-用途： 
+[**中文**](./README.md) | [**English**](./README_EN.md)
+
+<h1 align="center">
+    <br>
+    OpenAI Forward
+    <br>
+</h1>
+<p align="center">
+    <b> OpenAI API 接口转发服务 <br/>
+    The fastest way to deploy openai api forward proxy! </b>
+</p>
+
+<p align="center">
+    <img alt="pypi" src="https://img.shields.io/badge/Pypi-0.0.8-green.svg">
+    <img alt="License" src="https://img.shields.io/github/license/beidongjiedeguang/openai-forward.svg?color=blue&style=flat-square">
+    <img alt="Release (latest by date)" src="https://img.shields.io/github/v/release/beidongjiedeguang/openai-forward">
+    <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/beidongjiedeguang/openai-forward">
+    <img alt="GitHub top language" src="https://img.shields.io/github/languages/top/beidongjiedeguang/openai-forward">
+    <img alt="name" src="https://img.shields.io/badge/author-@kunyuan-orange.svg?style=flat-square&logo=appveyor">
+</p>
+
+[![Build Status](https://www.travis-ci.org/beidongjiedeguang/openai-forward.svg?branch=main)](https://www.travis-ci.org/beidongjiedeguang/openai-forward)
+[![codecov](https://codecov.io/gh/beidongjiedeguang/openai-forward/branch/main/graph/badge.svg)](https://codecov.io/gh/beidongjiedeguang/openai-forward)
+
+
 解决国内无法直接访问OpenAI的问题，将该服务部署在海外服务器上，通过该服务转发OpenAI的请求。即搭建反向代理服务  
-测试地址：https://caloi.top/v1/chat/completions 
+测试访问：https://caloi.top/v1/chat/completions 将完全等价于 https://api.openai.com/v1/chat/completions
 
-### 转发接口示例
-`https://api.openai.com`
-- [x] `/dashboard/billing/usage`
-- [x] `/v1/chat/completions`
-- [x] `/v1/completions`
-- [x] ......
 
-默认转发(包含流式转发)所有接口。
-
-### 一键部署
+### 快速部署
 ```bash
 docker run --name="openai-forward" -d -p 9999:8000 beidongjiedeguang/openai-forward:latest 
 ```
-通过`http://{ip}:9999`访问服务。
+通过`http://{ip}:9999`访问服务。 部署详情见下文。
+
+## 特点
+- [x] 支持转发OpenAI所有接口
+- [x] 请求ip验证
+- [x] 支持流式转发
+- [x] 支持默认api key
+- [x] pip安装
+- [x] docker部署
+- [x] 自定义转发端口
+- [ ] 自定义转发路由
+- [ ] SSL证书支持
+- [ ] 聊天内容安全：聊天内容流式过滤
 
 ## 应用
 > 这里以个人搭建好的代理地址 https://caloi.top 为例
@@ -66,7 +91,7 @@ openai.api_base = "https://caloi.top"
 openai.api_key = "sk-******"
 ```
 
-## 服务搭建
+## 服务部署
 提供两种服务部署方式,选择一种即可
 
 ### 方式一:  pip
@@ -106,3 +131,5 @@ https://api.openai.com/v1/chat/completions
 http://{ip}:{port}/v1/chat/completions
 ```
 
+## Https 支持
+TODO
