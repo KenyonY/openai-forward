@@ -10,7 +10,7 @@ authors = [
 ]
 requires-python = ">=3.6"
 readme = "README.md"
-keywords = ["openai", "chatgpt", "api forward", "chatbot", "streaming-api", "fastapi", "openai-proxy"]
+keywords = ["openai", "chatgpt", "openai-api", "openai-proxy", "forward", "streaming-api", "fastapi", "python"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Operating System :: OS Independent",

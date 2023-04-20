@@ -1,6 +1,6 @@
 import orjson
 from orjson import JSONDecodeError
-from fastapi import Request, Response, HTTPException, status
+from fastapi import Request
 from fastapi.responses import StreamingResponse, RedirectResponse, FileResponse
 from loguru import logger
 import httpx
@@ -59,8 +59,7 @@ class OpenaiBase:
         if ip == "*" or ip in self.allow_ips:
             return True
         else:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                                detail=f"Forbidden, please add {ip=} to `allow_ips`")
+            return False
 
     @staticmethod
     def _parse_iter_line_content(line: str):

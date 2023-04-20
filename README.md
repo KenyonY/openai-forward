@@ -1,26 +1,76 @@
-# OpenAI Forward
-## 简介
-OpenAI 接口转发服务.   
-用途： 
-解决国内无法直接访问OpenAI的问题，将该服务部署在海外服务器上，通过该服务转发OpenAI的请求。即搭建反向代理服务  
-测试地址：https://caloi.top/v1/chat/completions 
+**中文** | [**English**](./README_EN.md)
 
-### 转发接口示例
-`https://api.openai.com`
-- [x] `/dashboard/billing/usage`
-- [x] `/v1/chat/completions`
-- [x] `/v1/completions`
-- [x] ......
+<h1 align="center">
+    <br>
+    OpenAI Forward
+    <br>
+</h1>
+<p align="center">
+    <b> OpenAI API 接口转发服务 <br/>
+    The fastest way to deploy openai api forward proxy </b>
+</p>
 
-默认转发(包含流式转发)所有接口。
+[//]: # (    <a href="https://github.com/beidongjiedeguang">)
+[//]: # (        <img alt="name" src="https://img.shields.io/badge/author-@kunyuan-orange.svg?style=flat-square&logo=appveyor">)
+[//]: # (    </a>)
+[//]: # (    <a href="https://github.com/beidongjiedeguang/openai-forward/stargazers">)
+[//]: # (        <img alt="starts" src=https://img.shields.io/github/stars/beidongjiedeguang/openai-forward?style=social>)
+[//]: # (    </a>)
+[//]: # ([![Downloads]&#40;https://static.pepy.tech/badge/openai-forward/month&#41;]&#40;https://pepy.tech/project/openai-forward&#41;)
+[//]: # (    <a href="https://codecov.io/gh/beidongjiedeguang/openai-forward">)
+[//]: # (        <img alt="codecov" src="https://codecov.io/gh/beidongjiedeguang/openai-forward/branch/dev/graph/badge.svg">)
+[//]: # (    </a>)
 
-### 一键部署
-```bash
-docker run --name="openai-forward" -d -p 9999:8000 beidongjiedeguang/openai-forward:latest 
-```
-通过`http://{ip}:9999`访问服务。
+<p align="center">
+    <a href="https://pypi.org/project/openai-forward/">
+        <img alt="pypi" src="https://img.shields.io/badge/pypi-0.0.8-green.svg">
+    </a>
+    <a href="https://github.com/beidongjiedeguang/openai-forward/blob/main/LICENSE">
+        <img alt="License" src="https://img.shields.io/github/license/beidongjiedeguang/openai-forward.svg?color=blue&style=flat-square">
+    </a>
+    <a href="https://github.com/beidongjiedeguang/openai-forward/releases">
+        <img alt="Release (latest by date)" src="https://img.shields.io/github/v/release/beidongjiedeguang/openai-forward">
+    </a>
+    <a href="https://github.com/beidongjiedeguang/openai-forward">
+        <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/beidongjiedeguang/openai-forward">
+    </a>
+    <a href="https://github.com/beidongjiedeguang/openai-forward/">
+        <img alt="GitHub top language" src="https://img.shields.io/github/languages/top/beidongjiedeguang/openai-forward">
+    </a>
+    <a href="https://github.com/beidongjiedeguang/openai-forward/actions/workflows/run_tests.yaml">
+        <img alt="tests" src="https://img.shields.io/github/actions/workflow/status/beidongjiedeguang/openai-forward/run_tests.yml?label=tests">
+    </a>
+    <a href="https://pypi.org/project/openai_forward/">
+        <img alt="pypi downloads" src="https://img.shields.io/pypi/dm/openai_forward">
+    </a>
 
-## 应用
+</p>
+
+
+
+本项目用于解决一些地区无法直接访问OpenAI的问题，将该服务部署在可以正常访问openai api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代理服务  
+测试访问：https://caloi.top/v1/chat/completions 将等价于 https://api.openai.com/v1/chat/completions
+
+# Table of Contents
+
+- [Features](#Features)
+- [Usage](#Usage)
+- [服务部署](#安装部署)
+- [服务调用](#服务调用)
+
+
+# Features
+- [x] 支持转发OpenAI所有接口
+- [x] 请求IP验证
+- [x] 支持流式转发
+- [x] 支持默认api key
+- [x] pip安装
+- [x] docker部署
+- [x] 自定义转发端口
+- [ ] 自定义转发路由
+- [ ] 聊天内容安全：聊天内容流式过滤
+
+# Usage
 > 这里以个人搭建好的代理地址 https://caloi.top 为例
  
 ### [chatgpt-web](https://github.com/Chanzhaoyu/chatgpt-web)
@@ -66,10 +116,10 @@ openai.api_base = "https://caloi.top"
 openai.api_key = "sk-******"
 ```
 
-## 服务搭建
+# 服务部署
 提供两种服务部署方式,选择一种即可
 
-### 方式一:  pip
+## 方式一:  pip
 **安装**
 ```bash
 pip install openai-forward
@@ -89,14 +139,14 @@ OPENAI_API_KEY="sk-xxx" openai_forward run --port=9999 --workers=1
 注: 如果既存在默认api key又在请求头中传入了api key，则以请求头中的api key会覆盖默认api key.
 
 
-### 方式二: Docker(推荐) 
+## 方式二: Docker(推荐) 
 ```bash
 docker run --name="openai-forward" -d -p 9999:8000 beidongjiedeguang/openai-forward:latest 
 ```
 将映射宿主机的9999端口，通过`http://{ip}:9999`访问服务。  
 注：同样可以在启动命令中通过-e传入环境变量OPENAI_API_KEY=sk-xxx作为默认api key
 
-## 服务调用
+# 服务调用
 替换openai的api地址为该服务的地址即可，如：
 ```bash
 https://api.openai.com/v1/chat/completions
@@ -105,4 +155,3 @@ https://api.openai.com/v1/chat/completions
 ```bash
 http://{ip}:{port}/v1/chat/completions
 ```
-

@@ -1,5 +1,6 @@
-from ._base import OpenaiBase, Request
+from ._base import OpenaiBase
 from .routers.schemas import OpenAIV1ChatCompletion
+from fastapi import Request, HTTPException, status
 
 
 class Openai(OpenaiBase):
@@ -8,7 +9,10 @@ class Openai(OpenaiBase):
 
     async def reverse_proxy(self, request: Request):
         if self.validate_host:
-            self.validate_request_host(request.client.host)
+            if not self.validate_request_host(request.client.host):
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                    detail=f"Forbidden, please add ip={request.client.host} to `allow_ips`")
+
         return await self._reverse_proxy(request)
 
     async def v1_chat_completions(self, data: OpenAIV1ChatCompletion, request: Request):
