@@ -28,6 +28,8 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
           body: |
-            See [CHANGELOG.md](https://github.com/beidongjiedeguang/openai-forward/blob/main/ChangeLog).
+            Changes in this Release
+            - First Change: Add github workflow.
+            - Second Change: Some other change.
           draft: true
           prerelease: false

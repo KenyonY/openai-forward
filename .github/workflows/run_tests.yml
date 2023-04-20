@@ -3,9 +3,12 @@ name: Run tests
 on:
   push :
     branches:
+      - dev
       - main
+      - update-workflow
   pull_request:
     branches:
+      - dev
       - main
 
 jobs:
@@ -14,10 +17,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8, 3.9, 3.10]
+        python-version: ["3.10"]
 
     steps:
       - uses: actions/checkout@v3
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v3
         with:
