@@ -29,7 +29,7 @@ jobs:
           release_name: Release ${{ github.ref }}
           body: |
             Changes in this Release
-            - First Change: Add github workflow.
-            - Second Change: Some other change.
+            - First Change
+            - Second Change
           draft: true
           prerelease: false
