@@ -17,6 +17,9 @@
 [//]: # (        <img alt="starts" src=https://img.shields.io/github/stars/beidongjiedeguang/openai-forward?style=social>)
 [//]: # (    </a>)
 [//]: # ([![Downloads]&#40;https://static.pepy.tech/badge/openai-forward/month&#41;]&#40;https://pepy.tech/project/openai-forward&#41;)
+[//]: # (    <a href="https://codecov.io/gh/beidongjiedeguang/openai-forward">)
+[//]: # (        <img alt="codecov" src="https://codecov.io/gh/beidongjiedeguang/openai-forward/branch/dev/graph/badge.svg">)
+[//]: # (    </a>)
 
 <p align="center">
     <a href="https://pypi.org/project/openai-forward/">
@@ -40,9 +43,7 @@
     <a href="https://pypi.org/project/openai_forward/">
         <img alt="pypi downloads" src="https://img.shields.io/pypi/dm/openai_forward">
     </a>
-    <a href="https://codecov.io/gh/beidongjiedeguang/openai-forward">
-        <img alt="codecov" src="https://codecov.io/gh/beidongjiedeguang/openai-forward/branch/main/graph/badge.svg">
-    </a>
+
 </p>
 
 
@@ -154,6 +155,3 @@ https://api.openai.com/v1/chat/completions
 ```bash
 http://{ip}:{port}/v1/chat/completions
 ```
-
-# Https 支持
-TODO
