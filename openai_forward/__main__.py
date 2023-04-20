@@ -1,7 +1,6 @@
 import fire
 import uvicorn
 import os
-from sparrow import relp
 
 
 class Cli:
@@ -16,10 +15,6 @@ class Cli:
             ssl_keyfile=os.environ.get("ssl_keyfile", None),
             ssl_certfile=os.environ.get("ssl_certfile", None),
         )
-
-    @staticmethod
-    def node(port=8000, base_url="https://api.openai.com/"):
-        os.system(f"PORT={port} BASE_URL={base_url} node {relp('web/index.js')}")
 
 
 def main():

@@ -22,9 +22,7 @@
 [//]: # (    </a>)
 
 <p align="center">
-    <a href="https://pypi.org/project/openai-forward/">
-        <img alt="pypi" src="https://img.shields.io/badge/pypi-0.0.8-green.svg">
-    </a>
+<a href="https://badge.fury.io/py/openai-forward"><img src="https://badge.fury.io/py/openai-forward.svg" alt="PyPI version" ></a>
     <a href="https://github.com/beidongjiedeguang/openai-forward/blob/main/LICENSE">
         <img alt="License" src="https://img.shields.io/github/license/beidongjiedeguang/openai-forward.svg?color=blue&style=flat-square">
     </a>
