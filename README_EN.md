@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-<a href="https://badge.fury.io/py/openai-forward"><img src="https://badge.fury.io/py/openai-forward.svg" alt="PyPI version" ></a>
+    <a href="https://pypi.org/project/openai-forward/"><img src="https://img.shields.io/pypi/v/openai-forward?color=brightgreen" alt="PyPI version" ></a>
     <a href="https://github.com/beidongjiedeguang/openai-forward/blob/main/LICENSE">
         <img alt="License" src="https://img.shields.io/github/license/beidongjiedeguang/openai-forward.svg?color=blue&style=flat-square">
     </a>
@@ -21,8 +21,8 @@
     <a href="https://github.com/beidongjiedeguang/openai-forward">
         <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/beidongjiedeguang/openai-forward">
     </a>
-    <a href="https://github.com/beidongjiedeguang/openai-forward/">
-        <img alt="GitHub top language" src="https://img.shields.io/github/languages/top/beidongjiedeguang/openai-forward">
+    <a href="https://hub.docker.com/r/beidongjiedeguang/openai-forward">
+        <img alt="docer image size" src="https://img.shields.io/docker/image-size/beidongjiedeguang/openai-forward?style=flat&label=docker image">
     </a>
     <a href="https://github.com/beidongjiedeguang/openai-forward/actions/workflows/run_tests.yaml">
         <img alt="tests" src="https://img.shields.io/github/actions/workflow/status/beidongjiedeguang/openai-forward/run_tests.yml?label=tests">
@@ -41,21 +41,31 @@ Test access: https://caloi.top/v1/chat/completions is equivalent to https://api.
 - [Features](#Features) 
 - [Usage](#Usage) 
 - [Service Deployment](#Service-Deployment) 
-- [Service Invocation](#Service-Invocation) 
+- [Service Usage](#Service Usage) 
 
 # Features 
 - [x] Supports forwarding of all OpenAI interfaces 
-- [x] Request IP verification 
+- [x] Supports request IP verification 
 - [x] Supports streaming forwarding 
 - [x] Supports default API key 
-- [x] pip installation 
+- [x] pip installation and deployment 
 - [x] Docker deployment 
-- [x] Custom forwarding port 
-- [ ] Custom forwarding route 
 - [ ] Chat content security: Chat content streaming filtering 
 
 # Usage 
 > Here, the proxy address set up by the individual, https://caloi.top, is used as an example 
+
+### Image Generation (DALL-E):
+```bash 
+curl --location 'https://caloi.top/v1/images/generations' \ 
+--header 'Authorization: Bearer sk-******' \ 
+--header 'Content-Type: application/json' \ 
+--data '{ 
+    "prompt": "A photo of a cat", 
+    "n": 1, 
+    "size": "512x512"
+}' 
+``` 
 
 ### [chatgpt-web](https://github.com/Chanzhaoyu/chatgpt-web) 
 Modify the `OPENAI_API_BASE_URL` in [Docker Compose](https://github.com/Chanzhaoyu/chatgpt-web#docker-compose) to the address of the proxy service we set up: 
@@ -66,20 +76,9 @@ OPENAI_API_BASE_URL: https://caloi.top
 ### [ChatGPT-Next-Web](https://github.com/Yidadaa/ChatGPT-Next-Web) 
 Replace `BASE_URL` in the docker startup command with the address of the proxy service we set up: 
 ```bash 
-docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-xxx" -e CODE="<your password>" -e BASE_URL="caloi.top" yidadaa/chatgpt-next-web 
+docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-******" -e CODE="<your password>" -e BASE_URL="caloi.top" yidadaa/chatgpt-next-web 
 ``` 
 
-### Image Generation (DALL-E): 
-```bash 
-curl --location 'https://caloi.top/v1/images/generations' \ 
---header 'Authorization: Bearer sk-***[OUR_API_KEY]***' \ 
---header 'Content-Type: application/json' \ 
---data '{ 
-    "prompt": "A photo of a cat", 
-    "n": 1, 
-    "size": "512x512", 
-}' 
-``` 
 
 ### Using in a module 
 

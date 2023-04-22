@@ -22,7 +22,7 @@
 [//]: # (    </a>)
 
 <p align="center">
-<a href="https://badge.fury.io/py/openai-forward"><img src="https://badge.fury.io/py/openai-forward.svg" alt="PyPI version" ></a>
+    <a href="https://pypi.org/project/openai-forward/"><img src="https://img.shields.io/pypi/v/openai-forward?color=brightgreen" alt="PyPI version" ></a>
     <a href="https://github.com/beidongjiedeguang/openai-forward/blob/main/LICENSE">
         <img alt="License" src="https://img.shields.io/github/license/beidongjiedeguang/openai-forward.svg?color=blue&style=flat-square">
     </a>
@@ -32,8 +32,8 @@
     <a href="https://github.com/beidongjiedeguang/openai-forward">
         <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/beidongjiedeguang/openai-forward">
     </a>
-    <a href="https://github.com/beidongjiedeguang/openai-forward/">
-        <img alt="GitHub top language" src="https://img.shields.io/github/languages/top/beidongjiedeguang/openai-forward">
+    <a href="https://hub.docker.com/r/beidongjiedeguang/openai-forward">
+        <img alt="docer image size" src="https://img.shields.io/docker/image-size/beidongjiedeguang/openai-forward?style=flat&label=docker image">
     </a>
     <a href="https://github.com/beidongjiedeguang/openai-forward/actions/workflows/run_tests.yaml">
         <img alt="tests" src="https://img.shields.io/github/actions/workflow/status/beidongjiedeguang/openai-forward/run_tests.yml?label=tests">
@@ -53,24 +53,34 @@
 
 - [Features](#Features)
 - [Usage](#Usage)
-- [服务部署](#安装部署)
+- [安装部署](#安装部署)
 - [服务调用](#服务调用)
 
 
 # Features
 - [x] 支持转发OpenAI所有接口
-- [x] 请求IP验证
+- [x] 支持请求IP验证
 - [x] 支持流式转发
 - [x] 支持默认api key
-- [x] pip安装
+- [x] pip安装部署
 - [x] docker部署
-- [x] 自定义转发端口
-- [ ] 自定义转发路由
 - [ ] 聊天内容安全：聊天内容流式过滤
 
 # Usage
 > 这里以个人搭建好的代理地址 https://caloi.top 为例
- 
+
+### Image Generation (DALL-E):
+```bash
+curl --location 'https://caloi.top/v1/images/generations' \
+--header 'Authorization: Bearer sk-******' \
+--header 'Content-Type: application/json' \
+--data '{
+    "prompt": "A photo of a cat",
+    "n": 1,
+    "size": "512x512"
+}'
+```
+
 ### [chatgpt-web](https://github.com/Chanzhaoyu/chatgpt-web)
 修改 [Docker Compose](https://github.com/Chanzhaoyu/chatgpt-web#docker-compose) 中的`OPENAI_API_BASE_URL`为我们搭建的代理服务地址:
 ```bash
@@ -83,17 +93,6 @@ OPENAI_API_BASE_URL: https://caloi.top
 docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-xxx" -e CODE="<your password>" -e BASE_URL="caloi.top" yidadaa/chatgpt-next-web
 ```
 
-### Image Generation (DALL-E):
-```bash
-curl --location 'https://caloi.top/v1/images/generations' \
---header 'Authorization: Bearer sk-***[OUR_API_KEY]***' \
---header 'Content-Type: application/json' \
---data '{
-    "prompt": "A photo of a cat",
-    "n": 1,
-    "size": "512x512",
-}'
-```
 
 ### 在模块中使用
 
@@ -114,7 +113,7 @@ openai.api_base = "https://caloi.top"
 openai.api_key = "sk-******"
 ```
 
-# 服务部署
+# 安装部署
 提供两种服务部署方式,选择一种即可
 
 ## 方式一:  pip
