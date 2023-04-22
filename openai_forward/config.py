@@ -1,5 +1,7 @@
 from loguru import logger
+import orjson
 from sparrow import relp
+from typing import Union, List, Dict
 import sys
 import logging
 
@@ -32,3 +34,44 @@ def setting_log(log_name, multi_process=True):
         ],
     }
     logger.configure(**logger_config)
+
+
+def yaml_dump(data, filepath, rel_path=False, mode='w'):
+    abs_path = relp(filepath, parents=1) if rel_path else filepath
+    from yaml import dump
+
+    try:
+        from yaml import CDumper as Dumper
+    except ImportError:
+        from yaml import Dumper
+    with open(abs_path, mode=mode, encoding="utf-8") as fw:
+        fw.write(dump(data, Dumper=Dumper, allow_unicode=True, indent=4))
+
+
+def yaml_load(filepath, rel_path=False, mode='r'):
+    abs_path = relp(filepath, parents=1) if rel_path else filepath
+    from yaml import load
+
+    try:
+        from yaml import CLoader as Loader
+    except ImportError:
+        from yaml import Loader
+    with open(abs_path, mode=mode, encoding="utf-8") as stream:
+        #     stream = stream.read()
+        content = load(stream, Loader=Loader)
+    return content
+
+
+def json_load(filepath: str, rel=False, mode='rb'):
+    abs_path = relp(filepath, parents=1) if rel else filepath
+    with open(abs_path, mode=mode) as f:
+        return orjson.loads(f.read())
+
+
+def json_dump(data: Union[List, Dict], filepath: str, rel=False, indent_2=False, mode='wb'):
+    orjson_option = 0
+    if indent_2:
+        orjson_option = orjson.OPT_INDENT_2
+    abs_path = relp(filepath, parents=1) if rel else filepath
+    with open(abs_path, mode=mode) as f:
+        f.write(orjson.dumps(data, option=orjson_option))

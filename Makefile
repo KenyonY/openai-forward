@@ -1,20 +1,25 @@
 .PHONY: start build push run down test twine
 
+image := "beidongjiedeguang/openai-forward:latest"
+container := "openai-forward-container"
+compose_path := "docker-compose.yaml"
 
-container = "openai-forward-container"
 start:
-	docker run --name=$(container) -p 8000:8000 $(image)
+	docker run -d \
+    --name $(container) \
+    --env "LETSENCRYPT_HOST=caloi.top,www.caloi.top" \
+    --env "VIRTUAL_HOST=caloi.top,www.caloi.top" \
+    --env "VIRTUAL_PORT=8000" \
+    --env "LOG_CHAT=true" \
+    --env "OPENAI_API_KEY=" \
+    $(image)
+
+log:
+	docker logs -f $(container)
+
 rm:
 	docker rm -f $(container)
 
-image = "beidongjiedeguang/openai-forward:latest"
-build:
-	@docker build -t $(image) -f docker/Dockerfile .
-
-push:
-	@docker push $(image)
-
-compose_path = "docker-compose.yaml"
 up:
 	@docker-compose  -f $(compose_path) up -d
 
@@ -38,6 +43,9 @@ build-web:
 
 start-web:
 	@openai_forward node --port=9099 --base_url="https://api.openai.com"
+
+build:
+	docker build --tag $(image) -f docker/Dockerfile .
 
 build-push:
 	docker buildx build --push --platform linux/arm64/v8,linux/amd64 --tag $(image) -f docker/Dockerfile .
