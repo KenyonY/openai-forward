@@ -42,5 +42,8 @@ build-web:
 start-web:
 	@openai_forward node --port=9099 --base_url="https://api.openai.com"
 
+build:
+	docker build --tag $(image) -f docker/Dockerfile .
+
 build-push:
 	docker buildx build --push --platform linux/arm64/v8,linux/amd64 --tag $(image) -f docker/Dockerfile .
