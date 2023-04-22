@@ -10,6 +10,8 @@ start:
     --env "LETSENCRYPT_HOST=caloi.top,www.caloi.top" \
     --env "VIRTUAL_HOST=caloi.top,www.caloi.top" \
     --env "VIRTUAL_PORT=8000" \
+    --env "LOG_CHAT=true" \
+    --env "OPENAI_API_KEY=" \
     $(image)
 
 log:
