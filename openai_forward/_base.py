@@ -1,13 +1,10 @@
 from fastapi import Request
-from fastapi.responses import StreamingResponse, RedirectResponse, FileResponse
+from fastapi.responses import StreamingResponse
 from loguru import logger
 import httpx
 from starlette.background import BackgroundTask
 import os
-from sparrow import yaml_dump, yaml_load
-from pathlib import Path
-from threading import Thread
-from .content.chat import log_chat_completions
+from .content.chat import log_chat_completions, ChatSaver
 
 
 class OpenaiBase:
@@ -18,29 +15,7 @@ class OpenaiBase:
     timeout = 30
     non_stream_timeout = 30
     allow_ips = []
-    chat_info_list = []
-    _current_chat_info = []
-    _chat_file_idx = 0
-    _save_freq_idx = 1
-
-    @classmethod
-    def save_chat_info(cls, save_freq=0.02, save_threshold=4000):
-        chat_file = f"chat_{cls._chat_file_idx}.yaml"
-        if Path(chat_file).exists():
-            chat_info_list = yaml_load(chat_file)
-        else:
-            chat_info_list = []
-
-        cls.chat_info_list.append(cls._current_chat_info)
-        cls._current_chat_info = []
-        chat_info_list.extend(cls.chat_info_list)
-        if len(chat_info_list) >= save_threshold:
-            cls._chat_file_idx += 1
-            chat_file = f"chat_{cls._chat_file_idx}.yaml"
-        if len(chat_info_list) >= save_threshold * save_freq * cls._save_freq_idx:
-            cls._save_freq_idx += 1
-            yaml_dump(chat_file, chat_info_list)
-            cls.chat_info_list = []
+    chatsaver = ChatSaver(save_interval=10)
 
     def add_allowed_ip(self, ip: str):
         if ip == "*":
@@ -57,9 +32,7 @@ class OpenaiBase:
     @classmethod
     def log_chat_completions(cls, bytes_: bytes):
         target_info = log_chat_completions(bytes_)
-        logger.info(f"{target_info}")
-        cls._current_chat_info.append({target_info['role']: target_info['content']})
-        Thread(target=cls.save_chat_info).start()
+        cls.chatsaver.add_chat({target_info['role']: target_info['content']})
 
     @classmethod
     async def aiter_bytes(cls, r: httpx.Response):
@@ -87,19 +60,15 @@ class OpenaiBase:
             tmp_headers = {}
 
         headers.pop("host", None)
-        # headers.pop("user-agent", None)
         headers.update(tmp_headers)
         if cls.LOG_CHAT:
             try:
                 input_info = await request.json()
                 msgs = input_info['messages']
-                cls._current_chat_info.append(
-                    {
-                        "model": input_info['model'],
-                        "messages": [{msg['role']: msg['content']} for msg in msgs],
-                    }
-                )
-                logger.info(f"{input_info}")
+                cls.chatsaver.add_chat({
+                    "model": input_info['model'],
+                    "messages": [{msg['role']: msg['content']} for msg in msgs],
+                })
             except Exception as e:
                 logger.warning(e)
         req = client.build_request(
@@ -113,7 +82,7 @@ class OpenaiBase:
         return StreamingResponse(
             aiter_bytes,
             status_code=r.status_code,
-            # headers=r.headers,
+            # headers=r.headers, # do not use r.headers, it will cause error
             media_type=r.headers.get("content-type"),
             background=BackgroundTask(r.aclose)
         )

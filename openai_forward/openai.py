@@ -1,6 +1,9 @@
 from ._base import OpenaiBase
 from .routers.schemas import OpenAIV1ChatCompletion
 from fastapi import Request, HTTPException, status
+from .config import setting_log
+
+setting_log(log_name="openai_forward.log")
 
 
 class Openai(OpenaiBase):
