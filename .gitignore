@@ -6,6 +6,7 @@ ssl/
 chat.yaml
 chat_*.yaml
 
+.env.example
 Log/
 dist/
 # Byte-compiled / optimized / DLL files

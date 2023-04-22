@@ -29,5 +29,5 @@ jobs:
           release_name: Release ${{ github.ref }}
           body: |
             See ChangeLog
-          draft: true
+          draft: false
           prerelease: false
