@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "openai_forward"
-description = ""
+description = "🚀 Openai api forward · OpenAI 接口转发服务 · streaming forward"
 authors = [
     { name = "kunyuan", email = "beidongjiedeguang@gmail.com" },
 ]
