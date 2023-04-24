@@ -64,6 +64,8 @@
 - [x] 支持默认api key
 - [x] pip安装部署
 - [x] docker部署
+- [x] 支持多进程转发
+- [x] 支持指定转发路由前缀
 - [ ] 聊天内容安全：聊天内容流式过滤
 
 # Usage
@@ -96,7 +98,7 @@ docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-xxx" -e CODE="<your password>" 
 
 ### 在模块中使用
 
-**Used in JS/TS**
+**JS/TS**
 ```typescript
 import { Configuration } from "openai";
 
@@ -106,7 +108,7 @@ const configuration = new Configuration({
     
 });
 ```
-**Used in Python**  
+**Python**  
 ```python
 import openai
 openai.api_base = "https://caloi.top"
@@ -116,7 +118,7 @@ openai.api_key = "sk-******"
 # 安装部署
 提供两种服务部署方式,选择一种即可
 
-## 方式一:  pip
+## pip
 **安装**
 ```bash
 pip install openai-forward
@@ -136,7 +138,7 @@ OPENAI_API_KEY="sk-xxx" openai_forward run --port=9999 --workers=1
 注: 如果既存在默认api key又在请求头中传入了api key，则以请求头中的api key会覆盖默认api key.
 
 
-## 方式二: Docker(推荐) 
+## Docker(推荐) 
 ```bash
 docker run --name="openai-forward" -d -p 9999:8000 beidongjiedeguang/openai-forward:latest 
 ```

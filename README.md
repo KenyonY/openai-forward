@@ -41,7 +41,7 @@ Test access: https://caloi.top/v1/chat/completions is equivalent to https://api.
 - [Features](#Features) 
 - [Usage](#Usage) 
 - [Service Deployment](#Service-Deployment) 
-- [Service Usage](#Service Usage) 
+- [Service Usage](#Service-Usage) 
 
 # Features 
 - [x] Supports forwarding of all OpenAI interfaces 
@@ -50,6 +50,8 @@ Test access: https://caloi.top/v1/chat/completions is equivalent to https://api.
 - [x] Supports default API key 
 - [x] pip installation and deployment 
 - [x] Docker deployment 
+- [x] Support for multiple worker processes
+- [x] Support for specifying the forwarding routing prefix.
 - [ ] Chat content security: Chat content streaming filtering 
 
 # Usage 
@@ -82,7 +84,7 @@ docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-******" -e CODE="<your password
 
 ### Using in a module 
 
-**Used in JS/TS** 
+**JS/TS** 
 ```typescript 
 import { Configuration } from "openai"; 
 
@@ -92,7 +94,7 @@ const configuration = new Configuration({
 
 }); 
 ``` 
-**Used in Python** 
+**Python** 
 ```python 
 import openai 
 openai.api_base = "https://caloi.top" 
@@ -102,7 +104,7 @@ openai.api_key = "sk-******"
 # Service Deployment 
 Two service deployment methods are provided, choose one 
 
-## Method 1: pip 
+## Use `pip` 
 **Installation** 
 ```bash 
 pip install openai-forward 
@@ -121,7 +123,7 @@ OPENAI_API_KEY="sk-xxx" openai_forward run --port=9999 --workers=1
 ``` 
 Note: If both the default API key and the API key passed in the request header exist, the API key in the request header will override the default API key. 
 
-## Method 2: Docker (recommended) 
+## Use Docker (recommended) 
 ```bash 
 docker run --name="openai-forward" -d -p 9999:8000 beidongjiedeguang/openai-forward:latest 
 ``` 
