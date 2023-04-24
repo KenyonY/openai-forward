@@ -57,6 +57,26 @@ Test access: https://caloi.top/v1/chat/completions is equivalent to https://api.
 # Usage 
 > Here, the proxy address set up by the individual, https://caloi.top, is used as an example 
 
+### Using in a module
+
+**JS/TS**
+
+```diff
+  import { Configuration } from "openai";
+  
+  const configuration = new Configuration({
++ basePath: "https://caloi.top",
+  apiKey: "sk-******",
+  });
+```
+
+**Python**
+```diff
+  import openai
++ openai.api_base = "https://caloi.top"
+  openai.api_key = "sk-******"
+```
+
 ### Image Generation (DALL-E):
 ```bash 
 curl --location 'https://caloi.top/v1/images/generations' \ 
@@ -79,26 +99,6 @@ OPENAI_API_BASE_URL: https://caloi.top
 Replace `BASE_URL` in the docker startup command with the address of the proxy service we set up: 
 ```bash 
 docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-******" -e CODE="<your password>" -e BASE_URL="caloi.top" yidadaa/chatgpt-next-web 
-``` 
-
-
-### Using in a module 
-
-**JS/TS** 
-```typescript 
-import { Configuration } from "openai"; 
-
-const configuration = new Configuration({ 
-    basePath: "https://caloi.top", 
-    apiKey: "sk-******", 
-
-}); 
-``` 
-**Python** 
-```python 
-import openai 
-openai.api_base = "https://caloi.top" 
-openai.api_key = "sk-******" 
 ``` 
 
 # Service Deployment 

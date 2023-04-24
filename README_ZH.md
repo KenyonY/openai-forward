@@ -71,6 +71,24 @@
 # Usage
 > 这里以个人搭建好的代理地址 https://caloi.top 为例
 
+### 在模块中使用
+
+**JS/TS**
+```diff
+  import { Configuration } from "openai";
+  
+  const configuration = new Configuration({
++ basePath: "https://caloi.top",
+  apiKey: "sk-******",
+  });
+```
+**Python**
+```diff
+  import openai
++ openai.api_base = "https://caloi.top"
+  openai.api_key = "sk-******"
+```
+
 ### Image Generation (DALL-E):
 ```bash
 curl --location 'https://caloi.top/v1/images/generations' \
@@ -95,25 +113,6 @@ OPENAI_API_BASE_URL: https://caloi.top
 docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-xxx" -e CODE="<your password>" -e BASE_URL="caloi.top" yidadaa/chatgpt-next-web
 ```
 
-
-### 在模块中使用
-
-**JS/TS**
-```typescript
-import { Configuration } from "openai";
-
-const configuration = new Configuration({
-    basePath: "https://caloi.top",
-    apiKey: "sk-******",
-    
-});
-```
-**Python**  
-```python
-import openai
-openai.api_base = "https://caloi.top"
-openai.api_key = "sk-******"
-```
 
 # 安装部署
 提供两种服务部署方式,选择一种即可
