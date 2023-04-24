@@ -65,7 +65,7 @@ class ChatSaver:
             self._file_idx += 1
 
     def add_chat(self, chat_info: dict):
-        logger.info(chat_info)
+        logger.info(str(chat_info))
         self._chat_list.append(chat_info)
         self._cur_chat_file_size += 1
         self._save_chat()
