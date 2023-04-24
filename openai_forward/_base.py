@@ -11,6 +11,12 @@ class OpenaiBase:
     default_api_key = os.environ.get("OPENAI_API_KEY", "")
     base_url = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com")
     LOG_CHAT = os.environ.get("LOG_CHAT", "False").lower() == "true"
+    ROUTE_PREFIX = os.environ.get("ROUTE_PREFIX", "")
+    if ROUTE_PREFIX:
+        if ROUTE_PREFIX.endswith('/'):
+            ROUTE_PREFIX = ROUTE_PREFIX[:-1]
+        if not ROUTE_PREFIX.startswith('/'):
+            ROUTE_PREFIX = '/' + ROUTE_PREFIX
     stream_timeout = 20
     timeout = 30
     non_stream_timeout = 30
@@ -48,7 +54,9 @@ class OpenaiBase:
     @classmethod
     async def _reverse_proxy(cls, request: Request):
         client: httpx.AsyncClient = request.app.state.client
-        url = httpx.URL(path=request.url.path, query=request.url.query.encode('utf-8'))
+        url_path = request.url.path
+        url_path = url_path[len(cls.ROUTE_PREFIX):]
+        url = httpx.URL(path=url_path, query=request.url.query.encode('utf-8'))
         headers = dict(request.headers)
         auth = headers.pop("authorization", None)
         if auth and str(auth).startswith("Bearer sk-"):
