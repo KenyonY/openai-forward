@@ -74,6 +74,7 @@ class OpenaiBase:
                 input_info = await request.json()
                 msgs = input_info['messages']
                 cls.chatsaver.add_chat({
+                    "host": request.client.host,
                     "model": input_info['model'],
                     "messages": [{msg['role']: msg['content']} for msg in msgs],
                 })
