@@ -139,3 +139,29 @@ Replace with
 ```bash 
 http://{ip}:{port}/v1/chat/completions 
 ```
+
+# Configuration Options
+
+**`openai-forward run` Parameter Configuration Options**
+
+| Configuration Option | Description | Default Value |
+|-----------| --- | :---: |
+| --port    | Service port number | 8000 |
+| --workers | Number of worker processes | 1 |
+
+**Environment Variable Configuration Options**  
+refer to the `.env` file in the project root directory
+
+| Environment Variable  | Description | Default Value |
+|-----------------|------------|:------------------------:|
+| OPENAI_API_KEY  | Default API key | None |
+| OPENAI_BASE_URL | Forwarding base URL | `https://api.openai.com` |
+|LOG_CHAT| Whether to log chat content | `true` |
+|ROUTE_PREFIX| Route prefix | None |
+
+**TODO**
+
+| Environment Variable | Description | Default Value |
+|-----------------|------------|:------------------------:|
+| IP_WHITELIST    | IP whitelist | None |
+| IP_BLACKLIST    | IP blacklist | None |
