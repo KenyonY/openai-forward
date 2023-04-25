@@ -42,6 +42,7 @@ Test access: https://caloi.top/v1/chat/completions is equivalent to https://api.
 - [Usage](#Usage) 
 - [Service Deployment](#Service-Deployment) 
 - [Service Usage](#Service-Usage) 
+- [Configuration](#Configuration)
 
 # Features 
 - [x] Supports forwarding of all OpenAI interfaces 
@@ -140,7 +141,7 @@ Replace with
 http://{ip}:{port}/v1/chat/completions 
 ```
 
-# Configuration Options
+# Configuration
 
 **`openai-forward run` Parameter Configuration Options**
 
