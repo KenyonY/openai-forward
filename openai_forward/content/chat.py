@@ -20,7 +20,7 @@ def _parse_iter_line_content(line: str):
         return ""
 
 
-def log_chat_completions(bytes_: bytes):
+def parse_chat_completions(bytes_: bytes):
     txt_lines = decoder.decode(bytes_.decode('utf-8'))
     line0 = txt_lines[0]
     target_info = dict()
