@@ -2,8 +2,11 @@ name: Upload Python Package
 
 on:
   workflow_dispatch:
-  release:
-    types: [published]
+#  release:
+#    types: [published]
+  push:
+    tags:
+      - 'v*'
 
 
 jobs:

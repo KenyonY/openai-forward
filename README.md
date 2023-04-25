@@ -57,6 +57,26 @@ Test access: https://caloi.top/v1/chat/completions is equivalent to https://api.
 # Usage 
 > Here, the proxy address set up by the individual, https://caloi.top, is used as an example 
 
+### Using in a module
+
+**JS/TS**
+
+```diff
+  import { Configuration } from "openai";
+  
+  const configuration = new Configuration({
++ basePath: "https://caloi.top",
+  apiKey: "sk-******",
+  });
+```
+
+**Python**
+```diff
+  import openai
++ openai.api_base = "https://caloi.top"
+  openai.api_key = "sk-******"
+```
+
 ### Image Generation (DALL-E):
 ```bash 
 curl --location 'https://caloi.top/v1/images/generations' \ 
@@ -79,26 +99,6 @@ OPENAI_API_BASE_URL: https://caloi.top
 Replace `BASE_URL` in the docker startup command with the address of the proxy service we set up: 
 ```bash 
 docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-******" -e CODE="<your password>" -e BASE_URL="caloi.top" yidadaa/chatgpt-next-web 
-``` 
-
-
-### Using in a module 
-
-**JS/TS** 
-```typescript 
-import { Configuration } from "openai"; 
-
-const configuration = new Configuration({ 
-    basePath: "https://caloi.top", 
-    apiKey: "sk-******", 
-
-}); 
-``` 
-**Python** 
-```python 
-import openai 
-openai.api_base = "https://caloi.top" 
-openai.api_key = "sk-******" 
 ``` 
 
 # Service Deployment 
@@ -139,3 +139,29 @@ Replace with
 ```bash 
 http://{ip}:{port}/v1/chat/completions 
 ```
+
+# Configuration Options
+
+**`openai-forward run` Parameter Configuration Options**
+
+| Configuration Option | Description | Default Value |
+|-----------| --- | :---: |
+| --port    | Service port number | 8000 |
+| --workers | Number of worker processes | 1 |
+
+**Environment Variable Configuration Options**  
+refer to the `.env` file in the project root directory
+
+| Environment Variable  | Description | Default Value |
+|-----------------|------------|:------------------------:|
+| OPENAI_API_KEY  | Default API key | None |
+| OPENAI_BASE_URL | Forwarding base URL | `https://api.openai.com` |
+|LOG_CHAT| Whether to log chat content | `true` |
+|ROUTE_PREFIX| Route prefix | None |
+
+**TODO**
+
+| Environment Variable | Description | Default Value |
+|-----------------|------------|:------------------------:|
+| IP_WHITELIST    | IP whitelist | None |
+| IP_BLACKLIST    | IP blacklist | None |

@@ -65,14 +65,14 @@ class ChatSaver:
             self._file_idx += 1
 
     def add_chat(self, chat_info: dict):
-        logger.info(chat_info)
+        logger.info(str(chat_info))
         self._chat_list.append(chat_info)
         self._cur_chat_file_size += 1
         self._save_chat()
 
     def _save_chat(self):
         if len(self._chat_list) >= self._save_interval:
-            logger.warning(f"{len(self._chat_list)=}")
+            logger.info(f"save chat to {self.chat_file}")
             if self._cur_chat_file_size > self._max_chat_file_size:
                 logger.warning(f"{self._cur_chat_file_size} is too large, create new file")
                 self._file_idx += 1
