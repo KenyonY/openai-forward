@@ -4,7 +4,7 @@ from loguru import logger
 import httpx
 from starlette.background import BackgroundTask
 import os
-from .content.chat import log_chat_completions, ChatSaver
+from .content.chat import parse_chat_completions, ChatSaver
 
 
 class OpenaiBase:
@@ -37,7 +37,7 @@ class OpenaiBase:
 
     @classmethod
     def log_chat_completions(cls, bytes_: bytes):
-        target_info = log_chat_completions(bytes_)
+        target_info = parse_chat_completions(bytes_)
         cls.chatsaver.add_chat({target_info['role']: target_info['content']})
 
     @classmethod
