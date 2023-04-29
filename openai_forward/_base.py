@@ -50,7 +50,7 @@ class OpenaiBase:
         try:
             cls.log_chat_completions(bytes_)
         except Exception as e:
-            logger.warning(e)
+            logger.warning(f"small log chat error:\n{e=}")
 
     @classmethod
     async def _reverse_proxy(cls, request: Request):
@@ -80,7 +80,7 @@ class OpenaiBase:
                     "messages": [{msg['role']: msg['content']} for msg in msgs],
                 })
             except Exception as e:
-                logger.warning(e)
+                logger.warning(f"small log chat error:\n{request.client.host=}: {e}")
         req = client.build_request(
             request.method, url, headers=headers,
             content=request.stream(),
