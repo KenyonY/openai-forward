@@ -1,4 +1,4 @@
-from fastapi import Request
+from fastapi import Request, HTTPException, status
 from fastapi.responses import StreamingResponse
 from loguru import logger
 import httpx
@@ -8,10 +8,16 @@ from .content.chat import parse_chat_completions, ChatSaver
 
 
 class OpenaiBase:
-    default_api_key = os.environ.get("OPENAI_API_KEY", "")
-    base_url = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com")
+    default_api_key = os.environ.get("OPENAI_API_KEY", "").strip()
+    base_url = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com").strip()
     LOG_CHAT = os.environ.get("LOG_CHAT", "False").lower() == "true"
-    ROUTE_PREFIX = os.environ.get("ROUTE_PREFIX", "")
+    ROUTE_PREFIX = os.environ.get("ROUTE_PREFIX", "").strip()
+    IP_WHITELIST = os.environ.get("IP_WHITELIST", "").strip()
+    IP_BLACKLIST = os.environ.get("IP_BLACKLIST", "").strip()
+    if IP_BLACKLIST:
+        IP_BLACKLIST = [i.strip() for i in IP_BLACKLIST.split(' ')]
+    if IP_WHITELIST:
+        IP_WHITELIST = [i.strip() for i in IP_WHITELIST.split(' ')]
     if ROUTE_PREFIX:
         if ROUTE_PREFIX.endswith('/'):
             ROUTE_PREFIX = ROUTE_PREFIX[:-1]
@@ -20,20 +26,15 @@ class OpenaiBase:
     stream_timeout = 20
     timeout = 30
     non_stream_timeout = 30
-    allow_ips = []
     chatsaver = ChatSaver(save_interval=10)
 
-    def add_allowed_ip(self, ip: str):
-        if ip == "*":
-            ...
-        else:
-            self.allow_ips.append(ip)
-
     def validate_request_host(self, ip):
-        if ip == "*" or ip in self.allow_ips:
-            return True
-        else:
-            return False
+        if self.IP_WHITELIST and ip not in self.IP_WHITELIST:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail=f"Forbidden, ip={ip} not in whitelist!")
+        if self.IP_BLACKLIST and ip in self.IP_BLACKLIST:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail=f"Forbidden, ip={ip} in blacklist!")
 
     @classmethod
     def log_chat_completions(cls, bytes_: bytes):

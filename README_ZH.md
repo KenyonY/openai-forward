@@ -7,7 +7,7 @@
 </h1>
 <p align="center">
     <b> OpenAI API 接口转发服务 <br/>
-    The fastest way to deploy openai api forward proxy </b>
+    The fastest way to deploy openai api forwarding </b>
 </p>
 
 [//]: # (    <a href="https://github.com/beidongjiedeguang">)
@@ -77,7 +77,6 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 - [x] docker部署
 - [x] 支持多进程转发
 - [x] 支持指定转发路由前缀
-- [ ] 聊天内容安全：聊天内容流式过滤
 
 # Usage
 
@@ -205,10 +204,6 @@ http://{ip}:{port}/v1/chat/completions
 | OPENAI_BASE_URL | 转发base url | `https://api.openai.com` |
 |LOG_CHAT| 是否记录聊天内容   |          `true`          |
 |ROUTE_PREFIX| 路由前缀     |            无             |
-
-**TODO**
-
-| 环境变量        | 说明         |      默认值             |
-|-----------------|------------|:----------------------:|
 | IP_WHITELIST    | ip白名单      |           无            |
 | IP_BLACKLIST    | ip黑名单      |           无            | 
+
