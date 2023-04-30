@@ -114,7 +114,7 @@ docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-******" -e CODE="<your password
 
 Two service deployment methods are provided, choose one
 
-## Use `pip`
+## Use `pip`  (recommended)
 
 **Installation**
 
@@ -144,7 +144,7 @@ OPENAI_API_KEY="sk-xxx" openai_forward run --port=9999 --workers=1
 Note: If both the default API key and the API key passed in the request header exist, the API key in the request header
 will override the default API key.
 
-## Use Docker (recommended)
+## Use Docker
 
 ```bash 
 docker run --name="openai-forward" -d -p 9999:8000 beidongjiedeguang/openai-forward:latest 

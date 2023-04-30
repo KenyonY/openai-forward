@@ -137,7 +137,7 @@ docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-xxx" -e CODE="<your password>" 
 
 提供两种服务部署方式,选择一种即可
 
-## pip
+## pip (推荐)
 
 **安装**
 
@@ -163,7 +163,7 @@ OPENAI_API_KEY="sk-xxx" openai_forward run --port=9999 --workers=1
 
 注: 如果既存在默认api key又在请求头中传入了api key，则以请求头中的api key会覆盖默认api key.
 
-## Docker(推荐)
+## Docker
 
 ```bash
 docker run --name="openai-forward" -d -p 9999:8000 beidongjiedeguang/openai-forward:latest 
