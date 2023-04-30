@@ -16,8 +16,12 @@ class OpenaiBase:
     IP_BLACKLIST = os.environ.get("IP_BLACKLIST", "").strip()
     if IP_BLACKLIST:
         IP_BLACKLIST = [i.strip() for i in IP_BLACKLIST.split(' ')]
+    else:
+        IP_BLACKLIST = []
     if IP_WHITELIST:
         IP_WHITELIST = [i.strip() for i in IP_WHITELIST.split(' ')]
+    else:
+        IP_WHITELIST = []
     if _ROUTE_PREFIX:
         if _ROUTE_PREFIX.endswith('/'):
             _ROUTE_PREFIX = _ROUTE_PREFIX[:-1]
