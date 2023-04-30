@@ -3,7 +3,7 @@ from .schemas import OpenAIV1ChatCompletion
 from fastapi import Request, APIRouter
 
 openai = Openai()
-router = APIRouter(prefix=openai.ROUTE_PREFIX, tags=["v1"])
+router = APIRouter(prefix=openai._ROUTE_PREFIX, tags=["v1"])
 
 
 @router.post("/v1/chat/completions")
