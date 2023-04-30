@@ -1,4 +1,4 @@
-from fastapi import Request
+from fastapi import Request, HTTPException, status
 from fastapi.responses import StreamingResponse
 from loguru import logger
 import httpx
@@ -8,32 +8,37 @@ from .content.chat import parse_chat_completions, ChatSaver
 
 
 class OpenaiBase:
-    default_api_key = os.environ.get("OPENAI_API_KEY", "")
-    base_url = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com")
-    LOG_CHAT = os.environ.get("LOG_CHAT", "False").lower() == "true"
-    ROUTE_PREFIX = os.environ.get("ROUTE_PREFIX", "")
-    if ROUTE_PREFIX:
-        if ROUTE_PREFIX.endswith('/'):
-            ROUTE_PREFIX = ROUTE_PREFIX[:-1]
-        if not ROUTE_PREFIX.startswith('/'):
-            ROUTE_PREFIX = '/' + ROUTE_PREFIX
+    _default_api_key = os.environ.get("OPENAI_API_KEY", "").strip()
+    _base_url = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com").strip()
+    _LOG_CHAT = os.environ.get("LOG_CHAT", "False").lower() == "true"
+    _ROUTE_PREFIX = os.environ.get("ROUTE_PREFIX", "").strip()
+    IP_WHITELIST = os.environ.get("IP_WHITELIST", "").strip()
+    IP_BLACKLIST = os.environ.get("IP_BLACKLIST", "").strip()
+    if IP_BLACKLIST:
+        IP_BLACKLIST = [i.strip() for i in IP_BLACKLIST.split(' ')]
+    else:
+        IP_BLACKLIST = []
+    if IP_WHITELIST:
+        IP_WHITELIST = [i.strip() for i in IP_WHITELIST.split(' ')]
+    else:
+        IP_WHITELIST = []
+    if _ROUTE_PREFIX:
+        if _ROUTE_PREFIX.endswith('/'):
+            _ROUTE_PREFIX = _ROUTE_PREFIX[:-1]
+        if not _ROUTE_PREFIX.startswith('/'):
+            _ROUTE_PREFIX = '/' + _ROUTE_PREFIX
     stream_timeout = 20
     timeout = 30
     non_stream_timeout = 30
-    allow_ips = []
     chatsaver = ChatSaver(save_interval=10)
 
-    def add_allowed_ip(self, ip: str):
-        if ip == "*":
-            ...
-        else:
-            self.allow_ips.append(ip)
-
     def validate_request_host(self, ip):
-        if ip == "*" or ip in self.allow_ips:
-            return True
-        else:
-            return False
+        if self.IP_WHITELIST and ip not in self.IP_WHITELIST:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail=f"Forbidden, ip={ip} not in whitelist!")
+        if self.IP_BLACKLIST and ip in self.IP_BLACKLIST:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail=f"Forbidden, ip={ip} in blacklist!")
 
     @classmethod
     def log_chat_completions(cls, bytes_: bytes):
@@ -49,27 +54,27 @@ class OpenaiBase:
         try:
             cls.log_chat_completions(bytes_)
         except Exception as e:
-            logger.warning(e)
+            logger.warning(f"small log chat error:\n{e=}")
 
     @classmethod
     async def _reverse_proxy(cls, request: Request):
         client: httpx.AsyncClient = request.app.state.client
         url_path = request.url.path
-        url_path = url_path[len(cls.ROUTE_PREFIX):]
+        url_path = url_path[len(cls._ROUTE_PREFIX):]
         url = httpx.URL(path=url_path, query=request.url.query.encode('utf-8'))
         headers = dict(request.headers)
         auth = headers.pop("authorization", None)
         if auth and str(auth).startswith("Bearer sk-"):
             tmp_headers = {'Authorization': auth}
-        elif cls.default_api_key:
-            auth = "Bearer " + cls.default_api_key
+        elif cls._default_api_key:
+            auth = "Bearer " + cls._default_api_key
             tmp_headers = {'Authorization': auth}
         else:
             tmp_headers = {}
 
         headers.pop("host", None)
         headers.update(tmp_headers)
-        if cls.LOG_CHAT:
+        if cls._LOG_CHAT:
             try:
                 input_info = await request.json()
                 msgs = input_info['messages']
@@ -79,7 +84,7 @@ class OpenaiBase:
                     "messages": [{msg['role']: msg['content']} for msg in msgs],
                 })
             except Exception as e:
-                logger.warning(e)
+                logger.warning(f"small log chat error:\n{request.client.host=}: {e}")
         req = client.build_request(
             request.method, url, headers=headers,
             content=request.stream(),
@@ -87,7 +92,7 @@ class OpenaiBase:
         )
         r = await client.send(req, stream=True)
 
-        aiter_bytes = cls.aiter_bytes(r) if cls.LOG_CHAT else r.aiter_bytes()
+        aiter_bytes = cls.aiter_bytes(r) if cls._LOG_CHAT else r.aiter_bytes()
         return StreamingResponse(
             aiter_bytes,
             status_code=r.status_code,

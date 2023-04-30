@@ -1,4 +1,4 @@
-.PHONY: start build push run down test twine
+.PHONY: start build push run down test twine log
 
 image := "beidongjiedeguang/openai-forward:latest"
 container := "openai-forward-container"
@@ -13,6 +13,17 @@ start:
     --env "LOG_CHAT=true" \
     --env "OPENAI_API_KEY=" \
     $(image)
+
+start-win:
+	docker run -itd \
+    --name $(container) \
+    --env "LOG_CHAT=true" \
+    --env "OPENAI_API_KEY=" \
+    -p 8000:8000 \
+    $(image)
+
+exec:
+	docker exec -it $(container) bash
 
 log:
 	docker logs -f $(container)
