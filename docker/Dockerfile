@@ -1,4 +1,4 @@
-FROM continuumio/miniconda3:master-alpine
+FROM continuumio/miniconda3:master
 LABEL maintainer="kunyuan"
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
@@ -11,8 +11,8 @@ RUN pip install --no-cache-dir  \
     "python-dotenv" \
     "httpx"
 
-WORKDIR /home/openai-forward
 COPY . /home/openai-forward
+WORKDIR /home/openai-forward
 RUN pip install . --no-cache-dir && rm -rf /home/openai-forward
 EXPOSE 8000
 ENTRYPOINT ["openai_forward", "run"]
