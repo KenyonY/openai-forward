@@ -99,7 +99,7 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 
 ```diff
   import openai
-+ openai.api_base = "https://caloi.top"
++ openai.api_base = "https://caloi.top/v1"
   openai.api_key = "sk-******"
 ```
 
