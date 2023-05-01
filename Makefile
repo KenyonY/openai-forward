@@ -18,7 +18,7 @@ start-win:
 	docker run -itd \
     --name $(container) \
     --env "LOG_CHAT=true" \
-    --env "OPENAI_API_KEY=" \
+    --env OPENAI_API_KEY="" \
     -p 8000:8000 \
     $(image)
 

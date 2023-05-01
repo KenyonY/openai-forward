@@ -11,7 +11,7 @@ dist/
 __pycache__/
 *.py[cod]
 *$py.class
-
+Miniconda3-latest-Linux-x86_64.sh
 # C extensions
 *.so
 

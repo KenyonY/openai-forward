@@ -76,7 +76,7 @@ Test access: https://caloi.top/v1/chat/completions is equivalent to https://api.
 
 ```diff
   import openai
-+ openai.api_base = "https://caloi.top"
++ openai.api_base = "https://caloi.top/v1"
   openai.api_key = "sk-******"
 ```
 
