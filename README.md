@@ -47,8 +47,8 @@ Test access: https://caloi.top/v1/chat/completions is equivalent to https://api.
 # Features
 
 - [x] Supports forwarding of all OpenAI interfaces
-- [x] Supports request IP verification
-- [x] Supports streaming forwarding
+- [x] Request IP verification
+- [x] Streaming Response
 - [x] Supports default API key
 - [x] pip installation and deployment
 - [x] Docker deployment
@@ -61,16 +61,6 @@ Test access: https://caloi.top/v1/chat/completions is equivalent to https://api.
 
 ### Using in a module
 
-**JS/TS**
-
-```diff
-  import { Configuration } from "openai";
-  
-  const configuration = new Configuration({
-+ basePath: "https://caloi.top",
-  apiKey: "sk-******",
-  });
-```
 
 **Python**
 
@@ -79,6 +69,18 @@ Test access: https://caloi.top/v1/chat/completions is equivalent to https://api.
 + openai.api_base = "https://caloi.top/v1"
   openai.api_key = "sk-******"
 ```
+
+**JS/TS**
+
+```diff
+  import { Configuration } from "openai";
+  
+  const configuration = new Configuration({
++ basePath: "https://caloi.top/v1",
+  apiKey: "sk-******",
+  });
+```
+
 
 ### Image Generation (DALL-E):
 
@@ -155,8 +157,7 @@ Note: You can also pass in the environment variable OPENAI_API_KEY=sk-xxx as the
 
 # Service Usage
 
-Simply replace the OpenAI API address with the address of the service we set up, such as:
-
+Simply replace the OpenAI API address with the address of the service we set up, such as `Chat Completion`
 ```bash 
 https://api.openai.com/v1/chat/completions 
 ``` 

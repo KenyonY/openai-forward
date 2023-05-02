@@ -70,13 +70,13 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 # Features
 
 - [x] 支持转发OpenAI所有接口
-- [x] 支持请求IP验证
-- [x] 支持流式转发
-- [x] 支持默认api key
+- [x] 支持流式响应
+- [x] 支持默认api key, 多api key 轮询
 - [x] pip安装部署
 - [x] docker部署
 - [x] 支持多进程转发
 - [x] 支持指定转发路由前缀
+- [x] 支持请求IP验证
 
 # Usage
 
@@ -90,7 +90,7 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
   import { Configuration } from "openai";
   
   const configuration = new Configuration({
-+ basePath: "https://caloi.top",
++ basePath: "https://caloi.top/v1",
   apiKey: "sk-******",
   });
 ```
