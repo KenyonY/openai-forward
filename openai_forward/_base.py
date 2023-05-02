@@ -4,32 +4,26 @@ from loguru import logger
 import httpx
 from starlette.background import BackgroundTask
 import os
+from itertools import cycle
 from .content.chat import parse_chat_completions, ChatSaver
+from .config import env2list
 
 
 class OpenaiBase:
-    _default_api_key = os.environ.get("OPENAI_API_KEY", "").strip()
     _base_url = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com").strip()
     _LOG_CHAT = os.environ.get("LOG_CHAT", "False").lower() == "true"
     _ROUTE_PREFIX = os.environ.get("ROUTE_PREFIX", "").strip()
-    IP_WHITELIST = os.environ.get("IP_WHITELIST", "").strip()
-    IP_BLACKLIST = os.environ.get("IP_BLACKLIST", "").strip()
-    if IP_BLACKLIST:
-        IP_BLACKLIST = [i.strip() for i in IP_BLACKLIST.split(' ')]
-    else:
-        IP_BLACKLIST = []
-    if IP_WHITELIST:
-        IP_WHITELIST = [i.strip() for i in IP_WHITELIST.split(' ')]
-    else:
-        IP_WHITELIST = []
+    _default_api_key_list = env2list("OPENAI_API_KEY", sep=" ")
+    _cycle_api_key = cycle(_default_api_key_list)
+    IP_WHITELIST = env2list("IP_WHITELIST", sep=" ")
+    IP_BLACKLIST = env2list("IP_BLACKLIST", sep=" ")
+
     if _ROUTE_PREFIX:
         if _ROUTE_PREFIX.endswith('/'):
             _ROUTE_PREFIX = _ROUTE_PREFIX[:-1]
         if not _ROUTE_PREFIX.startswith('/'):
             _ROUTE_PREFIX = '/' + _ROUTE_PREFIX
-    stream_timeout = 20
     timeout = 30
-    non_stream_timeout = 30
     chatsaver = ChatSaver(save_interval=10)
 
     def validate_request_host(self, ip):
@@ -66,8 +60,8 @@ class OpenaiBase:
         auth = headers.pop("authorization", None)
         if auth and str(auth).startswith("Bearer sk-"):
             tmp_headers = {'Authorization': auth}
-        elif cls._default_api_key:
-            auth = "Bearer " + cls._default_api_key
+        elif cls._default_api_key_list:
+            auth = "Bearer " + next(cls._cycle_api_key)
             tmp_headers = {'Authorization': auth}
         else:
             tmp_headers = {}

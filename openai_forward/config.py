@@ -4,6 +4,7 @@ from sparrow import relp
 from typing import Union, List, Dict
 import sys
 import logging
+import os
 
 
 class InterceptHandler(logging.Handler):
@@ -75,3 +76,13 @@ def json_dump(data: Union[List, Dict], filepath: str, rel=False, indent_2=False,
     abs_path = relp(filepath, parents=1) if rel else filepath
     with open(abs_path, mode=mode) as f:
         f.write(orjson.dumps(data, option=orjson_option))
+
+
+def str2list(s: str, sep=' '):
+    if s:
+        return [i.strip() for i in s.split(sep) if i.strip()]
+    else:
+        return []
+
+def env2list(env_name: str, sep=" "):
+    return str2list(os.environ.get(env_name, "").strip(), sep=sep)
