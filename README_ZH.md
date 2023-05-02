@@ -71,7 +71,7 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 
 - [x] 支持转发OpenAI所有接口
 - [x] 支持流式响应
-- [x] 支持默认api key, 多api key 轮询
+- [x] 支持默认api key(多api key 循环调用)
 - [x] pip安装部署
 - [x] docker部署
 - [x] 支持多进程转发
@@ -198,12 +198,12 @@ http://{ip}:{port}/v1/chat/completions
 **环境变量配置项**  
 参考项目根目录下`.env`文件
 
-| 环境变量      | 说明         |           默认值            |
-|-----------------|------------|:------------------------:|
-| OPENAI_API_KEY  | 默认api key  |            无             |
-| OPENAI_BASE_URL | 转发base url | `https://api.openai.com` |
-|LOG_CHAT| 是否记录聊天内容   |          `true`          |
-|ROUTE_PREFIX| 路由前缀     |            无             |
-| IP_WHITELIST    | ip白名单      |           无            |
-| IP_BLACKLIST    | ip黑名单      |           无            | 
+| 环境变量      | 说明                             |           默认值            |
+|-----------------|--------------------------------|:------------------------:|
+| OPENAI_API_KEY  | 默认api key，支持多个默认api key, 以空格分割 |            无             |
+| OPENAI_BASE_URL | 转发base url                     | `https://api.openai.com` |
+|LOG_CHAT| 是否记录聊天内容                       |          `true`          |
+|ROUTE_PREFIX| 路由前缀                           |            无             |
+| IP_WHITELIST    | ip白名单, 空格分开                    |           无            |
+| IP_BLACKLIST    | ip黑名单, 空格分开                    |           无            | 
 

@@ -49,11 +49,11 @@ Test access: https://caloi.top/v1/chat/completions is equivalent to https://api.
 - [x] Supports forwarding of all OpenAI interfaces
 - [x] Request IP verification
 - [x] Streaming Response
-- [x] Supports default API key
+- [x] Supports default API key (cyclic call with multiple API keys)
 - [x] pip installation and deployment
 - [x] Docker deployment
 - [x] Support for multiple worker processes
-- [x] Support for specifying the forwarding routing prefix.
+- [x] Support for specifying the forwarding routing prefix
 
 # Usage
 
@@ -182,9 +182,9 @@ refer to the `.env` file in the project root directory
 
 | Environment Variable  | Description | Default Value |
 |-----------------|------------|:------------------------:|
-| OPENAI_API_KEY  | Default API key | None |
+| OPENAI_API_KEY  | Default API key, supports multiple default API keys separated by space. | None |
 | OPENAI_BASE_URL | Forwarding base URL | `https://api.openai.com` |
 |LOG_CHAT| Whether to log chat content | `true` |
 |ROUTE_PREFIX| Route prefix | None |
-| IP_WHITELIST    | IP whitelist | None |
-| IP_BLACKLIST    | IP blacklist | None |
+| IP_WHITELIST    | IP whitelist, separated by space. | None |
+| IP_BLACKLIST    | IP blacklist, separated by space. | None |
