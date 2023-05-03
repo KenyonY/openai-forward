@@ -5,6 +5,7 @@ from httpx._decoders import LineDecoder
 from pathlib import Path
 from sparrow import relp
 from typing import List, Dict
+import os
 
 decoder = LineDecoder()
 
@@ -48,17 +49,18 @@ def parse_chat_completions(bytes_: bytes):
 
 
 class ChatSaver:
-    def __init__(self, max_chat_size=2000, save_interval=2):
+    def __init__(self, max_chat_size=2000, save_interval=2, _dir='./Log'):
         self._chat_list = []
         self._file_idx = 0
         self._save_interval = save_interval
         self._max_chat_file_size = max_chat_size
         self._cur_chat_file_size = 0
+        self._log_dir = _dir
         self._init_chat_file()
 
     @property
     def chat_file(self):
-        return f"chat_{self._file_idx}.txt"
+        return os.path.join(self._log_dir, f"chat_{self._file_idx}.txt")
 
     def _init_chat_file(self):
         while Path(self.chat_file).exists():

@@ -1,9 +1,13 @@
 services:
   openai_forward:
     image: beidongjiedeguang/openai-forward:latest
-    container_name: openai_forward_container
+    container_name: openai-forward-container
+    env_file:
+      .env
     ports:
       - "8000:8000"
+    volumes:
+      - ./Log:/home/openai-forward/Log
     command:
       - --port=8000
       - --workers=1
