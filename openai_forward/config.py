@@ -31,7 +31,7 @@ def setting_log(log_name, multi_process=True):
     logger_config = {
         "handlers": [
             {"sink": sys.stdout},
-            {"sink": relp(f"../Log/{log_name}"), "enqueue": multi_process, "rotation": "100 MB"},
+            {"sink": f"./Log/{log_name}", "enqueue": multi_process, "rotation": "100 MB"},
         ],
     }
     logger.configure(**logger_config)

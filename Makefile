@@ -10,16 +10,16 @@ start:
     --env "LETSENCRYPT_HOST=caloi.top,www.caloi.top" \
     --env "VIRTUAL_HOST=caloi.top,www.caloi.top" \
     --env "VIRTUAL_PORT=8000" \
-    --env "LOG_CHAT=true" \
-    --env "OPENAI_API_KEY=" \
+    --env-file .env \
+    -v "Log:/home/openai-forward/Log" \
     $(image)
 
 start-win:
 	docker run -itd \
     --name $(container) \
-    --env "LOG_CHAT=true" \
-    --env OPENAI_API_KEY="" \
+    --env-file .env \
     -p 8000:8000 \
+    -v "Log:/home/openai-forward/Log" \
     $(image)
 
 exec:
@@ -32,7 +32,7 @@ rm:
 	docker rm -f $(container)
 
 up:
-	@docker-compose  -f $(compose_path) up -d
+	@docker-compose  -f $(compose_path) up
 
 down:
 	@docker-compose  -f $(compose_path) down
