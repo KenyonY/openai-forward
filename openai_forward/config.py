@@ -5,6 +5,8 @@ from typing import Union, List, Dict
 import sys
 import logging
 import os
+import time
+import pytz
 
 
 class InterceptHandler(logging.Handler):
@@ -23,7 +25,19 @@ class InterceptHandler(logging.Handler):
         logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
 
 
-def setting_log(log_name, multi_process=True):
+def setting_log(log_name, multi_process=True, time_zone='Asia/Shanghai'):
+    # TODO 修复时区配置
+    if time_zone == "Asia/Shanghai":
+        import datetime
+        tz = pytz.timezone(time_zone)
+        loc_dt = tz.localize(datetime.datetime.now())
+        offset = loc_dt.utcoffset()
+        # tzname, offset = loc_dt.strftime("%Z::%z").split("::")
+        # offset = loc_dt.strftime("%z")
+        os.environ['TZ'] = f"UTC-{offset}"
+        print(os.environ['TZ'])
+        time.tzset()
+
     logging.root.handlers = [InterceptHandler()]
     for name in logging.root.manager.loggerDict.keys():
         logging.getLogger(name).handlers = []
@@ -83,6 +97,7 @@ def str2list(s: str, sep=' '):
         return [i.strip() for i in s.split(sep) if i.strip()]
     else:
         return []
+
 
 def env2list(env_name: str, sep=" "):
     return str2list(os.environ.get(env_name, "").strip(), sep=sep)

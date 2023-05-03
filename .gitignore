@@ -8,6 +8,7 @@ chat_*.yaml
 
 .env.example
 Log/
+Log-caloi-top/
 dist/
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -11,15 +11,15 @@ start:
     --env "VIRTUAL_HOST=caloi.top,www.caloi.top" \
     --env "VIRTUAL_PORT=8000" \
     --env-file .env \
-    -v "Log:/home/openai-forward/Log" \
+    -v $(shell pwd)/Log-caloi-top:/home/openai-forward/Log \
     $(image)
 
-start-win:
+start-dev:
 	docker run -itd \
     --name $(container) \
     --env-file .env \
     -p 8000:8000 \
-    -v "Log:/home/openai-forward/Log" \
+    -v $(shell pwd)/Log:/home/openai-forward/Log \
     $(image)
 
 exec:
