@@ -19,12 +19,13 @@ classifiers = [
 
 dependencies = [
     "loguru",
-    "sparrow-python>=0.1.1",
+    "sparrow-python>=0.1.2",
     "fastapi",
     "uvicorn",
     "orjson",
     "python-dotenv",
     "httpx",
+    "pytz"
 ]
 
 dynamic = ["version"]

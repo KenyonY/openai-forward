@@ -8,6 +8,7 @@ services:
       - "8000:8000"
     volumes:
       - ./Log:/home/openai-forward/Log
+      - ./openai_forward:/opt/conda/lib/python3.10/site-packages/openai_forward
     command:
       - --port=8000
       - --workers=1
