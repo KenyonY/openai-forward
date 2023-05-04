@@ -57,7 +57,8 @@
 
 本项目用于解决一些地区无法直接访问OpenAI的问题，将该服务部署在可以正常访问openai
 api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代理服务  
-测试访问：https://caloi.top/v1/chat/completions 将等价于 https://api.openai.com/v1/chat/completions
+测试访问：https://caloi.top/openai/v1/chat/completions 将等价于 https://api.openai.com/v1/chat/completions  
+或者说 https://caloi.top/openai 等价于 https://api.openai.com 
 
 # Table of Contents
 
@@ -80,7 +81,7 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 
 # Usage
 
-> 这里以个人使用该项目搭建好的代理服务 https://caloi.top 为例
+> 这里以个人使用该项目搭建好的代理服务 https://caloi.top/openai 为例
 
 ### 在模块中使用
 
@@ -90,7 +91,7 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
   import { Configuration } from "openai";
   
   const configuration = new Configuration({
-+ basePath: "https://caloi.top/v1",
++ basePath: "https://caloi.top/openai/v1",
   apiKey: "sk-******",
   });
 ```
@@ -99,14 +100,14 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 
 ```diff
   import openai
-+ openai.api_base = "https://caloi.top/v1"
++ openai.api_base = "https://caloi.top/openai/v1"
   openai.api_key = "sk-******"
 ```
 
 ### Image Generation (DALL-E):
 
 ```bash
-curl --location 'https://caloi.top/v1/images/generations' \
+curl --location 'https://caloi.top/openai/v1/images/generations' \
 --header 'Authorization: Bearer sk-******' \
 --header 'Content-Type: application/json' \
 --data '{
@@ -122,7 +123,7 @@ curl --location 'https://caloi.top/v1/images/generations' \
 为我们搭建的代理服务地址:
 
 ```bash
-OPENAI_API_BASE_URL: https://caloi.top 
+OPENAI_API_BASE_URL: https://caloi.top/openai 
 ```
 
 ### [ChatGPT-Next-Web](https://github.com/Yidadaa/ChatGPT-Next-Web)
@@ -130,7 +131,7 @@ OPENAI_API_BASE_URL: https://caloi.top
 替换docker启动命令中的 `BASE_URL`为我们搭建的代理服务地址
 
 ```bash
-docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-xxx" -e CODE="<your password>" -e BASE_URL="caloi.top" yidadaa/chatgpt-next-web
+docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-xxx" -e CODE="<your password>" -e BASE_URL="caloi.top/openai" yidadaa/chatgpt-next-web
 ```
 
 # 安装部署

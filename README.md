@@ -34,13 +34,14 @@
 </p>
 This project is designed to solve the problem of some regions being unable to directly access OpenAI. The service is deployed on a server that can access the OpenAI API, and OpenAI requests are forwarded through the service, i.e. a reverse proxy service is set up. 
 
-Test access: https://caloi.top/v1/chat/completions is equivalent to https://api.openai.com/v1/chat/completions
+Test access: https://caloi.top/openai/v1/chat/completions is equivalent to https://api.openai.com/v1/chat/completions  
+Or, to put it another way, https://caloi.top/openai is equivalent to https://api.openai.com.
 
 # Table of Contents
 
 - [Features](#Features)
 - [Usage](#Usage)
-- [Service Deployment](#Service-Deployment)
+- [Deploy](#Deploy)
 - [Service Usage](#Service-Usage)
 - [Configuration](#Configuration)
 
@@ -57,7 +58,7 @@ Test access: https://caloi.top/v1/chat/completions is equivalent to https://api.
 
 # Usage
 
-> Here, the proxy address set up by the individual, https://caloi.top, is used as an example
+> Here, the proxy address set up by the individual, https://caloi.top/openai, is used as an example
 
 ### Using in a module
 
@@ -66,7 +67,7 @@ Test access: https://caloi.top/v1/chat/completions is equivalent to https://api.
 
 ```diff
   import openai
-+ openai.api_base = "https://caloi.top/v1"
++ openai.api_base = "https://caloi.top/openai/v1"
   openai.api_key = "sk-******"
 ```
 
@@ -76,7 +77,7 @@ Test access: https://caloi.top/v1/chat/completions is equivalent to https://api.
   import { Configuration } from "openai";
   
   const configuration = new Configuration({
-+ basePath: "https://caloi.top/v1",
++ basePath: "https://caloi.top/openai/v1",
   apiKey: "sk-******",
   });
 ```
@@ -85,7 +86,7 @@ Test access: https://caloi.top/v1/chat/completions is equivalent to https://api.
 ### Image Generation (DALL-E):
 
 ```bash 
-curl --location 'https://caloi.top/v1/images/generations' \ 
+curl --location 'https://caloi.top/openai/v1/images/generations' \ 
 --header 'Authorization: Bearer sk-******' \ 
 --header 'Content-Type: application/json' \ 
 --data '{ 
@@ -101,7 +102,7 @@ Modify the `OPENAI_API_BASE_URL` in [Docker Compose](https://github.com/Chanzhao
 address of the proxy service we set up:
 
 ```bash 
-OPENAI_API_BASE_URL: https://caloi.top 
+OPENAI_API_BASE_URL: https://caloi.top/openai 
 ``` 
 
 ### [ChatGPT-Next-Web](https://github.com/Yidadaa/ChatGPT-Next-Web)
@@ -109,12 +110,12 @@ OPENAI_API_BASE_URL: https://caloi.top
 Replace `BASE_URL` in the docker startup command with the address of the proxy service we set up:
 
 ```bash 
-docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-******" -e CODE="<your password>" -e BASE_URL="caloi.top" yidadaa/chatgpt-next-web 
+docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-******" -e CODE="<your password>" -e BASE_URL="caloi.top/openai" yidadaa/chatgpt-next-web 
 ``` 
 
-# Service Deployment
+# Deploy
 
-Two service deployment methods are provided, choose one
+Two deployment methods are provided, just choose one.
 
 ## Use `pip`  (recommended)
 
