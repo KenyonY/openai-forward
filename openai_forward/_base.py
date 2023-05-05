@@ -88,7 +88,8 @@ class OpenaiBase:
         try:
             r = await client.send(req, stream=True)
         except httpx.ConnectError as e:
-            error_info = f"{type(e)}: {str(e)}"
+            error_info = f"{type(e)}: {str(e)} | " \
+                         f"Please check if host={request.client.host} can access {cls._base_url} successfully."
             logger.error(error_info)
             raise HTTPException(status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail=error_info)
         except Exception as e:
