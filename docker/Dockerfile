@@ -21,6 +21,6 @@ RUN pip install --no-cache-dir  \
 
 COPY . /home/openai-forward
 WORKDIR /home/openai-forward
-RUN pip install . --no-cache-dir && rm -rf /home/openai-forward/*
+RUN pip install -e . --no-cache-dir
 EXPOSE 8000
 ENTRYPOINT ["openai_forward", "run"]

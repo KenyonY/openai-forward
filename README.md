@@ -113,6 +113,7 @@ Replace `BASE_URL` in the docker startup command with the address of the proxy s
 docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-******" -e CODE="<your password>" -e BASE_URL="caloi.top/openai" yidadaa/chatgpt-next-web 
 ``` 
 
+
 # Deploy
 
 Two deployment methods are provided, just choose one.
