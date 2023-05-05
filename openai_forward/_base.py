@@ -48,7 +48,7 @@ class OpenaiBase:
         try:
             cls.log_chat_completions(bytes_)
         except Exception as e:
-            logger.warning(f"small log chat error:\n{e=}")
+            logger.debug(f"log chat (not) error:\n{e=}")
 
     @classmethod
     async def _reverse_proxy(cls, request: Request):
@@ -78,13 +78,24 @@ class OpenaiBase:
                     "messages": [{msg['role']: msg['content']} for msg in msgs],
                 })
             except Exception as e:
-                logger.warning(f"small log chat error:\n{request.client.host=}: {e}")
+                logger.debug(f"log chat (not) error:\n{request.client.host=}: {e}")
         req = client.build_request(
             request.method, url, headers=headers,
             content=request.stream(),
             timeout=cls.timeout,
         )
-        r = await client.send(req, stream=True)
+
+        try:
+            r = await client.send(req, stream=True)
+        except httpx.ConnectError as e:
+            error_info = f"{type(e)}: {e} | " \
+                         f"Please check if host={request.client.host} can access [{cls._base_url}] successfully."
+            logger.error(error_info)
+            raise HTTPException(status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail=error_info)
+        except Exception as e:
+            error_info = f"{type(e)}: {str(e)}"
+            logger.error(error_info)
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_info)
 
         aiter_bytes = cls.aiter_bytes(r) if cls._LOG_CHAT else r.aiter_bytes()
         return StreamingResponse(
