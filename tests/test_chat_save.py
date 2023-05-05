@@ -1,18 +1,15 @@
 from openai_forward.content.chat import ChatSaver
 import pytest
-import os
 from utils import rm
 
 @pytest.fixture(scope="module")
 def saver() -> ChatSaver:
-    os.system("rm -rf chat_*.txt")
     return ChatSaver(save_interval=1, max_chat_size=2)
 
 class TestChatSaver:
 
     @classmethod
     def teardown_class(cls):
-        rm("Log/*.log")
         rm("Log/chat*.txt")
 
     def test_init(self, saver: ChatSaver):
