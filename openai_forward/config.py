@@ -25,8 +25,10 @@ class InterceptHandler(logging.Handler):
         logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
 
 
-def setting_log(log_name, multi_process=True, time_zone='Asia/Shanghai'):
+def setting_log(log_name, multi_process=True):
     # TODO 修复时区配置
+    time_zone = os.environ.get("TZ")
+    print(f"{time_zone=}")
     if time_zone == "Asia/Shanghai":
         import datetime
         tz = pytz.timezone(time_zone)
