@@ -36,8 +36,9 @@ def setting_log(log_name, multi_process=True, time_zone='Asia/Shanghai'):
         # offset = loc_dt.strftime("%z")
         # os.environ['TZ'] = f"UTC-{offset}"
         os.environ['TZ'] = f"UTC-8"
-        print(os.environ['TZ'])
-        time.tzset()
+        if hasattr(time, 'tzset'):
+            print(os.environ['TZ'])
+            time.tzset()
 
     logging.root.handlers = [InterceptHandler()]
     for name in logging.root.manager.loggerDict.keys():
