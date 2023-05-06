@@ -30,6 +30,9 @@
     <a href="https://pypi.org/project/openai_forward/">
         <img alt="pypi downloads" src="https://img.shields.io/pypi/dm/openai_forward">
     </a>
+    <a href="https://codecov.io/gh/beidongjiedeguang/openai-forward">
+        <img alt="codecov" src="https://codecov.io/gh/beidongjiedeguang/openai-forward/branch/dev/graph/badge.svg">
+    </a>
 
 </p>
 This project is designed to solve the problem of some regions being unable to directly access OpenAI. The service is deployed on a server that can access the OpenAI API, and OpenAI requests are forwarded through the service, i.e. a reverse proxy service is set up. 
@@ -44,6 +47,7 @@ Or, to put it another way, https://caloi.top/openai is equivalent to https://api
 - [Deploy](#Deploy)
 - [Service Usage](#Service-Usage)
 - [Configuration](#Configuration)
+- [Chat Log](#Chat-log)
 
 # Features
 
@@ -190,3 +194,17 @@ refer to the `.env` file in the project root directory
 |ROUTE_PREFIX| Route prefix | None |
 | IP_WHITELIST    | IP whitelist, separated by space. | None |
 | IP_BLACKLIST    | IP blacklist, separated by space. | None |
+
+# Chat Log
+The saved path is in the `Log/` directory under the current directory.  
+The chat log starts with `chat_` and is written to the file every 5 rounds by default.  
+The recording format is as follows:
+```text
+{'host': xxx, 'model': xxx, 'message': [{'user': xxx}, {'assistant': xxx}]}
+{'assistant': xxx}
+
+{'host': ...}
+{'assistant': ...}
+
+...
+```

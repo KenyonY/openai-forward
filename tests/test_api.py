@@ -11,7 +11,8 @@ def openai() -> OpenaiBase:
 
 class TestOpenai:
 
-    def teardown_method(self):
+    @staticmethod
+    def teardown_method():
         OpenaiBase.IP_BLACKLIST = []
         OpenaiBase.IP_WHITELIST = []
         OpenaiBase._default_api_key_list = []
