@@ -27,17 +27,8 @@ class InterceptHandler(logging.Handler):
 
 def setting_log(log_name, multi_process=True):
     # TODO 修复时区配置
-    time_zone = os.environ.get("TZ")
-    print(f"{time_zone=}")
-    if time_zone == "Asia/Shanghai":
-        import datetime
-        tz = pytz.timezone(time_zone)
-        loc_dt = tz.localize(datetime.datetime.now())
-        offset = loc_dt.utcoffset()
-        # tzname, offset = loc_dt.strftime("%Z::%z").split("::")
-        # offset = loc_dt.strftime("%z")
-        # os.environ['TZ'] = f"UTC-{offset}"
-        os.environ['TZ'] = f"UTC-8"
+    if os.environ.get("TZ") == "Asia/Shanghai":
+        os.environ['TZ'] = "UTC-8"
         if hasattr(time, 'tzset'):
             print(os.environ['TZ'])
             time.tzset()

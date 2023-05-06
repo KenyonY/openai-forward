@@ -84,6 +84,7 @@ class OpenaiBase:
             content=request.stream(),
             timeout=cls.timeout,
         )
+        logger.warning(f"{url=}")
 
         try:
             r = await client.send(req, stream=True)

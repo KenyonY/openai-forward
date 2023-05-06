@@ -5,7 +5,40 @@ import os
 
 class Cli:
     @staticmethod
-    def run(port=8000, workers=1):
+    def run(port=8000,
+            workers=1,
+            api_key=None,
+            base_url='https://api.openai.com',
+            log_chat='true',
+            route_prefix=None,
+            ip_whitelist=None,
+            ip_blacklist=None,
+            ):
+        """ Run forwarding serve.
+
+        Parameters
+        ----------
+
+        port: int, default 8000
+        workers: int, default 1
+        api_key: str, default None
+        base_url: str, default 'https://api.openai.com'
+        log_chat: str, default 'true'
+        route_prefix: str, default None
+        ip_whitelist: str, default None
+        ip_blacklist: str, default None
+        """
+        os.environ['OPENAI_BASE_URL'] = base_url
+        os.environ['LOG_CHAT'] = log_chat
+        if api_key:
+            os.environ['OPENAI_API_KEY'] = api_key
+        if route_prefix:
+            os.environ['ROUTE_PREFIX'] = route_prefix
+        if ip_whitelist:
+            os.environ['IP_WHITELIST'] = ip_whitelist
+        if ip_blacklist:
+            os.environ['IP_BLACKLIST'] = ip_blacklist
+
         uvicorn.run(
             app="openai_forward.app:app",
             host="0.0.0.0",
