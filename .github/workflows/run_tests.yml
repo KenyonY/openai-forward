@@ -6,7 +6,6 @@ on:
       - main
   pull_request:
     branches:
-      - dev
       - main
 
 jobs:

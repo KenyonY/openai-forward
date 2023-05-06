@@ -2,9 +2,11 @@ from openai_forward.content.chat import ChatSaver
 import pytest
 from utils import rm
 
+
 @pytest.fixture(scope="module")
 def saver() -> ChatSaver:
     return ChatSaver(save_interval=1, max_chat_size=2)
+
 
 class TestChatSaver:
 
@@ -30,4 +32,3 @@ class TestChatSaver:
     def test_init_file(self):
         saver = ChatSaver()
         assert saver.chat_file.endswith("chat_3.txt")
-
