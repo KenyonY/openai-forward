@@ -67,11 +67,13 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 - [安装部署](#安装部署)
 - [服务调用](#服务调用)
 - [配置选项](#配置选项)
+- [聊天日志](#聊天日志)
 
 # Features
 
 - [x] 支持转发OpenAI所有接口
 - [x] 支持流式响应
+- [x] 实时记录聊天记录(包括流式响应的聊天内容)
 - [x] 支持默认api key(多api key 循环调用)
 - [x] pip安装部署
 - [x] docker部署
@@ -199,12 +201,26 @@ http://{ip}:{port}/v1/chat/completions
 **环境变量配置项**  
 参考项目根目录下`.env`文件
 
-| 环境变量      | 说明                             |           默认值            |
+| 环境变量            | 说明                             |           默认值            |
 |-----------------|--------------------------------|:------------------------:|
 | OPENAI_API_KEY  | 默认api key，支持多个默认api key, 以空格分割 |            无             |
 | OPENAI_BASE_URL | 转发base url                     | `https://api.openai.com` |
-|LOG_CHAT| 是否记录聊天内容                       |          `true`          |
-|ROUTE_PREFIX| 路由前缀                           |            无             |
+| LOG_CHAT        | 是否记录聊天内容                       |          `true`          |
+| ROUTE_PREFIX    | 路由前缀                           |            无             |
 | IP_WHITELIST    | ip白名单, 空格分开                    |           无            |
 | IP_BLACKLIST    | ip黑名单, 空格分开                    |           无            | 
 
+
+# 聊天日志
+保存路径在当前目录下的`Log/`路径中。  
+聊天日志以 `chat_`开头, 默认每5轮对话写入一次文件    
+记录格式为
+```text
+{'host': xxx, 'model': xxx, 'message': [{'user': xxx}, {'assistant': xxx}]}
+{'assistant': xxx}
+
+{'host': ...}
+{'assistant': ...}
+
+...
+```

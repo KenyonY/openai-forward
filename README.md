@@ -44,6 +44,7 @@ Or, to put it another way, https://caloi.top/openai is equivalent to https://api
 - [Deploy](#Deploy)
 - [Service Usage](#Service-Usage)
 - [Configuration](#Configuration)
+- [Chat Log](#Chat-log)
 
 # Features
 
@@ -190,3 +191,17 @@ refer to the `.env` file in the project root directory
 |ROUTE_PREFIX| Route prefix | None |
 | IP_WHITELIST    | IP whitelist, separated by space. | None |
 | IP_BLACKLIST    | IP blacklist, separated by space. | None |
+
+# Chat Log
+The saved path is in the `Log/` directory under the current directory.  
+The chat log starts with `chat_` and is written to the file every 5 rounds by default.  
+The recording format is as follows:
+```text
+{'host': xxx, 'model': xxx, 'message': [{'user': xxx}, {'assistant': xxx}]}
+{'assistant': xxx}
+
+{'host': ...}
+{'assistant': ...}
+
+...
+```
