@@ -24,11 +24,6 @@
 
 [//]: # ([![Downloads]&#40;https://static.pepy.tech/badge/openai-forward/month&#41;]&#40;https://pepy.tech/project/openai-forward&#41;)
 
-[//]: # (    <a href="https://codecov.io/gh/beidongjiedeguang/openai-forward">)
-
-[//]: # (        <img alt="codecov" src="https://codecov.io/gh/beidongjiedeguang/openai-forward/branch/dev/graph/badge.svg">)
-
-[//]: # (    </a>)
 
 <p align="center">
     <a href="https://pypi.org/project/openai-forward/"><img src="https://img.shields.io/pypi/v/openai-forward?color=brightgreen" alt="PyPI version" ></a>
@@ -50,7 +45,9 @@
     <a href="https://pypi.org/project/openai_forward/">
         <img alt="pypi downloads" src="https://img.shields.io/pypi/dm/openai_forward">
     </a>
-
+    <a href="https://codecov.io/gh/beidongjiedeguang/openai-forward">
+        <img alt="codecov" src="https://codecov.io/gh/beidongjiedeguang/openai-forward/branch/dev/graph/badge.svg">
+    </a>
 </p>
 
 
