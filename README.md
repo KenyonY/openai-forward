@@ -113,7 +113,7 @@ curl --location 'https://caloi.top/openai/v1/images/generations' \
 
 Two deployment methods are provided, just choose one.
 
-## Use `pip`  (recommended)
+## Use `pip` 
 
 **Installation**
 
@@ -143,7 +143,7 @@ OPENAI_API_KEY="sk-xxx" openai_forward run --port=9999 --workers=1
 Note: If both the default API key and the API key passed in the request header exist, the API key in the request header
 will override the default API key.
 
-## Use Docker
+## Use Docker (Recommended)
 
 ```bash 
 docker run --name="openai-forward" -d -p 9999:8000 beidongjiedeguang/openai-forward:latest 

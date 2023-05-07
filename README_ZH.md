@@ -129,7 +129,7 @@ curl --location 'https://caloi.top/openai/v1/images/generations' \
 
 提供两种服务部署方式,选择一种即可
 
-## pip (推荐)
+## pip 
 
 **安装**
 
@@ -155,7 +155,7 @@ OPENAI_API_KEY="sk-xxx" openai_forward run --port=9999 --workers=1
 
 注: 如果既存在默认api key又在请求头中传入了api key，则以请求头中的api key会覆盖默认api key.
 
-## Docker
+## Docker (推荐)
 
 ```bash
 docker run --name="openai-forward" -d -p 9999:8000 beidongjiedeguang/openai-forward:latest 
