@@ -1,4 +1,4 @@
-from ._base import OpenaiBase
+from .base import OpenaiBase
 from .routers.schemas import OpenAIV1ChatCompletion
 from fastapi import Request
 from .config import setting_log
