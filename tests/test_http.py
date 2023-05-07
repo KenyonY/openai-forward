@@ -9,8 +9,10 @@ from utils import rm
 class TestRun:
     @classmethod
     def setup_class(cls):
-        subprocess.Popen(["nohup", "openai-forward", "run", "--base_url", "https://caloi.top/openai"])
-        time.sleep(0.7)
+        kill(8000)
+        base_url = "https://caloi.top/openai"
+        subprocess.Popen(["nohup", "openai-forward", "run", "--base_url", base_url])
+        time.sleep(3)
 
     @classmethod
     def teardown_class(cls):
