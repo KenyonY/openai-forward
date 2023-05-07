@@ -18,7 +18,7 @@ class TestOpenai:
         OpenaiBase._default_api_key_list = []
 
     def test_env(self, openai: OpenaiBase):
-        assert openai._base_url == "https://api.openai.com"
+        assert openai.BASE_URL == "https://api.openai.com"
 
     def test_api_keys(self, openai: OpenaiBase):
         assert openai._default_api_key_list == []

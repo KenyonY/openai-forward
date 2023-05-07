@@ -10,19 +10,21 @@ from .config import env2list
 
 
 class OpenaiBase:
-    _base_url = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com").strip()
+    BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com").strip()
+    ROUTE_PREFIX = os.environ.get("ROUTE_PREFIX", "").strip()
     _LOG_CHAT = os.environ.get("LOG_CHAT", "False").lower() == "true"
-    _ROUTE_PREFIX = os.environ.get("ROUTE_PREFIX", "").strip()
     _default_api_key_list = env2list("OPENAI_API_KEY", sep=" ")
     _cycle_api_key = cycle(_default_api_key_list)
+    _PASSWORD = env2list("PASSWORD", sep=" ")
+    _use_password = _default_api_key_list != [] and _PASSWORD != []
     IP_WHITELIST = env2list("IP_WHITELIST", sep=" ")
     IP_BLACKLIST = env2list("IP_BLACKLIST", sep=" ")
 
-    if _ROUTE_PREFIX:
-        if _ROUTE_PREFIX.endswith('/'):
-            _ROUTE_PREFIX = _ROUTE_PREFIX[:-1]
-        if not _ROUTE_PREFIX.startswith('/'):
-            _ROUTE_PREFIX = '/' + _ROUTE_PREFIX
+    if ROUTE_PREFIX:
+        if ROUTE_PREFIX.endswith('/'):
+            ROUTE_PREFIX = ROUTE_PREFIX[:-1]
+        if not ROUTE_PREFIX.startswith('/'):
+            ROUTE_PREFIX = '/' + ROUTE_PREFIX
     timeout = 30
     chatsaver = ChatSaver(save_interval=10)
 
@@ -54,7 +56,7 @@ class OpenaiBase:
     async def _reverse_proxy(cls, request: Request):
         client: httpx.AsyncClient = request.app.state.client
         url_path = request.url.path
-        url_path = url_path[len(cls._ROUTE_PREFIX):]
+        url_path = url_path[len(cls.ROUTE_PREFIX):]
         url = httpx.URL(path=url_path, query=request.url.query.encode('utf-8'))
         headers = dict(request.headers)
         auth = headers.pop("authorization", None)
@@ -66,19 +68,27 @@ class OpenaiBase:
         else:
             tmp_headers = {}
 
-        headers.pop("host", None)
-        headers.update(tmp_headers)
-        if cls._LOG_CHAT:
+        if cls._LOG_CHAT or cls._use_password:
             try:
                 input_info = await request.json()
                 msgs = input_info['messages']
-                cls.chatsaver.add_chat({
-                    "host": request.client.host,
-                    "model": input_info['model'],
-                    "messages": [{msg['role']: msg['content']} for msg in msgs],
-                })
+                if cls._LOG_CHAT:
+                    cls.chatsaver.add_chat({
+                        "host": request.client.host,
+                        "model": input_info['model'],
+                        "messages": [{msg['role']: msg['content']} for msg in msgs],
+                    })
+                if cls._use_password:
+                    password = input_info['password']
+                    if password not in cls._PASSWORD:
+                        tmp_headers = {'Authorization': ''}
+
             except Exception as e:
                 logger.debug(f"log chat (not) error:\n{request.client.host=}: {e}")
+
+        headers.pop("host", None)
+        headers.update(tmp_headers)
+
         req = client.build_request(
             request.method, url, headers=headers,
             content=request.stream(),
@@ -90,7 +100,7 @@ class OpenaiBase:
             r = await client.send(req, stream=True)
         except httpx.ConnectError as e:
             error_info = f"{type(e)}: {e} | " \
-                         f"Please check if host={request.client.host} can access [{cls._base_url}] successfully."
+                         f"Please check if host={request.client.host} can access [{cls.BASE_URL}] successfully."
             logger.error(error_info)
             raise HTTPException(status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail=error_info)
         except Exception as e:

@@ -1,4 +1,4 @@
-[**中文**](./README_ZH.md) | **English**
+**中文** | [**English**](./README_EN.md)
 
 <h1 align="center">
     <br>
@@ -33,56 +33,50 @@
     <a href="https://codecov.io/gh/beidongjiedeguang/openai-forward">
         <img alt="codecov" src="https://codecov.io/gh/beidongjiedeguang/openai-forward/branch/dev/graph/badge.svg">
     </a>
-
 </p>
-This project is designed to solve the problem of some regions being unable to directly access OpenAI. The service is deployed on a server that can access the OpenAI API, and OpenAI requests are forwarded through the service, i.e. a reverse proxy service is set up. 
 
-Test access: https://caloi.top/openai/v1/chat/completions is equivalent to https://api.openai.com/v1/chat/completions  
-Or, to put it another way, https://caloi.top/openai is equivalent to https://api.openai.com.
+
+
+本项目用于解决一些地区无法直接访问OpenAI的问题，将该服务部署在可以正常访问openai
+api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代理服务  
+测试访问：https://caloi.top/openai/v1/chat/completions 将等价于 https://api.openai.com/v1/chat/completions  
+或者说 https://caloi.top/openai 等价于 https://api.openai.com 
 
 # Table of Contents
 
 - [Features](#Features)
-- [Usage](#Usage)
-- [Deploy](#Deploy)
-- [Service Usage](#Service-Usage)
-- [Configuration](#Configuration)
-- [Chat Log](#Chat-log)
+- [应用](#应用)
+- [安装部署](#安装部署)
+- [服务调用](#服务调用)
+- [配置选项](#配置选项)
+- [聊天日志](#聊天日志)
 
 # Features
 
-- [x] Supports forwarding of all OpenAI interfaces
-- [x] Request IP verification
-- [x] Streaming Response
-- [x] Supports default API key (cyclic call with multiple API keys)
-- [x] pip installation and deployment
-- [x] Docker deployment
-- [x] Support for multiple worker processes
-- [x] Support for specifying the forwarding routing prefix
+- [x] 支持转发OpenAI所有接口
+- [x] 支持流式响应
+- [x] 实时记录聊天记录(包括流式响应的聊天内容)
+- [x] 支持默认api key(多api key 循环调用)
+- [x] pip安装部署
+- [x] docker部署
+- [x] 支持多进程转发
+- [x] 支持指定转发路由前缀
+- [x] 支持请求IP验证
 
-# Usage
+# 应用
 
-> Here, the proxy address set up by the individual, https://caloi.top/openai, is used as an example
+> 这里以个人使用该项目搭建好的代理服务 https://caloi.top/openai 为例
 
 ### [caloi.top](https://caloi.top)
-Build your own ChatGPT service based on the open source project [ChatGPT-Next-Web](https://github.com/Yidadaa/ChatGPT-Next-Web).
-Replace `BASE_URL` in the docker startup command with the address of the proxy service we set up:
+基于开源项目[ChatGPT-Next-Web](https://github.com/Yidadaa/ChatGPT-Next-Web)搭建自己的chatgpt服务  
+替换docker启动命令中的 `BASE_URL`为我们自己搭建的代理服务地址
 
-```bash 
-docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-******" -e CODE="<your password>" -e BASE_URL="caloi.top/openai" yidadaa/chatgpt-next-web 
-``` 
-Access to https://caloi.top. access code: `beidongjiedeguang`.
-
-### Using in a module
-
-**Python**
-
-```diff
-  import openai
-+ openai.api_base = "https://caloi.top/openai/v1"
-  openai.api_key = "sk-******"
+```bash
+docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-xxx" -e CODE="<your password>" -e BASE_URL="caloi.top/openai" yidadaa/chatgpt-next-web
 ```
+访问 https://caloi.top 。访问密码为 `beidongjiedeguang`
 
+### 在模块中使用
 **JS/TS**
 
 ```diff
@@ -94,102 +88,107 @@ Access to https://caloi.top. access code: `beidongjiedeguang`.
   });
 ```
 
+**Python**
+
+```diff
+  import openai
++ openai.api_base = "https://caloi.top/openai/v1"
+  openai.api_key = "sk-******"
+```
 
 ### Image Generation (DALL-E):
 
-```bash 
-curl --location 'https://caloi.top/openai/v1/images/generations' \ 
---header 'Authorization: Bearer sk-******' \ 
---header 'Content-Type: application/json' \ 
---data '{ 
-    "prompt": "A photo of a cat", 
-    "n": 1, 
+```bash
+curl --location 'https://caloi.top/openai/v1/images/generations' \
+--header 'Authorization: Bearer sk-******' \
+--header 'Content-Type: application/json' \
+--data '{
+    "prompt": "A photo of a cat",
+    "n": 1,
     "size": "512x512"
-}' 
-``` 
-
-
-# Deploy
-
-Two deployment methods are provided, just choose one.
-
-## Use `pip` 
-
-**Installation**
-
-```bash 
-pip install openai-forward 
-``` 
-
-**Run forwarding service**
-The port number can be specified through `--port`, which defaults to `8000`, and the number of worker processes can be
-specified through `--workers`, which defaults to `1`.
-
-```bash 
-openai_forward run --port=9999 --workers=1 
-``` 
-
-The service is now set up, and the usage is to replace `https://api.openai.com` with the port number of the
-service `http://{ip}:{port}`.
-
-Of course, OPENAI_API_KEY can also be passed in as an environment variable as the default API key, so that the client
-does not need to pass in the Authorization in the header when requesting the relevant route.
-Startup command with default API key:
-
-```bash 
-OPENAI_API_KEY="sk-xxx" openai_forward run --port=9999 --workers=1 
-``` 
-
-Note: If both the default API key and the API key passed in the request header exist, the API key in the request header
-will override the default API key.
-
-## Use Docker (Recommended)
-
-```bash 
-docker run --name="openai-forward" -d -p 9999:8000 beidongjiedeguang/openai-forward:latest 
-``` 
-
-The 9999 port of the host is mapped, and the service can be accessed through `http://{ip}:9999`.
-Note: You can also pass in the environment variable OPENAI_API_KEY=sk-xxx as the default API key in the startup command.
-
-# Service Usage
-
-Simply replace the OpenAI API address with the address of the service we set up, such as `Chat Completion`
-```bash 
-https://api.openai.com/v1/chat/completions 
-``` 
-
-Replace with
-
-```bash 
-http://{ip}:{port}/v1/chat/completions 
+}'
 ```
 
-# Configuration
 
-**`openai-forward run` Parameter Configuration Options**
+# 安装部署
 
-| Configuration Option | Description | Default Value |
+提供两种服务部署方式,选择一种即可
+
+## pip 
+
+**安装**
+
+```bash
+pip install openai-forward
+```
+
+**运行转发服务**  
+可通过`--port`指定端口号，默认为`8000`，可通过`--workers`指定工作进程数，默认为`1`
+
+```bash
+openai_forward run --port=9999 --workers=1
+```
+
+服务就搭建完成了，使用方式只需将`https://api.openai.com` 替换为服务所在端口`http://{ip}:{port}` 即可。
+
+当然也可以将 OPENAI_API_KEY 作为环境变量传入作为默认api key， 这样客户端在请求相关路由时可以无需在Header中传入Authorization。
+带默认api key的启动方式：
+
+```bash
+OPENAI_API_KEY="sk-xxx" openai_forward run --port=9999 --workers=1
+```
+
+注: 如果既存在默认api key又在请求头中传入了api key，则以请求头中的api key会覆盖默认api key.
+
+## Docker (推荐)
+
+```bash
+docker run --name="openai-forward" -d -p 9999:8000 beidongjiedeguang/openai-forward:latest 
+```
+
+将映射宿主机的9999端口，通过`http://{ip}:9999`访问服务。  
+注：同样可以在启动命令中通过-e传入环境变量OPENAI_API_KEY=sk-xxx作为默认api key
+
+# 服务调用
+
+替换openai的api地址为该服务的地址即可，如：
+
+```bash
+https://api.openai.com/v1/chat/completions
+```
+
+替换为
+
+```bash
+http://{ip}:{port}/v1/chat/completions
+```
+
+# 配置选项
+
+**`openai-forward run`参数配置项**
+
+| 配置项       | 说明 | 默认值 |
 |-----------| --- | :---: |
-| --port    | Service port number | 8000 |
-| --workers | Number of worker processes | 1 |
+| --port    | 服务端口号 | 8000 |
+| --workers | 工作进程数 | 1 |
 
-**Environment Variable Configuration Options**  
-refer to the `.env` file in the project root directory
+**环境变量配置项**  
+参考项目根目录下`.env`文件
 
-| Environment Variable  | Description | Default Value |
-|-----------------|------------|:------------------------:|
-| OPENAI_API_KEY  | Default API key, supports multiple default API keys separated by space. | None |
-| OPENAI_BASE_URL | Forwarding base URL | `https://api.openai.com` |
-|LOG_CHAT| Whether to log chat content | `true` |
-|ROUTE_PREFIX| Route prefix | None |
-| IP_WHITELIST    | IP whitelist, separated by space. | None |
-| IP_BLACKLIST    | IP blacklist, separated by space. | None |
+| 环境变量            | 说明                             |           默认值            |
+|-----------------|--------------------------------|:------------------------:|
+| OPENAI_API_KEY  | 默认api key，支持多个默认api key, 以空格分割 |            无             |
+| OPENAI_BASE_URL | 转发base url                     | `https://api.openai.com` |
+| LOG_CHAT        | 是否记录聊天内容                       |          `true`          |
+| ROUTE_PREFIX    | 路由前缀                           |            无             |
+| IP_WHITELIST    | ip白名单, 空格分开                    |           无            |
+| IP_BLACKLIST    | ip黑名单, 空格分开                    |           无            | 
 
-# Chat Log
-The saved path is in the `Log/` directory under the current directory.  
-The chat log starts with `chat_` and is written to the file every 5 rounds by default.  
-The recording format is as follows:
+
+# 聊天日志
+保存路径在当前目录下的`Log/`路径中。  
+聊天日志以 `chat_`开头, 默认每5轮对话写入一次文件    
+记录格式为
 ```text
 {'host': xxx, 'model': xxx, 'message': [{'user': xxx}, {'assistant': xxx}]}
 {'assistant': xxx}

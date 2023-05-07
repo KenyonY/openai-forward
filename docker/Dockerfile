@@ -16,8 +16,7 @@ RUN pip install --no-cache-dir  \
     "uvicorn" \
     "orjson" \
     "python-dotenv" \
-    "httpx" \
-    "pytz"
+    "httpx"
 
 COPY . /home/openai-forward
 WORKDIR /home/openai-forward
