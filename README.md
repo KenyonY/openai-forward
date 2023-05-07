@@ -64,8 +64,16 @@ Or, to put it another way, https://caloi.top/openai is equivalent to https://api
 
 > Here, the proxy address set up by the individual, https://caloi.top/openai, is used as an example
 
-### Using in a module
+### [caloi.top](https://caloi.top)
+Build your own ChatGPT service based on the open source project [ChatGPT-Next-Web](https://github.com/Yidadaa/ChatGPT-Next-Web).
+Replace `BASE_URL` in the docker startup command with the address of the proxy service we set up:
 
+```bash 
+docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-******" -e CODE="<your password>" -e BASE_URL="caloi.top/openai" yidadaa/chatgpt-next-web 
+``` 
+Access https://caloi.top. The access password is `beidongjiedeguang`.
+
+### Using in a module
 
 **Python**
 
@@ -98,23 +106,6 @@ curl --location 'https://caloi.top/openai/v1/images/generations' \
     "n": 1, 
     "size": "512x512"
 }' 
-``` 
-
-### [chatgpt-web](https://github.com/Chanzhaoyu/chatgpt-web)
-
-Modify the `OPENAI_API_BASE_URL` in [Docker Compose](https://github.com/Chanzhaoyu/chatgpt-web#docker-compose) to the
-address of the proxy service we set up:
-
-```bash 
-OPENAI_API_BASE_URL: https://caloi.top/openai 
-``` 
-
-### [ChatGPT-Next-Web](https://github.com/Yidadaa/ChatGPT-Next-Web)
-
-Replace `BASE_URL` in the docker startup command with the address of the proxy service we set up:
-
-```bash 
-docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-******" -e CODE="<your password>" -e BASE_URL="caloi.top/openai" yidadaa/chatgpt-next-web 
 ``` 
 
 

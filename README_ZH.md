@@ -60,7 +60,7 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 # Table of Contents
 
 - [Features](#Features)
-- [Usage](#Usage)
+- [应用](#应用)
 - [安装部署](#安装部署)
 - [服务调用](#服务调用)
 - [配置选项](#配置选项)
@@ -78,12 +78,20 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 - [x] 支持指定转发路由前缀
 - [x] 支持请求IP验证
 
-# Usage
+# 应用
 
 > 这里以个人使用该项目搭建好的代理服务 https://caloi.top/openai 为例
 
-### 在模块中使用
+### [caloi.top](https://caloi.top)
+基于开源项目[ChatGPT-Next-Web](https://github.com/Yidadaa/ChatGPT-Next-Web)搭建自己的chatgpt服务  
+替换docker启动命令中的 `BASE_URL`为我们自己搭建的代理服务地址
 
+```bash
+docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-xxx" -e CODE="<your password>" -e BASE_URL="caloi.top/openai" yidadaa/chatgpt-next-web
+```
+访问 https://caloi.top 。访问密码为 `beidongjiedeguang`
+
+### 在模块中使用
 **JS/TS**
 
 ```diff
@@ -116,22 +124,6 @@ curl --location 'https://caloi.top/openai/v1/images/generations' \
 }'
 ```
 
-### [chatgpt-web](https://github.com/Chanzhaoyu/chatgpt-web)
-
-修改 [Docker Compose](https://github.com/Chanzhaoyu/chatgpt-web#docker-compose) 中的`OPENAI_API_BASE_URL`
-为我们搭建的代理服务地址:
-
-```bash
-OPENAI_API_BASE_URL: https://caloi.top/openai 
-```
-
-### [ChatGPT-Next-Web](https://github.com/Yidadaa/ChatGPT-Next-Web)
-
-替换docker启动命令中的 `BASE_URL`为我们搭建的代理服务地址
-
-```bash
-docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-xxx" -e CODE="<your password>" -e BASE_URL="caloi.top/openai" yidadaa/chatgpt-next-web
-```
 
 # 安装部署
 
