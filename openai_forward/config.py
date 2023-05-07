@@ -6,7 +6,6 @@ import sys
 import logging
 import os
 import time
-import pytz
 
 
 class InterceptHandler(logging.Handler):
