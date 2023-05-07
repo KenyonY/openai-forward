@@ -17,8 +17,6 @@ class OpenaiBase:
     _cycle_api_key = cycle(_default_api_key_list)
     _PASSWORD = env2list("PASSWORD", sep=" ")
     _use_password = _default_api_key_list != [] and _PASSWORD != []
-    logger.warning(f"{_default_api_key_list=}")
-    logger.warning(f"{_use_password=}")
     IP_WHITELIST = env2list("IP_WHITELIST", sep=" ")
     IP_BLACKLIST = env2list("IP_BLACKLIST", sep=" ")
 
@@ -70,9 +68,6 @@ class OpenaiBase:
         else:
             tmp_headers = {}
 
-        headers.pop("host", None)
-        headers.update(tmp_headers)
-
         if cls._LOG_CHAT or cls._use_password:
             try:
                 input_info = await request.json()
@@ -84,10 +79,16 @@ class OpenaiBase:
                         "messages": [{msg['role']: msg['content']} for msg in msgs],
                     })
                 if cls._use_password:
-                    ...
+                    password = input_info['password']
+                    if password not in cls._PASSWORD:
+                        tmp_headers = {'Authorization': ''}
 
             except Exception as e:
                 logger.debug(f"log chat (not) error:\n{request.client.host=}: {e}")
+
+        headers.pop("host", None)
+        headers.update(tmp_headers)
+
         req = client.build_request(
             request.method, url, headers=headers,
             content=request.stream(),
