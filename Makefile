@@ -1,4 +1,4 @@
-.PHONY: start build push run down test twine log
+.PHONY: start build push run down test twine log pull
 
 image := "beidongjiedeguang/openai-forward:latest"
 container := "openai-forward-container"
@@ -7,20 +7,11 @@ compose_path := "docker-compose.yaml"
 start:
 	docker run -d \
     --name $(container) \
-    --env "LETSENCRYPT_HOST=caloi.top,www.caloi.top" \
-    --env "VIRTUAL_HOST=caloi.top,www.caloi.top" \
-    --env "VIRTUAL_PORT=8000" \
     --env-file .env \
+    -p 27001:8000 \
     -v $(shell pwd)/Log-caloi-top:/home/openai-forward/Log \
     $(image)
 
-start-dev:
-	docker run -itd \
-    --name $(container) \
-    --env-file .env \
-    -p 8000:8000 \
-    -v $(shell pwd)/Log:/home/openai-forward/Log \
-    $(image)
 
 exec:
 	docker exec -it $(container) bash
@@ -60,3 +51,6 @@ build:
 
 build-push:
 	docker buildx build --push --platform linux/arm64/v8,linux/amd64 --tag $(image) -f docker/Dockerfile .
+
+pull:
+	 docker pull $(image)
