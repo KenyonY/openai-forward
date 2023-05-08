@@ -227,9 +227,9 @@ You need to configure OPENAI_API_KEY and FORWARD_KEY, for example:
 
 ```bash
 OPENAI_API_KEY=sk-*******
-FORWARD_KEY=fk-mytokenabcd
+FORWARD_KEY=fk-mytoken-abcd
 ```
-If you set FORWARD_KEY to fk-mytoken567, then the client only needs to set the OPENAI_API_KEY to fk-mytoken567 when calling the API later.
+If you set FORWARD_KEY to fk-mytoken-abcd, then the client only needs to set the OPENAI_API_KEY to fk-mytoken-abcd when calling the API later.
 
 **Examples:**  
 
@@ -238,9 +238,9 @@ If you set FORWARD_KEY to fk-mytoken567, then the client only needs to set the O
   import openai
 + openai.api_base = "https://caloi.top/openai/v1"
 - openai.api_key = "sk-******"
-+ openai.api_key = "fk-mytokenabcd"
++ openai.api_key = "fk-mytoken-abcd"
 ```
 **Web application**
 ```bash 
-docker run -d -p 3000:3000 -e OPENAI_API_KEY="fk-mytokenabcd" -e CODE="<your password>" -e BASE_URL="caloi.top/openai" yidadaa/chatgpt-next-web 
+docker run -d -p 3000:3000 -e OPENAI_API_KEY="fk-mytoken-abcd" -e CODE="<your password>" -e BASE_URL="caloi.top/openai" yidadaa/chatgpt-next-web 
 ``` 

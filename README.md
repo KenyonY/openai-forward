@@ -232,17 +232,26 @@ http://{ip}:{port}/v1/chat/completions
 OPENAI_API_KEY=sk-*******
 FORWARD_KEY=fk-mytokenabcd
 ```
-这里我们配置了FORWARD_KEY为fk-mytoken567, 那么后面客户端在调用时只需设置OPENAI_API_KEY为fk-mytoken567 即可。
+这里我们配置了FORWARD_KEY为fk-mytoken-abcd, 那么后面客户端在调用时只需设置OPENAI_API_KEY为fk-mytoken-abcd 即可。
 
 **例如:**
+```bash
+curl https://caloi.top/openai/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer fk-mytoken-abcd" \
+  -d '{
+    "model": "gpt-3.5-turbo",
+    "messages": [{"role": "user", "content": "Hello!"}]
+  }'
+```
 **Python**
 ```diff
   import openai
 + openai.api_base = "https://caloi.top/openai/v1"
 - openai.api_key = "sk-******"
-+ openai.api_key = "fk-mytokenabcd"
++ openai.api_key = "fk-mytoken-abcd"
 ```
 **Web application**
 ```bash 
-docker run -d -p 3000:3000 -e OPENAI_API_KEY="fk-mytokenabcd" -e CODE="<your password>" -e BASE_URL="caloi.top/openai" yidadaa/chatgpt-next-web 
+docker run -d -p 3000:3000 -e OPENAI_API_KEY="fk-mytoken-abcd" -e CODE="<your password>" -e BASE_URL="caloi.top/openai" yidadaa/chatgpt-next-web 
 ``` 
