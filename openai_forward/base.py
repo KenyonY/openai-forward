@@ -68,7 +68,7 @@ class OpenaiBase:
                 fk_prefix = "Bearer fk-"
                 logger.info(f"use forward key: {auth}")
                 logger.info(f"{cls._FWD_KEYS}")
-                if auth and str(auth).startswith(fk_prefix) and auth[len(fk_prefix):] in cls._FWD_KEYS:
+                if auth and str(auth).startswith(fk_prefix) and auth[len("Bearer "):] in cls._FWD_KEYS:
                     auth = "Bearer " + next(cls._cycle_api_key)
                     tmp_headers = {'Authorization': auth}
                 else:
