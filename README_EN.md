@@ -86,7 +86,12 @@ project [ChatGPT-Next-Web](https://github.com/Yidadaa/ChatGPT-Next-Web).
 Replace `BASE_URL` in the docker startup command with the address of the proxy service we set up:
 
 ```bash 
-docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-******" -e CODE="<your password>" -e BASE_URL="caloi.top/openai" yidadaa/chatgpt-next-web 
+docker run -d \
+    -p 3000:3000 \
+    -e OPENAI_API_KEY="sk-******" \
+    -e BASE_URL="caloi.top/openai" \
+    -e CODE="<your password>" \
+    yidadaa/chatgpt-next-web 
 ``` 
 
 Access to https://caloi.top. access code: `beidongjiedeguang`.
@@ -242,5 +247,10 @@ If you set FORWARD_KEY to fk-mytoken-abcd, then the client only needs to set the
 ```
 **Web application**
 ```bash 
-docker run -d -p 3000:3000 -e OPENAI_API_KEY="fk-mytoken-abcd" -e CODE="<your password>" -e BASE_URL="caloi.top/openai" yidadaa/chatgpt-next-web 
+docker run -d \
+    -p 3000:3000 \
+    -e OPENAI_API_KEY="fk-mytoken-abcd" \
+    -e BASE_URL="caloi.top/openai" \
+    -e CODE="<your password>" \
+    yidadaa/chatgpt-next-web 
 ``` 

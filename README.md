@@ -235,7 +235,7 @@ http://{ip}:{port}/v1/chat/completions
 
 ```bash
 OPENAI_API_KEY=sk-*******
-FORWARD_KEY=fk-mytokenabcd
+FORWARD_KEY=fk-mytoken-abcd
 ```
 这里我们配置了FORWARD_KEY为fk-mytoken-abcd, 那么后面客户端在调用时只需设置OPENAI_API_KEY为fk-mytoken-abcd 即可。
 
