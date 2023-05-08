@@ -5,9 +5,9 @@ services:
     env_file:
       .env
     ports:
-      - "8000:8000"
+      - "27001:8000"
     volumes:
-      - ./Log:/home/openai-forward/Log
+      - ./Log-caloi-top:/home/openai-forward/Log
       - ./openai_forward:/home/openai-forward/openai_forward
     command:
       - --port=8000
