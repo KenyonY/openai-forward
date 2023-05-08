@@ -63,11 +63,10 @@ class OpenaiBase:
         if auth and str(auth).startswith("Bearer sk-"):
             tmp_headers = {'Authorization': auth}
         elif cls._openai_api_key_list:
-            logger.info(f"{cls._use_forward_key=}")
+            logger.info(f"Use forward key: {cls._use_forward_key}")
             if cls._use_forward_key:
                 fk_prefix = "Bearer fk-"
-                logger.info(f"use forward key: {auth}")
-                logger.info(f"{cls._FWD_KEYS}")
+                logger.info(f"current forward key: {auth}")
                 if auth and str(auth).startswith(fk_prefix) and auth[len("Bearer "):] in cls._FWD_KEYS:
                     auth = "Bearer " + next(cls._cycle_api_key)
                     tmp_headers = {'Authorization': auth}
