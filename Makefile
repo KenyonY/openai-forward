@@ -10,6 +10,7 @@ start:
     --env-file .env \
     -p 27001:8000 \
     -v $(shell pwd)/Log-caloi-top:/home/openai-forward/Log \
+    -v $(shell pwd)/openai_forward:/home/openai-forward/openai_forward \
     $(image)
 
 
