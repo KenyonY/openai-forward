@@ -56,7 +56,8 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 - [x] 支持转发OpenAI所有接口
 - [x] 支持流式响应
 - [x] 实时记录聊天记录(包括流式响应的聊天内容)
-- [x] 支持默认api key(多api key 循环调用)
+- [x] 支持默认openai api key(多api key 循环调用)
+- [x] 转发api key (在已设置默认openai api key情况下使用)
 - [x] pip安装部署
 - [x] docker部署
 - [x] 支持多进程转发
