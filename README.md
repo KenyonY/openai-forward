@@ -40,7 +40,7 @@
 本项目用于解决一些地区无法直接访问OpenAI的问题，将该服务部署在可以正常访问openai
 api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代理服务  
 测试访问：https://caloi.top/openai/v1/chat/completions 将等价于 https://api.openai.com/v1/chat/completions  
-或者说 https://caloi.top/openai 等价于 https://api.openai.com 
+或者说 https://caloi.top/openai 等价于 https://api.openai.com
 
 # Table of Contents
 
@@ -50,6 +50,7 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 - [服务调用](#服务调用)
 - [配置选项](#配置选项)
 - [聊天日志](#聊天日志)
+- [高级配置](#高级配置)
 
 # Features
 
@@ -58,9 +59,7 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 - [x] 实时记录聊天记录(包括流式响应的聊天内容)
 - [x] 支持默认openai api key(多api key 循环调用)
 - [x] 转发api key (在已设置默认openai api key情况下使用)
-- [x] pip安装部署
 - [x] docker部署
-- [x] 支持多进程转发
 - [x] 支持指定转发路由前缀
 - [x] 支持请求IP验证
 
@@ -69,15 +68,18 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 > 这里以个人使用该项目搭建好的代理服务 https://caloi.top/openai 为例
 
 ### [caloi.top](https://caloi.top)
+
 基于开源项目[ChatGPT-Next-Web](https://github.com/Yidadaa/ChatGPT-Next-Web)搭建自己的chatgpt服务  
 替换docker启动命令中的 `BASE_URL`为我们自己搭建的代理服务地址
 
 ```bash
 docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-xxx" -e CODE="<your password>" -e BASE_URL="caloi.top/openai" yidadaa/chatgpt-next-web
 ```
+
 访问 https://caloi.top 。访问密码为 `beidongjiedeguang`
 
 ### 在模块中使用
+
 **JS/TS**
 
 ```diff
@@ -110,12 +112,11 @@ curl --location 'https://caloi.top/openai/v1/images/generations' \
 }'
 ```
 
-
 # 安装部署
 
-提供两种服务部署方式,选择一种即可
+提供3种服务部署方式,选择一种即可
 
-## pip 
+## pip
 
 **安装**
 
@@ -150,6 +151,26 @@ docker run --name="openai-forward" -d -p 9999:8000 beidongjiedeguang/openai-forw
 将映射宿主机的9999端口，通过`http://{ip}:9999`访问服务。  
 注：同样可以在启动命令中通过-e传入环境变量OPENAI_API_KEY=sk-xxx作为默认api key
 
+## 源码部署
+
+```bash
+git clone https://github.com/beidongjiedeguang/openai-forward.git --depth=1
+cd openai-forward
+```
+
+**使用 docker**
+
+```bash
+docker-compose up
+```
+
+**或使用pip**
+
+```bash
+pip install -e .
+openai-forward run 
+```
+
 # 服务调用
 
 替换openai的api地址为该服务的地址即可，如：
@@ -176,20 +197,22 @@ http://{ip}:{port}/v1/chat/completions
 **环境变量配置项**  
 参考项目根目录下`.env`文件
 
-| 环境变量            | 说明                             |           默认值            |
-|-----------------|--------------------------------|:------------------------:|
-| OPENAI_API_KEY  | 默认api key，支持多个默认api key, 以空格分割 |            无             |
-| OPENAI_BASE_URL | 转发base url                     | `https://api.openai.com` |
-| LOG_CHAT        | 是否记录聊天内容                       |          `true`          |
-| ROUTE_PREFIX    | 路由前缀                           |            无             |
-| IP_WHITELIST    | ip白名单, 空格分开                    |           无            |
-| IP_BLACKLIST    | ip黑名单, 空格分开                    |           无            | 
-
+| 环境变量            | 说明                                                              |           默认值            |
+|-----------------|-----------------------------------------------------------------|:------------------------:|
+| OPENAI_API_KEY  | 默认openai api key，支持多个默认api key, 以 `sk-` 开头， 以空格分割      |            无             |
+| FORWARD_KEY     | 允许调用方使用该key代替openai api key，支持多个forward key, 以`fk-` 开头, 以空格分割 |      无             |
+| OPENAI_BASE_URL | 转发base url                                                      | `https://api.openai.com` |
+| LOG_CHAT        | 是否记录聊天内容                                                        |          `true`          |
+| ROUTE_PREFIX    | 路由前缀                                                            |            无             |
+| IP_WHITELIST    | ip白名单, 空格分开                                                     |           无            |
+| IP_BLACKLIST    | ip黑名单, 空格分开                                                     |           无            | 
 
 # 聊天日志
+
 保存路径在当前目录下的`Log/`路径中。  
 聊天日志以 `chat_`开头, 默认每5轮对话写入一次文件    
 记录格式为
+
 ```text
 {'host': xxx, 'model': xxx, 'message': [{'user': xxx}, {'assistant': xxx}]}
 {'assistant': xxx}
@@ -199,3 +222,27 @@ http://{ip}:{port}/v1/chat/completions
 
 ...
 ```
+
+# 高级配置
+
+**设置api_key为自己设置的forward key**  
+需要配置 OPENAI_API_KEY 和 FORWARD_KEY, 例如
+
+```bash
+OPENAI_API_KEY=sk-*******
+FORWARD_KEY=fk-mytokenabcd
+```
+这里我们配置了FORWARD_KEY为fk-mytoken567, 那么后面客户端在调用时只需设置OPENAI_API_KEY为fk-mytoken567 即可。
+
+**例如:**
+**Python**
+```diff
+  import openai
++ openai.api_base = "https://caloi.top/openai/v1"
+- openai.api_key = "sk-******"
++ openai.api_key = "fk-mytokenabcd"
+```
+**Web application**
+```bash 
+docker run -d -p 3000:3000 -e OPENAI_API_KEY="fk-mytokenabcd" -e CODE="<your password>" -e BASE_URL="caloi.top/openai" yidadaa/chatgpt-next-web 
+``` 
