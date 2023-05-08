@@ -72,9 +72,14 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 基于开源项目[ChatGPT-Next-Web](https://github.com/Yidadaa/ChatGPT-Next-Web)搭建自己的chatgpt服务  
 替换docker启动命令中的 `BASE_URL`为我们自己搭建的代理服务地址
 
-```bash
-docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-xxx" -e CODE="<your password>" -e BASE_URL="caloi.top/openai" yidadaa/chatgpt-next-web
-```
+```bash 
+docker run -d \
+    -p 3000:3000 \
+    -e OPENAI_API_KEY="sk-******" \
+    -e BASE_URL="caloi.top/openai" \
+    -e CODE="<your password>" \
+    yidadaa/chatgpt-next-web 
+``` 
 
 访问 https://caloi.top 。访问密码为 `beidongjiedeguang`
 
@@ -234,7 +239,7 @@ FORWARD_KEY=fk-mytokenabcd
 ```
 这里我们配置了FORWARD_KEY为fk-mytoken-abcd, 那么后面客户端在调用时只需设置OPENAI_API_KEY为fk-mytoken-abcd 即可。
 
-**例如:**
+**用例:**
 ```bash
 curl https://caloi.top/openai/v1/chat/completions \
   -H "Content-Type: application/json" \
@@ -253,5 +258,10 @@ curl https://caloi.top/openai/v1/chat/completions \
 ```
 **Web application**
 ```bash 
-docker run -d -p 3000:3000 -e OPENAI_API_KEY="fk-mytoken-abcd" -e CODE="<your password>" -e BASE_URL="caloi.top/openai" yidadaa/chatgpt-next-web 
+docker run -d \
+    -p 3000:3000 \
+    -e OPENAI_API_KEY="fk-mytoken-abcd" \
+    -e BASE_URL="caloi.top/openai" \
+    -e CODE="<your password>" \
+    yidadaa/chatgpt-next-web 
 ``` 
