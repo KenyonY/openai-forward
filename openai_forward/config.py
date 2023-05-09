@@ -17,7 +17,7 @@ class InterceptHandler(logging.Handler):
             level = record.levelno
 
         # Find caller from where originated the logged message
-        frame, depth = logging.currentframe(), 2
+        frame, depth = logging.currentframe(), 6
         while frame.f_code.co_filename == logging.__file__:
             frame = frame.f_back
             depth += 1
@@ -38,8 +38,8 @@ def setting_log(log_name, multi_process=True):
         logging.getLogger(name).propagate = True
     logger_config = {
         "handlers": [
-            {"sink": sys.stdout},
-            {"sink": f"./Log/{log_name}", "enqueue": multi_process, "rotation": "100 MB"},
+            {"sink": sys.stdout, "level": "DEBUG"},
+            {"sink": f"./Log/{log_name}.log", "enqueue": multi_process, "rotation": "100 MB", "level": "INFO"},
         ],
     }
     logger.configure(**logger_config)

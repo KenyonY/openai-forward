@@ -15,7 +15,7 @@ class TestEnv:
 LOG_CHAT=true
 OPENAI_BASE_URL=https://api.openai.com
 OPENAI_API_KEY=key1 key2
-PASSWORD=ps1 ps2 ps3
+FORWARD_KEY=ps1 ps2 ps3
 ROUTE_PREFIX=
 IP_WHITELIST=
 IP_BLACKLIST=
@@ -34,6 +34,6 @@ IP_BLACKLIST=
             f.write(cls.defualt_env)
 
     def test_env1(self):
-        assert self.aibase._PASSWORD == ['ps1', 'ps2', 'ps3']
-        assert self.aibase._default_api_key_list == ['key1', 'key2']
-        assert self.aibase._use_password
+        assert self.aibase._FWD_KEYS == ['ps1', 'ps2', 'ps3']
+        assert self.aibase._openai_api_key_list == ['key1', 'key2']
+        assert self.aibase._use_forward_key

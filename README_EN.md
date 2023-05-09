@@ -12,11 +12,17 @@
 
 
 [//]: # (    <a href="https://github.com/beidongjiedeguang">)
+
 [//]: # (        <img alt="name" src="https://img.shields.io/badge/author-@kunyuan-orange.svg?style=flat-square&logo=appveyor">)
+
 [//]: # (    </a>)
+
 [//]: # (    <a href="https://github.com/beidongjiedeguang/openai-forward/stargazers">)
+
 [//]: # (        <img alt="starts" src=https://img.shields.io/github/stars/beidongjiedeguang/openai-forward?style=social>)
+
 [//]: # (    </a>)
+
 [//]: # ([![Downloads]&#40;https://static.pepy.tech/badge/openai-forward/month&#41;]&#40;https://pepy.tech/project/openai-forward&#41;)
 
 <p align="center">
@@ -57,29 +63,37 @@ Or, to put it another way, https://caloi.top/openai is equivalent to https://api
 - [Service Usage](#Service-Usage)
 - [Configuration](#Configuration)
 - [Chat Log](#Chat-log)
+- [Advanced Configuration](#Advanced-Configuration)
 
 # Features
 
 - [x] Supports forwarding of all OpenAI interfaces
-- [x] Request IP verification
 - [x] Streaming Response
+- [x] Real-time recording of chat records (including the chat contents of streaming responses).
 - [x] Supports default API key (cyclic call with multiple API keys)
-- [x] pip installation and deployment
 - [x] Docker deployment
-- [x] Support for multiple worker processes
 - [x] Support for specifying the forwarding routing prefix
+- [x] Request IP verification
 
 # Usage
 
 > Here, the proxy address set up by the individual, https://caloi.top/openai, is used as an example
 
 ### [caloi.top](https://caloi.top)
-Build your own ChatGPT service based on the open source project [ChatGPT-Next-Web](https://github.com/Yidadaa/ChatGPT-Next-Web).
+
+Build your own ChatGPT service based on the open source
+project [ChatGPT-Next-Web](https://github.com/Yidadaa/ChatGPT-Next-Web).
 Replace `BASE_URL` in the docker startup command with the address of the proxy service we set up:
 
 ```bash 
-docker run -d -p 3000:3000 -e OPENAI_API_KEY="sk-******" -e CODE="<your password>" -e BASE_URL="caloi.top/openai" yidadaa/chatgpt-next-web 
+docker run -d \
+    -p 3000:3000 \
+    -e OPENAI_API_KEY="sk-******" \
+    -e BASE_URL="caloi.top/openai" \
+    -e CODE="<your password>" \
+    yidadaa/chatgpt-next-web 
 ``` 
+
 Access to https://caloi.top. access code: `beidongjiedeguang`.
 
 ### Using in a module
@@ -103,7 +117,6 @@ Access to https://caloi.top. access code: `beidongjiedeguang`.
   });
 ```
 
-
 ### Image Generation (DALL-E):
 
 ```bash 
@@ -117,12 +130,11 @@ curl --location 'https://caloi.top/openai/v1/images/generations' \
 }' 
 ``` 
 
-
 # Deploy
 
 Two deployment methods are provided, just choose one.
 
-## Use `pip` 
+## Use `pip`
 
 **Installation**
 
@@ -164,6 +176,7 @@ Note: You can also pass in the environment variable OPENAI_API_KEY=sk-xxx as the
 # Service Usage
 
 Simply replace the OpenAI API address with the address of the service we set up, such as `Chat Completion`
+
 ```bash 
 https://api.openai.com/v1/chat/completions 
 ``` 
@@ -186,19 +199,22 @@ http://{ip}:{port}/v1/chat/completions
 **Environment Variable Configuration Options**  
 refer to the `.env` file in the project root directory
 
-| Environment Variable  | Description | Default Value |
+| Environment Variable  | Description |      Default Value       |
 |-----------------|------------|:------------------------:|
-| OPENAI_API_KEY  | Default API key, supports multiple default API keys separated by space. | None |
+| OPENAI_API_KEY  | Default API key, supports multiple default API keys separated by space. |           None           |
+| FORWARD_KEY     | Allow the caller to use the key instead of the OpenAI API key, support multiple forward keys starting with "fk-" and separated by spaces. |          None           |
 | OPENAI_BASE_URL | Forwarding base URL | `https://api.openai.com` |
-|LOG_CHAT| Whether to log chat content | `true` |
-|ROUTE_PREFIX| Route prefix | None |
-| IP_WHITELIST    | IP whitelist, separated by space. | None |
-| IP_BLACKLIST    | IP blacklist, separated by space. | None |
+|LOG_CHAT| Whether to log chat content |          `true`          |
+|ROUTE_PREFIX| Route prefix |           None           |
+| IP_WHITELIST    | IP whitelist, separated by space. |           None           |
+| IP_BLACKLIST    | IP blacklist, separated by space. |           None           |
 
 # Chat Log
+
 The saved path is in the `Log/` directory under the current directory.  
 The chat log starts with `chat_` and is written to the file every 5 rounds by default.  
 The recording format is as follows:
+
 ```text
 {'host': xxx, 'model': xxx, 'message': [{'user': xxx}, {'assistant': xxx}]}
 {'assistant': xxx}
@@ -208,3 +224,33 @@ The recording format is as follows:
 
 ...
 ```
+
+# Advanced Configuration
+
+**Set the api_key to your own forward key**  
+You need to configure OPENAI_API_KEY and FORWARD_KEY, for example:
+
+```bash
+OPENAI_API_KEY=sk-*******
+FORWARD_KEY=fk-******
+```
+If you set FORWARD_KEY to fk-******, then the client only needs to set the OPENAI_API_KEY to fk-****** when calling the API later.
+
+**Examples:**  
+
+**Python**
+```diff
+  import openai
++ openai.api_base = "https://caloi.top/openai/v1"
+- openai.api_key = "sk-******"
++ openai.api_key = "fk-******"
+```
+**Web application**
+```bash 
+docker run -d \
+    -p 3000:3000 \
+    -e OPENAI_API_KEY="fk-******" \
+    -e BASE_URL="caloi.top/openai" \
+    -e CODE="<your password>" \
+    yidadaa/chatgpt-next-web 
+``` 

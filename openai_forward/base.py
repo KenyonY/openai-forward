@@ -12,11 +12,11 @@ from .config import env2list
 class OpenaiBase:
     BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com").strip()
     ROUTE_PREFIX = os.environ.get("ROUTE_PREFIX", "").strip()
-    _LOG_CHAT = os.environ.get("LOG_CHAT", "False").lower() == "true"
-    _default_api_key_list = env2list("OPENAI_API_KEY", sep=" ")
-    _cycle_api_key = cycle(_default_api_key_list)
-    _PASSWORD = env2list("PASSWORD", sep=" ")
-    _use_password = _default_api_key_list != [] and _PASSWORD != []
+    _LOG_CHAT = os.environ.get("LOG_CHAT", "False").strip().lower() == "true"
+    _openai_api_key_list = env2list("OPENAI_API_KEY", sep=" ")
+    _cycle_api_key = cycle(_openai_api_key_list)
+    _FWD_KEYS = env2list("FORWARD_KEY", sep=" ")
+    _use_forward_key = _openai_api_key_list != [] and _FWD_KEYS != []
     IP_WHITELIST = env2list("IP_WHITELIST", sep=" ")
     IP_BLACKLIST = env2list("IP_BLACKLIST", sep=" ")
 
@@ -62,27 +62,31 @@ class OpenaiBase:
         auth = headers.pop("authorization", None)
         if auth and str(auth).startswith("Bearer sk-"):
             tmp_headers = {'Authorization': auth}
-        elif cls._default_api_key_list:
-            auth = "Bearer " + next(cls._cycle_api_key)
-            tmp_headers = {'Authorization': auth}
+        elif cls._openai_api_key_list:
+            logger.info(f"Use forward key: {cls._use_forward_key}")
+            if cls._use_forward_key:
+                fk_prefix = "Bearer fk-"
+                logger.info(f"current forward key: {auth}")
+                if auth and str(auth).startswith(fk_prefix) and auth[len("Bearer "):] in cls._FWD_KEYS:
+                    auth = "Bearer " + next(cls._cycle_api_key)
+                    tmp_headers = {'Authorization': auth}
+                else:
+                    tmp_headers = {}
+            else:
+                auth = "Bearer " + next(cls._cycle_api_key)
+                tmp_headers = {'Authorization': auth}
         else:
             tmp_headers = {}
 
-        if cls._LOG_CHAT or cls._use_password:
+        if cls._LOG_CHAT:
             try:
                 input_info = await request.json()
                 msgs = input_info['messages']
-                if cls._LOG_CHAT:
-                    cls.chatsaver.add_chat({
-                        "host": request.client.host,
-                        "model": input_info['model'],
-                        "messages": [{msg['role']: msg['content']} for msg in msgs],
-                    })
-                if cls._use_password:
-                    password = input_info['password']
-                    if password not in cls._PASSWORD:
-                        tmp_headers = {'Authorization': ''}
-
+                cls.chatsaver.add_chat({
+                    "host": request.client.host,
+                    "model": input_info['model'],
+                    "messages": [{msg['role']: msg['content']} for msg in msgs],
+                })
             except Exception as e:
                 logger.debug(f"log chat (not) error:\n{request.client.host=}: {e}")
 
@@ -94,17 +98,15 @@ class OpenaiBase:
             content=request.stream(),
             timeout=cls.timeout,
         )
-        logger.warning(f"{url=}")
-
         try:
             r = await client.send(req, stream=True)
-        except httpx.ConnectError as e:
+        except (httpx.ConnectError, httpx.ConnectTimeout) as e:
             error_info = f"{type(e)}: {e} | " \
                          f"Please check if host={request.client.host} can access [{cls.BASE_URL}] successfully."
             logger.error(error_info)
             raise HTTPException(status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail=error_info)
         except Exception as e:
-            error_info = f"{type(e)}: {str(e)}"
+            error_info = f"{type(e)}: {e}"
             logger.error(error_info)
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_info)
 

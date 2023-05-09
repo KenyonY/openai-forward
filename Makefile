@@ -10,6 +10,7 @@ start:
     --env-file .env \
     -p 27001:8000 \
     -v $(shell pwd)/Log-caloi-top:/home/openai-forward/Log \
+    -v $(shell pwd)/openai_forward:/home/openai-forward/openai_forward \
     $(image)
 
 
@@ -37,11 +38,6 @@ test:
 twine:
 	@twine upload dist/*
 	@rm -rf dist/*
-
-build-web:
-	@cd third-party/forward_web && npm run build
-	@cd third-party/forward_web/build && npx uglify-js index.js -m -o index.min.js
-	@mv third-party/forward_web/build/index.min.js openai_forward/web/index.js
 
 start-web:
 	@openai_forward node --port=9099 --base_url="https://api.openai.com"
