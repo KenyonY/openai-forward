@@ -12,7 +12,7 @@ from .config import env2list
 class OpenaiBase:
     BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com").strip()
     ROUTE_PREFIX = os.environ.get("ROUTE_PREFIX", "").strip()
-    _LOG_CHAT = os.environ.get("LOG_CHAT", "False").lower() == "true"
+    _LOG_CHAT = os.environ.get("LOG_CHAT", "False").strip().lower() == "true"
     _openai_api_key_list = env2list("OPENAI_API_KEY", sep=" ")
     _cycle_api_key = cycle(_openai_api_key_list)
     _FWD_KEYS = env2list("FORWARD_KEY", sep=" ")
@@ -98,17 +98,15 @@ class OpenaiBase:
             content=request.stream(),
             timeout=cls.timeout,
         )
-        logger.warning(f"{url=}")
-
         try:
             r = await client.send(req, stream=True)
-        except httpx.ConnectError as e:
+        except (httpx.ConnectError, httpx.ConnectTimeout) as e:
             error_info = f"{type(e)}: {e} | " \
                          f"Please check if host={request.client.host} can access [{cls.BASE_URL}] successfully."
             logger.error(error_info)
             raise HTTPException(status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail=error_info)
         except Exception as e:
-            error_info = f"{type(e)}: {str(e)}"
+            error_info = f"{type(e)}: {e}"
             logger.error(error_info)
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_info)
 

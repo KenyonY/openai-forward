@@ -17,12 +17,27 @@ class InterceptHandler(logging.Handler):
             level = record.levelno
 
         # Find caller from where originated the logged message
-        frame, depth = logging.currentframe(), 2
+        frame, depth = logging.currentframe(), 6
         while frame.f_code.co_filename == logging.__file__:
             frame = frame.f_back
             depth += 1
         logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
 
+# class InterceptHandler(logging.Handler):
+#     def emit(self, record):
+#         # Get corresponding Loguru level if it exists.
+#         try:
+#             level = logger.level(record.levelname).name
+#         except ValueError:
+#             level = record.levelno
+#
+#         # Find caller from where originated the logged message.
+#         frame, depth = sys._getframe(6), 6
+#         while frame and frame.f_code.co_filename == logging.__file__:
+#             frame = frame.f_back
+#             depth += 1
+#
+#         logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
 
 def setting_log(log_name, multi_process=True):
     # TODO 修复时区配置
@@ -32,14 +47,17 @@ def setting_log(log_name, multi_process=True):
             print(os.environ['TZ'])
             time.tzset()
 
+    # logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
     logging.root.handlers = [InterceptHandler()]
     for name in logging.root.manager.loggerDict.keys():
         logging.getLogger(name).handlers = []
         logging.getLogger(name).propagate = True
     logger_config = {
         "handlers": [
-            {"sink": sys.stdout},
-            {"sink": f"./Log/{log_name}", "enqueue": multi_process, "rotation": "100 MB"},
+            # {"sink": sys.stdout, "level": "INFO"},
+            {"sink": sys.stdout, "level": "DEBUG"},
+            # {"sink": f"./Log/{log_name}_{{time}}.log", "enqueue": multi_process, "rotation": "100 MB", "level": "DEBUG"},
+            {"sink": f"./Log/{log_name}.log", "enqueue": multi_process, "rotation": "100 MB", "level": "DEBUG"},
         ],
     }
     logger.configure(**logger_config)

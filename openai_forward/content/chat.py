@@ -8,6 +8,8 @@ from typing import List, Dict
 import os
 
 decoder = LineDecoder()
+logger.disable("Log/openai_forward.log")
+logger.add("chat.log", level='DEBUG')
 
 
 def _parse_iter_line_content(line: str):
@@ -67,7 +69,7 @@ class ChatSaver:
             self._file_idx += 1
 
     def add_chat(self, chat_info: dict):
-        logger.info(str(chat_info))
+        logger.debug(str(chat_info))
         self._chat_list.append(chat_info)
         self._cur_chat_file_size += 1
         self._save_chat()

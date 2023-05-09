@@ -3,7 +3,7 @@ from .routers.schemas import OpenAIV1ChatCompletion
 from fastapi import Request
 from .config import setting_log
 
-setting_log(log_name="openai_forward.log")
+setting_log(log_name="openai_forward")
 
 
 class Openai(OpenaiBase):
