@@ -122,7 +122,7 @@ curl --location 'https://caloi.top/openai/v1/images/generations' \
 提供3种服务部署方式,选择一种即可
 
 ## pip
-
+pip的安装方式目前在使用nginx反向代理时存在Bug, 建议使用Docker方式部署。  
 **安装**
 
 ```bash
@@ -235,15 +235,16 @@ http://{ip}:{port}/v1/chat/completions
 
 ```bash
 OPENAI_API_KEY=sk-*******
-FORWARD_KEY=fk-mytoken-abcd
+FORWARD_KEY=fk-****** # 这里fk-token由我们自己定义
 ```
-这里我们配置了FORWARD_KEY为fk-mytoken-abcd, 那么后面客户端在调用时只需设置OPENAI_API_KEY为fk-mytoken-abcd 即可。
+这里我们配置了FORWARD_KEY为`fk-******`, 那么后面客户端在调用时只需设置OPENAI_API_KEY为我们自定义的`fk-******` 即可。  
+这样的好处是在使用一些需要输入OPENAI_API_KEY的第三方应用时，我们可以使用`fk-******`搭配proxy使用（如下面的例子） 而无需担心OPENAI_API_KEY被泄露。
 
 **用例:**
 ```bash
 curl https://caloi.top/openai/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer fk-mytoken-abcd" \
+  -H "Authorization: Bearer fk-******" \
   -d '{
     "model": "gpt-3.5-turbo",
     "messages": [{"role": "user", "content": "Hello!"}]
@@ -254,13 +255,13 @@ curl https://caloi.top/openai/v1/chat/completions \
   import openai
 + openai.api_base = "https://caloi.top/openai/v1"
 - openai.api_key = "sk-******"
-+ openai.api_key = "fk-mytoken-abcd"
++ openai.api_key = "fk-******"
 ```
 **Web application**
 ```bash 
 docker run -d \
     -p 3000:3000 \
-    -e OPENAI_API_KEY="fk-mytoken-abcd" \
+    -e OPENAI_API_KEY="fk-******" \
     -e BASE_URL="caloi.top/openai" \
     -e CODE="<your password>" \
     yidadaa/chatgpt-next-web 
