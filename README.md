@@ -39,12 +39,11 @@
 
 本项目用于解决一些地区无法直接访问OpenAI的问题，将该服务部署在可以正常访问openai
 api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代理服务  
-测试访问：https://caloi.top/openai/v1/chat/completions 将等价于 https://api.openai.com/v1/chat/completions  
-或者说 https://caloi.top/openai 等价于 https://api.openai.com
 
-# Table of Contents
 
-- [Features](#Features)
+# 目录
+
+- [特点](#特点)
 - [应用](#应用)
 - [安装部署](#安装部署)
 - [服务调用](#服务调用)
@@ -52,7 +51,7 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 - [聊天日志](#聊天日志)
 - [高级配置](#高级配置)
 
-# Features
+# 特点
 
 - [x] 支持转发OpenAI所有接口
 - [x] 支持流式响应
@@ -63,6 +62,8 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 - [x] 支持指定转发路由前缀
 - [x] 支持请求IP验证
 
+测试访问：https://caloi.top/openai/v1/chat/completions 将等价于 https://api.openai.com/v1/chat/completions  
+或者说 https://caloi.top/openai 等价于 https://api.openai.com
 # 应用
 
 > 这里以个人使用该项目搭建好的代理服务 https://caloi.top/openai 为例
@@ -266,3 +267,8 @@ docker run -d \
     -e CODE="<your password>" \
     yidadaa/chatgpt-next-web 
 ``` 
+
+# License
+
+Openai-forward is licensed under the [MIT](https://opensource.org/license/mit/) license.
+
