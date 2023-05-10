@@ -257,6 +257,11 @@ docker run -d \
     yidadaa/chatgpt-next-web 
 ``` 
 
+# Backer and Sponsor
+
+<a href="https://www.jetbrains.com/?from=beidongjiedeguang/openai-forward" target="_blank">
+<img src="./img/jetbrains.svg" width="100px" height="100px">
+</a>
 
 # License
 
