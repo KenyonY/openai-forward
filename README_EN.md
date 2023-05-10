@@ -52,8 +52,6 @@
 </p>
 This project is designed to solve the problem of some regions being unable to directly access OpenAI. The service is deployed on a server that can access the OpenAI API, and OpenAI requests are forwarded through the service, i.e. a reverse proxy service is set up. 
 
-Test access: https://caloi.top/openai/v1/chat/completions is equivalent to https://api.openai.com/v1/chat/completions  
-Or, to put it another way, https://caloi.top/openai is equivalent to https://api.openai.com.
 
 # Table of Contents
 
@@ -71,9 +69,13 @@ Or, to put it another way, https://caloi.top/openai is equivalent to https://api
 - [x] Streaming Response
 - [x] Real-time recording of chat records (including the chat contents of streaming responses).
 - [x] Supports default API key (cyclic call with multiple API keys)
+- [x] Use custom forward API key instead of OpenAI API key (see advanced configuration).
 - [x] Docker deployment
 - [x] Support for specifying the forwarding routing prefix
 - [x] Request IP verification
+
+Test access: https://caloi.top/openai/v1/chat/completions is equivalent to https://api.openai.com/v1/chat/completions  
+Or, to put it another way, https://caloi.top/openai is equivalent to https://api.openai.com.
 
 # Usage
 
@@ -132,7 +134,7 @@ curl --location 'https://caloi.top/openai/v1/images/generations' \
 
 # Deploy
 
-Two deployment methods are provided, just choose one.
+Just choose one.
 
 ## Use `pip`
 
@@ -234,7 +236,7 @@ You need to configure OPENAI_API_KEY and FORWARD_KEY, for example:
 OPENAI_API_KEY=sk-*******
 FORWARD_KEY=fk-******
 ```
-If you set FORWARD_KEY to fk-******, then the client only needs to set the OPENAI_API_KEY to fk-****** when calling the API later.
+If you set FORWARD_KEY to `fk-******`, then the client only needs to set the OPENAI_API_KEY to `fk-******` when calling the API later.
 
 **Examples:**  
 
@@ -254,3 +256,13 @@ docker run -d \
     -e CODE="<your password>" \
     yidadaa/chatgpt-next-web 
 ``` 
+
+# Backer and Sponsor
+
+<a href="https://www.jetbrains.com/?from=beidongjiedeguang/openai-forward" target="_blank">
+<img src="./img/jetbrains.svg" width="100px" height="100px">
+</a>
+
+# License
+
+Openai-forward is licensed under the [MIT](https://opensource.org/license/mit/) license.

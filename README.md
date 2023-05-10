@@ -39,12 +39,11 @@
 
 本项目用于解决一些地区无法直接访问OpenAI的问题，将该服务部署在可以正常访问openai
 api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代理服务  
-测试访问：https://caloi.top/openai/v1/chat/completions 将等价于 https://api.openai.com/v1/chat/completions  
-或者说 https://caloi.top/openai 等价于 https://api.openai.com
 
-# Table of Contents
 
-- [Features](#Features)
+# 目录
+
+- [特点](#特点)
 - [应用](#应用)
 - [安装部署](#安装部署)
 - [服务调用](#服务调用)
@@ -52,17 +51,19 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 - [聊天日志](#聊天日志)
 - [高级配置](#高级配置)
 
-# Features
+# 特点
 
 - [x] 支持转发OpenAI所有接口
 - [x] 支持流式响应
 - [x] 实时记录聊天记录(包括流式响应的聊天内容)
 - [x] 支持默认openai api key(多api key 循环调用)
-- [x] 转发api key (在已设置默认openai api key情况下使用)
+- [x] 自定义forward api key 代替 openai api key (见高级配置)
 - [x] docker部署
 - [x] 支持指定转发路由前缀
 - [x] 支持请求IP验证
 
+测试访问：https://caloi.top/openai/v1/chat/completions 将等价于 https://api.openai.com/v1/chat/completions  
+或者说 https://caloi.top/openai 等价于 https://api.openai.com
 # 应用
 
 > 这里以个人使用该项目搭建好的代理服务 https://caloi.top/openai 为例
@@ -119,10 +120,10 @@ curl --location 'https://caloi.top/openai/v1/images/generations' \
 
 # 安装部署
 
-提供3种服务部署方式,选择一种即可
+选择一种即可
 
 ## pip
-pip的安装方式目前在使用nginx反向代理时存在Bug, 建议使用Docker方式部署。  
+pip的安装方式目前在使用nginx反向代理时存尚存在Bug, 建议使用Docker方式部署。  
 **安装**
 
 ```bash
@@ -130,19 +131,19 @@ pip install openai-forward
 ```
 
 **运行转发服务**  
-可通过`--port`指定端口号，默认为`8000`，可通过`--workers`指定工作进程数，默认为`1`
+可通过`--port`指定端口号，默认为`8000`
 
 ```bash
-openai_forward run --port=9999 --workers=1
+openai_forward run --port=9999 
 ```
 
 服务就搭建完成了，使用方式只需将`https://api.openai.com` 替换为服务所在端口`http://{ip}:{port}` 即可。
 
-当然也可以将 OPENAI_API_KEY 作为环境变量传入作为默认api key， 这样客户端在请求相关路由时可以无需在Header中传入Authorization。
+当然也可以将 OPENAI_API_KEY 作为环境变量或`--api_key`参数传入作为默认api key， 这样客户端在请求相关路由时可以无需在Header中传入Authorization。
 带默认api key的启动方式：
 
 ```bash
-OPENAI_API_KEY="sk-xxx" openai_forward run --port=9999 --workers=1
+openai_forward run --port=9999 --api_key="sk-******"
 ```
 
 注: 如果既存在默认api key又在请求头中传入了api key，则以请求头中的api key会覆盖默认api key.
@@ -150,7 +151,7 @@ OPENAI_API_KEY="sk-xxx" openai_forward run --port=9999 --workers=1
 ## Docker (推荐)
 
 ```bash
-docker run --name="openai-forward" -d -p 9999:8000 beidongjiedeguang/openai-forward:latest 
+docker run -d -p 9999:8000 beidongjiedeguang/openai-forward:latest 
 ```
 
 将映射宿主机的9999端口，通过`http://{ip}:9999`访问服务。  
@@ -163,13 +164,13 @@ git clone https://github.com/beidongjiedeguang/openai-forward.git --depth=1
 cd openai-forward
 ```
 
-**使用 docker**
+**Docker**
 
 ```bash
 docker-compose up
 ```
 
-**或使用pip**
+**pip**
 
 ```bash
 pip install -e .
@@ -266,3 +267,13 @@ docker run -d \
     -e CODE="<your password>" \
     yidadaa/chatgpt-next-web 
 ``` 
+
+# Backer and Sponsor
+
+<a href="https://www.jetbrains.com/?from=beidongjiedeguang/openai-forward" target="_blank">
+<img src="./img/jetbrains.svg" width="100px" height="100px">
+</a>
+
+# License
+
+Openai-forward is licensed under the [MIT](https://opensource.org/license/mit/) license.
