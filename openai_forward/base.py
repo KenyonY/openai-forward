@@ -6,7 +6,7 @@ from starlette.background import BackgroundTask
 import os
 from itertools import cycle
 from .content.chat import parse_chat_completions, ChatSaver
-from .config import env2list
+from .config import env2list, print_startup_info
 
 
 class OpenaiBase:
@@ -27,6 +27,7 @@ class OpenaiBase:
             ROUTE_PREFIX = '/' + ROUTE_PREFIX
     timeout = 30
     chatsaver = ChatSaver(save_interval=10)
+    print_startup_info(BASE_URL, ROUTE_PREFIX, _openai_api_key_list, _FWD_KEYS)
 
     def validate_request_host(self, ip):
         if self.IP_WHITELIST and ip not in self.IP_WHITELIST:
@@ -90,8 +91,8 @@ class OpenaiBase:
             except Exception as e:
                 logger.debug(f"log chat (not) error:\n{request.client.host=}: {e}")
 
-        headers.pop("host", None)
-        headers.update(tmp_headers)
+        tmp_headers.update({"Content-Type": "application/json"})
+        headers = tmp_headers
 
         req = client.build_request(
             request.method, url, headers=headers,
@@ -102,7 +103,7 @@ class OpenaiBase:
             r = await client.send(req, stream=True)
         except (httpx.ConnectError, httpx.ConnectTimeout) as e:
             error_info = f"{type(e)}: {e} | " \
-                         f"Please check if host={request.client.host} can access [{cls.BASE_URL}] successfully."
+                         f"Please check if host={request.client.host} can access [{cls.BASE_URL}] successfully?"
             logger.error(error_info)
             raise HTTPException(status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail=error_info)
         except Exception as e:

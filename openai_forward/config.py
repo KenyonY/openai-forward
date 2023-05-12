@@ -6,6 +6,31 @@ import sys
 import logging
 import os
 import time
+from rich import print
+from rich.panel import Panel
+from rich.text import Text
+from rich.table import Table
+
+
+def print_startup_info(base_url, route_prefix,api_key, forward_key):
+    try:
+        from dotenv import load_dotenv
+        load_dotenv('.env')
+    except Exception:
+        ...
+    table = Table(title="", box=None, width=100)
+    table.add_column(Text("server"), justify="left", style="cyan", no_wrap=True)
+    table.add_column("base url", justify="left", style="#df412f")
+    table.add_column("route prefix", justify="left", style="#df412f")
+    table.add_column("Log file directory", justify="left", style="#f5bb00")
+    table.add_row("openai-forward", base_url, f"{route_prefix}", "./Log/*.log")
+    print(Panel(table, title="🤗AI Forwarding is ready to serve!", expand=False))
+
+    table = Table(title="", box=None, width=100)
+    table.add_column("default-openai-api-key", justify="left", style="#5087f4")
+    table.add_column("forward-key", justify="left", style="green")
+    table.add_row(f"{api_key}", f"{forward_key}",)
+    print(Panel(table, title="", expand=False))
 
 
 class InterceptHandler(logging.Handler):
