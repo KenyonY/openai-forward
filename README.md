@@ -40,6 +40,12 @@
 本项目用于解决一些地区无法直接访问OpenAI的问题，将该服务部署在可以正常访问openai
 api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代理服务  
 
+---
+
+测试访问：https://caloi.top/openai/v1/chat/completions  
+或者说 https://caloi.top/openai 等价于 https://api.openai.com
+
+---
 
 # 目录
 
@@ -62,8 +68,6 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 - [x] 支持指定转发路由前缀
 - [x] 支持请求IP验证
 
-测试访问：https://caloi.top/openai/v1/chat/completions 将等价于 https://api.openai.com/v1/chat/completions  
-或者说 https://caloi.top/openai 等价于 https://api.openai.com
 # 应用
 
 > 这里以个人使用该项目搭建好的代理服务 https://caloi.top/openai 为例
@@ -201,7 +205,7 @@ http://{ip}:{port}/v1/chat/completions
 | --workers | 工作进程数 | 1 |
 
 **环境变量配置项**  
-参考项目根目录下`.env`文件
+支持从运行目录下的`.env`文件中读取: 
 
 | 环境变量            | 说明                                                              |           默认值            |
 |-----------------|-----------------------------------------------------------------|:------------------------:|
@@ -245,7 +249,7 @@ FORWARD_KEY=fk-****** # 这里fk-token由我们自己定义
 ```bash
 curl https://caloi.top/openai/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer fk-******" \
+  -H "Authorization: Bearer fk-mytoken-abcd" \
   -d '{
     "model": "gpt-3.5-turbo",
     "messages": [{"role": "user", "content": "Hello!"}]
