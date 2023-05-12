@@ -92,10 +92,8 @@ class OpenaiBase:
                 logger.debug(f"log chat (not) error:\n{request.client.host=}: {e}")
 
         tmp_headers.update({"Content-Type": "application/json"})
-        headers = tmp_headers
-
         req = client.build_request(
-            request.method, url, headers=headers,
+            request.method, url, headers=tmp_headers,
             content=request.stream(),
             timeout=cls.timeout,
         )
