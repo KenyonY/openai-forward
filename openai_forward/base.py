@@ -90,11 +90,9 @@ class OpenaiBase:
             except Exception as e:
                 logger.debug(f"log chat (not) error:\n{request.client.host=}: {e}")
 
-        headers.pop("host", None)
-        headers.update(tmp_headers)
-
+        tmp_headers.update({"Content-Type": "application/json"})
         req = client.build_request(
-            request.method, url, headers=headers,
+            request.method, url, headers=tmp_headers,
             content=request.stream(),
             timeout=cls.timeout,
         )
@@ -102,7 +100,7 @@ class OpenaiBase:
             r = await client.send(req, stream=True)
         except (httpx.ConnectError, httpx.ConnectTimeout) as e:
             error_info = f"{type(e)}: {e} | " \
-                         f"Please check if host={request.client.host} can access [{cls.BASE_URL}] successfully."
+                         f"Please check if host={request.client.host} can access [{cls.BASE_URL}] successfully?"
             logger.error(error_info)
             raise HTTPException(status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail=error_info)
         except Exception as e:
