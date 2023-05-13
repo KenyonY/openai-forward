@@ -6,7 +6,7 @@ from starlette.background import BackgroundTask
 import os
 from itertools import cycle
 from .content.chat import parse_chat_completions, ChatSaver
-from .config import env2list
+from .config import env2list, print_startup_info
 
 
 class OpenaiBase:
@@ -27,6 +27,7 @@ class OpenaiBase:
             ROUTE_PREFIX = '/' + ROUTE_PREFIX
     timeout = 30
     chatsaver = ChatSaver(save_interval=10)
+    print_startup_info(BASE_URL, ROUTE_PREFIX, _openai_api_key_list, _FWD_KEYS, _LOG_CHAT)
 
     def validate_request_host(self, ip):
         if self.IP_WHITELIST and ip not in self.IP_WHITELIST:

@@ -2,15 +2,19 @@ from .openai import Openai
 from .routers.openai_v1 import router as router_v1
 from sparrow.api import create_app
 import httpx
+import chardet
 
 app = create_app(title="openai_forward", version="1.0")
 openai = Openai()
 use_http2 = False
 
 
+def autodetect(content):
+    return chardet.detect(content).get("encoding")
+
 @app.on_event('startup')
 async def startup_event():
-    app.state.client = httpx.AsyncClient(base_url=Openai.BASE_URL, http2=use_http2)
+    app.state.client = httpx.AsyncClient(base_url=Openai.BASE_URL, http2=use_http2, default_encoding=autodetect)
 
 
 @app.on_event('shutdown')

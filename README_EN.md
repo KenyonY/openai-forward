@@ -52,6 +52,12 @@
 </p>
 This project is designed to solve the problem of some regions being unable to directly access OpenAI. The service is deployed on a server that can access the OpenAI API, and OpenAI requests are forwarded through the service, i.e. a reverse proxy service is set up. 
 
+---
+
+Test access: https://caloi.top/openai/v1/chat/completions   
+To put it another way, https://caloi.top/openai is equivalent to https://api.openai.com.
+
+---
 
 # Table of Contents
 
@@ -73,9 +79,6 @@ This project is designed to solve the problem of some regions being unable to di
 - [x] Docker deployment
 - [x] Support for specifying the forwarding routing prefix
 - [x] Request IP verification
-
-Test access: https://caloi.top/openai/v1/chat/completions is equivalent to https://api.openai.com/v1/chat/completions  
-Or, to put it another way, https://caloi.top/openai is equivalent to https://api.openai.com.
 
 # Usage
 
