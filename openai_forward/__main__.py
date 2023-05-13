@@ -8,6 +8,7 @@ class Cli:
     def run(port=8000,
             workers=1,
             api_key=None,
+            forward_key=None,
             base_url=None,
             log_chat=None,
             route_prefix=None,
@@ -20,20 +21,23 @@ class Cli:
         ----------
 
         port: int, default 8000
-        workers: int, default 1
-        api_key: str, default None
-        base_url: str, default None
-        log_chat: str, default None
-        route_prefix: str, default None
-        ip_whitelist: str, default None
-        ip_blacklist: str, default None
+        workers: int, 1
+        api_key: str, None
+        forward_key: str, None
+        base_url: str, None
+        log_chat: str, None
+        route_prefix: str, None
+        ip_whitelist: str, None
+        ip_blacklist: str, None
         """
         if base_url:
             os.environ['OPENAI_BASE_URL'] = base_url
-        if log_chat:
-            os.environ['LOG_CHAT'] = log_chat
         if api_key:
             os.environ['OPENAI_API_KEY'] = api_key
+        if forward_key:
+            os.environ['FORWARD_KEY'] = forward_key
+        if log_chat:
+            os.environ['LOG_CHAT'] = log_chat
         if route_prefix:
             os.environ['ROUTE_PREFIX'] = route_prefix
         if ip_whitelist:

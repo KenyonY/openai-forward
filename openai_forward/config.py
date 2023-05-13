@@ -6,6 +6,29 @@ import sys
 import logging
 import os
 import time
+from rich import print
+from rich.panel import Panel
+from rich.table import Table
+
+
+def print_startup_info(base_url, route_prefix, api_key, forward_key, log_chat):
+    try:
+        from dotenv import load_dotenv
+        load_dotenv('.env')
+    except Exception:
+        ...
+    route_prefix = route_prefix or "/"
+    api_key_info = True if len(api_key) else False
+    forward_key_info = True if len(forward_key) else False
+    table = Table(title="", box=None, width=100)
+    table.add_column("base-url", justify="left", style="#df412f")
+    table.add_column("route-prefix", justify="center", style="#df412f")
+    table.add_column("openai-api-key", justify="center", style="green")
+    table.add_column("forward-key", justify="center", style="green")
+    table.add_column("Log-chat", justify="center", style="green")
+    table.add_column("Log-dir", justify="center", style="#f5bb00")
+    table.add_row(base_url, route_prefix, str(api_key_info), str(forward_key_info), str(log_chat), "./Log/*.log")
+    print(Panel(table, title="🤗openai-forward is ready to serve!", expand=False))
 
 
 class InterceptHandler(logging.Handler):
@@ -29,7 +52,6 @@ def setting_log(log_name, multi_process=True):
     if os.environ.get("TZ") == "Asia/Shanghai":
         os.environ['TZ'] = "UTC-8"
         if hasattr(time, 'tzset'):
-            print(os.environ['TZ'])
             time.tzset()
 
     logging.root.handlers = [InterceptHandler()]

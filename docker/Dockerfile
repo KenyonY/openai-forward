@@ -1,4 +1,4 @@
-FROM continuumio/miniconda3:master-alpine
+FROM python:3.10-alpine
 LABEL maintainer="kunyuan"
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8

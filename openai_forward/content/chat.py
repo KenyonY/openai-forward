@@ -2,6 +2,7 @@ import orjson
 from orjson import JSONDecodeError
 from loguru import logger
 from httpx._decoders import LineDecoder
+from fastapi import Request
 from pathlib import Path
 from sparrow import relp
 from typing import List, Dict
@@ -65,6 +66,27 @@ class ChatSaver:
     def _init_chat_file(self):
         while Path(self.chat_file).exists():
             self._file_idx += 1
+
+    @staticmethod
+    async def parse_payload_to_content(request: Request, route_path: str):
+        payload = await request.json()
+        if route_path == "/v1/chat/completions":
+            msgs = payload['messages']
+            model = payload['model']
+            return {
+                "host": request.client.host,
+                "model": model,
+                "messages": [{msg['role']: msg['content']} for msg in msgs],
+            }
+        else:
+            return {}
+
+    @staticmethod
+    def parse_bytes_to_content(bytes_: bytes, route_path: str):
+        if route_path == "/v1/chat/completions":
+            return parse_chat_completions(bytes_)
+        else:
+            return {}
 
     def add_chat(self, chat_info: dict):
         logger.info(str(chat_info))
