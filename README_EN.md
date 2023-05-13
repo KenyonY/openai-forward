@@ -71,14 +71,19 @@ To put it another way, https://caloi.top/openai is equivalent to https://api.ope
 
 # Features
 
-- [x] Supports forwarding of all OpenAI interfaces
-- [x] Streaming Response
-- [x] Real-time recording of chat records (including the chat contents of streaming responses).
-- [x] Supports default API key (cyclic call with multiple API keys)
-- [x] Use custom forward API key instead of OpenAI API key (see advanced configuration).
-- [x] Docker deployment
-- [x] Support for specifying the forwarding routing prefix
-- [x] Request IP verification
+**Basic Features**
+- [x] Support forwarding all OpenAI APIs.
+- [x] Support streaming responses.
+- [x] Support specifying forwarding route prefixes.
+- [x] Docker deployment.
+- [x] Pip installation deployment.
+
+**Advanced Features**
+- [x] Real-time recording of chat logs (including chat content from streaming responses).
+- [x] Support default OpenAI API key (round-robin invocation of multiple API keys).
+- [x] Custom forward API key instead of OpenAI API key (see advanced configuration).
+- [x] Support request IP verification (IP whitelist and blacklist).
+
 
 # Usage
 

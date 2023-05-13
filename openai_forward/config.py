@@ -52,7 +52,6 @@ def setting_log(log_name, multi_process=True):
     if os.environ.get("TZ") == "Asia/Shanghai":
         os.environ['TZ'] = "UTC-8"
         if hasattr(time, 'tzset'):
-            print(os.environ['TZ'])
             time.tzset()
 
     logging.root.handlers = [InterceptHandler()]
