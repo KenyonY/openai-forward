@@ -12,6 +12,7 @@ use_http2 = False
 def autodetect(content):
     return chardet.detect(content).get("encoding")
 
+
 @app.on_event('startup')
 async def startup_event():
     app.state.client = httpx.AsyncClient(base_url=Openai.BASE_URL, http2=use_http2, default_encoding=autodetect)

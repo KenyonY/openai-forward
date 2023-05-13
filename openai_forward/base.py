@@ -5,7 +5,7 @@ import httpx
 from starlette.background import BackgroundTask
 import os
 from itertools import cycle
-from .content.chat import parse_chat_completions, ChatSaver
+from .content.chat import ChatSaver
 from .config import env2list, print_startup_info
 
 
@@ -38,18 +38,14 @@ class OpenaiBase:
                                 detail=f"Forbidden, ip={ip} in blacklist!")
 
     @classmethod
-    def log_chat_completions(cls, bytes_: bytes):
-        target_info = parse_chat_completions(bytes_)
-        cls.chatsaver.add_chat({target_info['role']: target_info['content']})
-
-    @classmethod
-    async def aiter_bytes(cls, r: httpx.Response):
+    async def aiter_bytes(cls, r: httpx.Response, route_path: str):
         bytes_ = b''
         async for chunk in r.aiter_bytes():
             bytes_ += chunk
             yield chunk
         try:
-            cls.log_chat_completions(bytes_)
+            target_info = cls.chatsaver.parse_bytes_to_content(bytes_, route_path)
+            cls.chatsaver.add_chat({target_info['role']: target_info['content']})
         except Exception as e:
             logger.debug(f"log chat (not) error:\n{e=}")
 
@@ -79,17 +75,15 @@ class OpenaiBase:
         else:
             tmp_headers = {}
 
-        if cls._LOG_CHAT:
+        log_chat_completions = False
+        if cls._LOG_CHAT and request.method == 'POST':
             try:
-                input_info = await request.json()
-                msgs = input_info['messages']
-                cls.chatsaver.add_chat({
-                    "host": request.client.host,
-                    "model": input_info['model'],
-                    "messages": [{msg['role']: msg['content']} for msg in msgs],
-                })
+                chat_info = await cls.chatsaver.parse_payload_to_content(request, route_path=url_path)
+                if chat_info:
+                    cls.chatsaver.add_chat(chat_info)
+                    log_chat_completions = True
             except Exception as e:
-                logger.debug(f"log chat (not) error:\n{request.client.host=}: {e}")
+                logger.debug(f"log chat error:\n{request.client.host=} {request.method=}: {e}")
 
         tmp_headers.update({"Content-Type": "application/json"})
         req = client.build_request(
@@ -109,7 +103,7 @@ class OpenaiBase:
             logger.error(error_info)
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_info)
 
-        aiter_bytes = cls.aiter_bytes(r) if cls._LOG_CHAT else r.aiter_bytes()
+        aiter_bytes = cls.aiter_bytes(r, url_path) if log_chat_completions else r.aiter_bytes()
         return StreamingResponse(
             aiter_bytes,
             status_code=r.status_code,
