@@ -1,19 +1,21 @@
-from loguru import logger
-import orjson
-from sparrow import relp
-from typing import Union, List, Dict
-import sys
 import logging
 import os
+import sys
 import time
+from typing import Dict, List, Union
+
+import orjson
+from loguru import logger
 from rich import print
 from rich.panel import Panel
 from rich.table import Table
+from sparrow import relp
 
 
 def print_startup_info(base_url, route_prefix, api_key, forward_key, log_chat):
     try:
         from dotenv import load_dotenv
+
         load_dotenv('.env')
     except Exception:
         ...
@@ -27,7 +29,14 @@ def print_startup_info(base_url, route_prefix, api_key, forward_key, log_chat):
     table.add_column("forward-key", justify="center", style="green")
     table.add_column("Log-chat", justify="center", style="green")
     table.add_column("Log-dir", justify="center", style="#f5bb00")
-    table.add_row(base_url, route_prefix, str(api_key_info), str(forward_key_info), str(log_chat), "./Log/*.log")
+    table.add_row(
+        base_url,
+        route_prefix,
+        str(api_key_info),
+        str(forward_key_info),
+        str(log_chat),
+        "./Log/*.log",
+    )
     print(Panel(table, title="🤗openai-forward is ready to serve!", expand=False))
 
 
@@ -44,7 +53,9 @@ class InterceptHandler(logging.Handler):
         while frame.f_code.co_filename == logging.__file__:
             frame = frame.f_back
             depth += 1
-        logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
+        logger.opt(depth=depth, exception=record.exc_info).log(
+            level, record.getMessage()
+        )
 
 
 def setting_log(log_name, multi_process=True):
@@ -61,7 +72,12 @@ def setting_log(log_name, multi_process=True):
     logger_config = {
         "handlers": [
             {"sink": sys.stdout, "level": "DEBUG"},
-            {"sink": f"./Log/{log_name}.log", "enqueue": multi_process, "rotation": "100 MB", "level": "INFO"},
+            {
+                "sink": f"./Log/{log_name}.log",
+                "enqueue": multi_process,
+                "rotation": "100 MB",
+                "level": "INFO",
+            },
         ],
     }
     logger.configure(**logger_config)
@@ -99,7 +115,9 @@ def json_load(filepath: str, rel=False, mode='rb'):
         return orjson.loads(f.read())
 
 
-def json_dump(data: Union[List, Dict], filepath: str, rel=False, indent_2=False, mode='wb'):
+def json_dump(
+    data: Union[List, Dict], filepath: str, rel=False, indent_2=False, mode='wb'
+):
     orjson_option = 0
     if indent_2:
         orjson_option = orjson.OPT_INDENT_2

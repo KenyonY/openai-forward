@@ -1,6 +1,7 @@
+from fastapi import APIRouter, Request
+
 from ..openai import Openai
 from .schemas import OpenAIV1ChatCompletion
-from fastapi import Request, APIRouter
 
 openai = Openai()
 router = APIRouter(prefix=openai.ROUTE_PREFIX, tags=["v1"])

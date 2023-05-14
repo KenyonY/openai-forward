@@ -1,12 +1,13 @@
-import orjson
-from orjson import JSONDecodeError
-from loguru import logger
-from httpx._decoders import LineDecoder
-from fastapi import Request
-from pathlib import Path
-from sparrow import relp
-from typing import List, Dict
 import os
+from pathlib import Path
+from typing import Dict, List
+
+import orjson
+from fastapi import Request
+from httpx._decoders import LineDecoder
+from loguru import logger
+from orjson import JSONDecodeError
+from sparrow import relp
 
 decoder = LineDecoder()
 
@@ -105,7 +106,9 @@ class ChatSaver:
             self._chat_list = []
 
     @staticmethod
-    def dump_chat_list(data: List[Dict], filepath: str, rel=False, mode='w', _sep='\n', _end="\n"):
+    def dump_chat_list(
+        data: List[Dict], filepath: str, rel=False, mode='w', _sep='\n', _end="\n"
+    ):
         str_data = _sep.join([str(i) for i in data]) + _end
         abs_path = relp(filepath, parents=1) if rel else filepath
         with open(abs_path, mode=mode) as f:
