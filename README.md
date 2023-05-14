@@ -27,7 +27,7 @@
     <a href="https://github.com/beidongjiedeguang/openai-forward/actions/workflows/run_tests.yaml">
         <img alt="tests" src="https://img.shields.io/github/actions/workflow/status/beidongjiedeguang/openai-forward/run_tests.yml?label=tests">
     </a>
-    <a href="https://pypi.org/project/openai_forward/">
+    <a href="https://pypistats.org/packages/openai-forward">
         <img alt="pypi downloads" src="https://img.shields.io/pypi/dm/openai_forward">
     </a>
     <a href="https://codecov.io/gh/beidongjiedeguang/openai-forward">
