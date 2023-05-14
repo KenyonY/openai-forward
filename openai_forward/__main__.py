@@ -1,21 +1,23 @@
+import os
+
 import fire
 import uvicorn
-import os
 
 
 class Cli:
     @staticmethod
-    def run(port=8000,
-            workers=1,
-            api_key=None,
-            forward_key=None,
-            base_url=None,
-            log_chat=None,
-            route_prefix=None,
-            ip_whitelist=None,
-            ip_blacklist=None,
-            ):
-        """ Run forwarding serve.
+    def run(
+        port=8000,
+        workers=1,
+        api_key=None,
+        forward_key=None,
+        base_url=None,
+        log_chat=None,
+        route_prefix=None,
+        ip_whitelist=None,
+        ip_blacklist=None,
+    ):
+        """Run forwarding serve.
 
         Parameters
         ----------

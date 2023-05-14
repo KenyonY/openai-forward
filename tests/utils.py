@@ -1,6 +1,8 @@
-from sparrow import ls
 import os
 import shutil
+
+from sparrow import ls
+
 
 def rm(*file_pattern: str, rel=False):
     """Remove files or directories.

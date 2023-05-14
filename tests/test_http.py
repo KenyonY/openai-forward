@@ -1,8 +1,8 @@
-import os
-import time
-from sparrow.multiprocess import kill
 import subprocess
+import time
+
 import httpx
+from sparrow.multiprocess import kill
 from utils import rm
 
 

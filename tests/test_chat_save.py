@@ -1,6 +1,7 @@
-from openai_forward.content.chat import ChatSaver
 import pytest
 from utils import rm
+
+from openai_forward.content.chat import ChatSaver
 
 
 @pytest.fixture(scope="module")
@@ -9,7 +10,6 @@ def saver() -> ChatSaver:
 
 
 class TestChatSaver:
-
     @classmethod
     def teardown_class(cls):
         rm("Log/chat*.txt")
