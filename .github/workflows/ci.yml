@@ -68,10 +68,12 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install codecov pytest pytest-cov psutil
+          python -m pip install pytest psutil
+#          python -m pip install codecov pytest-cov
           python -m pip install .
       - name: Run tests
         run: |
-          pytest -v -s --cov=./ --cov-report=xml
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v3
+          pytest -v -s
+#          pytest -v -s --cov=./ --cov-report=xml
+#      - name: Upload coverage reports to Codecov
+#        uses: codecov/codecov-action@v3
