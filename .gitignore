@@ -1,5 +1,8 @@
 .github/release-template.ejs
-scripts/
+scripts/release.sh
+node_modules
+package-lock.json
+package.json
 .idea/
 .vscode/
 .DS_Store

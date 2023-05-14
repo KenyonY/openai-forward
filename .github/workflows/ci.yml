@@ -36,7 +36,7 @@ jobs:
       - name: check black
         env:
           CHANGED_FILES: ${{ steps.file_changes.outputs.added_modified }}
-        run: ./scripts/black.sh
+        run: bash ./scripts/black.sh
 
   lint-flake-8:
     runs-on: ubuntu-latest
