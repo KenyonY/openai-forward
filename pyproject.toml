@@ -8,6 +8,7 @@ description = "🚀 Openai api forward · OpenAI 接口转发服务 · stream fo
 authors = [
     { name = "kunyuan", email = "beidongjiedeguang@gmail.com" },
 ]
+license = "MIT"
 requires-python = ">=3.6"
 readme = "README.md"
 keywords = ["openai", "chatgpt", "openai-api", "openai-proxy", "forward", "streaming-api", "fastapi", "python"]
