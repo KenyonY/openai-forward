@@ -1,7 +1,9 @@
-from openai_forward.openai import OpenaiBase
-from fastapi import HTTPException
-import pytest
 from itertools import cycle
+
+import pytest
+from fastapi import HTTPException
+
+from openai_forward.openai import OpenaiBase
 
 
 @pytest.fixture(scope="module")
@@ -10,7 +12,6 @@ def openai() -> OpenaiBase:
 
 
 class TestOpenai:
-
     @staticmethod
     def teardown_method():
         OpenaiBase.IP_BLACKLIST = []

@@ -1,9 +1,12 @@
-import pytest
-import os
 import importlib
-import openai_forward
+import os
 import time
+
+import pytest
 from dotenv import load_dotenv
+
+import openai_forward
+
 
 class TestEnv:
     with open(".env", 'r', encoding='utf-8') as f:
