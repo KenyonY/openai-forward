@@ -54,8 +54,8 @@ This project is designed to solve the problem of some regions being unable to di
 
 ---
 
-Test access: https://caloi.top/openai/v1/chat/completions   
-To put it another way, https://caloi.top/openai is equivalent to https://api.openai.com.
+Test access: https://api.openai-forward.top/v1/chat/completions   
+To put it another way, https://api.openai-forward.top is equivalent to https://api.openai.com.
 
 ---
 
@@ -87,9 +87,9 @@ To put it another way, https://caloi.top/openai is equivalent to https://api.ope
 
 # Usage
 
-> Here, the proxy address set up by the individual, https://caloi.top/openai, is used as an example
+> Here, the proxy address set up by the individual, https://api.openai-forward.top, is used as an example
 
-### [caloi.top](https://caloi.top)
+### [Chat app](https://chat.beidongjiedeguang.top)
 
 Build your own ChatGPT service based on the open source
 project [ChatGPT-Next-Web](https://github.com/Yidadaa/ChatGPT-Next-Web).
@@ -99,12 +99,12 @@ Replace `BASE_URL` in the docker startup command with the address of the proxy s
 docker run -d \
     -p 3000:3000 \
     -e OPENAI_API_KEY="sk-******" \
-    -e BASE_URL="caloi.top/openai" \
-    -e CODE="<your password>" \
+    -e BASE_URL="https://api.openai-forward.top" \
+    -e CODE="kunyuan" \
     yidadaa/chatgpt-next-web 
 ``` 
 
-Access to https://caloi.top. access code: `beidongjiedeguang`.
+Access to  https://chat.beidongjiedeguang.top. access code: `kunyuan`.
 
 ### Using in a module
 
@@ -112,7 +112,7 @@ Access to https://caloi.top. access code: `beidongjiedeguang`.
 
 ```diff
   import openai
-+ openai.api_base = "https://caloi.top/openai/v1"
++ openai.api_base = "https://api.openai-forward.top/v1"
   openai.api_key = "sk-******"
 ```
 
@@ -122,7 +122,7 @@ Access to https://caloi.top. access code: `beidongjiedeguang`.
   import { Configuration } from "openai";
   
   const configuration = new Configuration({
-+ basePath: "https://caloi.top/openai/v1",
++ basePath: "https://api.openai-forward.top/v1",
   apiKey: "sk-******",
   });
 ```
@@ -130,7 +130,7 @@ Access to https://caloi.top. access code: `beidongjiedeguang`.
 ### Image Generation (DALL-E):
 
 ```bash 
-curl --location 'https://caloi.top/openai/v1/images/generations' \ 
+curl --location 'https://api.openai-forward.top/v1/images/generations' \ 
 --header 'Authorization: Bearer sk-******' \ 
 --header 'Content-Type: application/json' \ 
 --data '{ 
@@ -251,7 +251,7 @@ If you set FORWARD_KEY to `fk-******`, then the client only needs to set the OPE
 **Python**
 ```diff
   import openai
-+ openai.api_base = "https://caloi.top/openai/v1"
++ openai.api_base = "https://api.openai-forward.top/v1"
 - openai.api_key = "sk-******"
 + openai.api_key = "fk-******"
 ```
@@ -260,7 +260,7 @@ If you set FORWARD_KEY to `fk-******`, then the client only needs to set the OPE
 docker run -d \
     -p 3000:3000 \
     -e OPENAI_API_KEY="fk-******" \
-    -e BASE_URL="caloi.top/openai" \
+    -e BASE_URL="https://api.openai-forward.top/openai" \
     -e CODE="<your password>" \
     yidadaa/chatgpt-next-web 
 ``` 

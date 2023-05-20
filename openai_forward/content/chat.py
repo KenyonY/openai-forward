@@ -65,6 +65,9 @@ class ChatSaver:
         return os.path.join(self._log_dir, f"chat_{self._file_idx}.txt")
 
     def _init_chat_file(self):
+        _log_dir = Path(self._log_dir)
+        if not _log_dir.exists():
+            _log_dir.mkdir(parents=True)
         while Path(self.chat_file).exists():
             self._file_idx += 1
 

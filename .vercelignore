@@ -1,0 +1,8 @@
+**/*
+!openai_forward
+!openai_forward/*
+!*.py
+
+!vercel.json
+!requirements.txt
+!.env

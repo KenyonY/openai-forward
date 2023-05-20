@@ -39,9 +39,6 @@ twine:
 	@twine upload dist/*
 	@rm -rf dist/*
 
-start-web:
-	@openai_forward node --port=9099 --base_url="https://api.openai.com"
-
 build:
 	docker build --tag $(image) -f docker/Dockerfile .
 
@@ -50,3 +47,6 @@ build-push:
 
 pull:
 	 docker pull $(image)
+
+deploy:
+	vercel --prod

@@ -27,7 +27,6 @@ dependencies = [
     "python-dotenv",
     "httpx",
     "pytz",
-    "chardet",
 ]
 
 dynamic = ["version"]
