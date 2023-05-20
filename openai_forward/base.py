@@ -28,13 +28,13 @@ class OpenaiBase:
         if not ROUTE_PREFIX.startswith('/'):
             ROUTE_PREFIX = '/' + ROUTE_PREFIX
     timeout = 30
-    chatsaver = ChatSaver(save_interval=10)
 
     print_startup_info(
         BASE_URL, ROUTE_PREFIX, _openai_api_key_list, _FWD_KEYS, _LOG_CHAT
     )
     if _LOG_CHAT:
         setting_log(log_name="openai_forward")
+        chatsaver = ChatSaver(save_interval=10)
 
     def validate_request_host(self, ip):
         if self.IP_WHITELIST and ip not in self.IP_WHITELIST:
@@ -136,7 +136,6 @@ class OpenaiBase:
         return StreamingResponse(
             aiter_bytes,
             status_code=r.status_code,
-            # headers=r.headers, # do not use r.headers, it will cause error
             media_type=r.headers.get("content-type"),
             background=BackgroundTask(r.aclose),
         )
