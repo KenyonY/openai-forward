@@ -42,17 +42,18 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 
 ---
 
-测试访问：https://caloi.top/openai/v1/chat/completions  
-或者说 https://caloi.top/openai 等价于 https://api.openai.com
+本项目搭建的长期代理地址：
+> https://api.openai-forward.top/v1/chat/completions   
+
+或者说 https://api.openai-forward.top 等价于 https://api.openai.com
 
 ---
 
 ## 目录
 
 - [功能](#功能)
+- [部署指南](#部署指南)
 - [应用](#应用)
-- [安装部署](#安装部署)
-- [服务调用](#服务调用)
 - [配置选项](#配置选项)
 - [聊天日志](#聊天日志)
 - [高级配置](#高级配置)
@@ -64,7 +65,8 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 - [x] 支持指定转发路由前缀
 - [x] docker部署
 - [x] pip 安装部署
-- [x] vercel 一键部署
+- [x] vercel 一键个人免费部署
+  [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fbeidongjiedeguang%2Fopenai-forward&project-name=openai-forward&repository-name=openai-forward&framework=other)
 
 **高级功能**  
 - [x] 实时记录聊天记录(包括流式响应的聊天内容)
@@ -72,11 +74,20 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 - [x] 自定义forward api key 代替 openai api key (见高级配置)
 - [x] 支持请求IP验证(IP白名单与黑名单)
 
+## 部署指南
+
+提供三种部署方式
+1. [vps + pip 安装部署](deploy.md#pip-推荐) (推荐)
+2. [vps + Docker](deploy.md#docker-推荐) (推荐) 
+    > https://api.openai-forward.top 
+3. [一键Vercel部署](deploy.md#vercel-一键部署) 
+   > https://vercel.openai-forward.top 
+
 ## 应用
 
-> 这里以个人使用该项目搭建好的代理服务 https://caloi.top/openai 为例
+> 这里以个人使用该项目搭建好的代理服务 https://api.openai-forward.top 为例
 
-### [caloi.top](https://caloi.top)
+### [聊天应用](https://chat.beidongjiedeguang.top)
 
 基于开源项目[ChatGPT-Next-Web](https://github.com/Yidadaa/ChatGPT-Next-Web)搭建自己的chatgpt服务  
 替换docker启动命令中的 `BASE_URL`为我们自己搭建的代理服务地址
@@ -85,14 +96,14 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 docker run -d \
     -p 3000:3000 \
     -e OPENAI_API_KEY="sk-******" \
-    -e BASE_URL="https://caloi.top/openai" \
-    -e CODE="<your password>" \
+    -e BASE_URL="https://api.openai-forward.top" \
+    -e CODE="kunyuan" \
     yidadaa/chatgpt-next-web 
 ``` 
+这里部署了一个，供大家轻度使用:  
+ https://chat.beidongjiedeguang.top , 访问密码: `kunyuan` 
 
-访问 https://caloi.top 。访问密码为 `beidongjiedeguang`
-
-### 在模块中使用
+### 在代码中使用
 
 **JS/TS**
 
@@ -100,7 +111,7 @@ docker run -d \
   import { Configuration } from "openai";
   
   const configuration = new Configuration({
-+ basePath: "https://caloi.top/openai/v1",
++ basePath: "https://api.openai-forward.top/v1",
   apiKey: "sk-******",
   });
 ```
@@ -109,14 +120,23 @@ docker run -d \
 
 ```diff
   import openai
-+ openai.api_base = "https://caloi.top/openai/v1"
++ openai.api_base = "https://api.openai-forward.top/v1"
   openai.api_key = "sk-******"
 ```
 
-### Image Generation (DALL-E):
+**bash**
+```bash
+curl https://api.openai-forward.top/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer sk-******" \
+  -d '{
+    "model": "gpt-3.5-turbo",
+    "messages": [{"role": "user", "content": "Hello!"}]
+  }'
+```
 
 ```bash
-curl --location 'https://caloi.top/openai/v1/images/generations' \
+curl --location 'https://api.openai-forward.top/v1/images/generations' \
 --header 'Authorization: Bearer sk-******' \
 --header 'Content-Type: application/json' \
 --data '{
@@ -126,78 +146,6 @@ curl --location 'https://caloi.top/openai/v1/images/generations' \
 }'
 ```
 
-## 安装部署
-
-选择一种即可
-
-### pip
-
-**安装**
-
-```bash
-pip install openai-forward
-```
-
-**运行转发服务**  
-可通过`--port`指定端口号，默认为`8000`
-
-```bash
-openai_forward run --port=9999 
-```
-
-服务就搭建完成了，使用方式只需将`https://api.openai.com` 替换为服务所在端口`http://{ip}:{port}` 即可。
-
-当然也可以将 OPENAI_API_KEY 作为环境变量或`--api_key`参数传入作为默认api key， 这样客户端在请求相关路由时可以无需在Header中传入Authorization。
-带默认api key的启动方式：
-
-```bash
-openai_forward run --port=9999 --api_key="sk-******"
-```
-
-注: 如果既存在默认api key又在请求头中传入了api key，则以请求头中的api key会覆盖默认api key.
-
-### Docker (推荐)
-
-```bash
-docker run -d -p 9999:8000 beidongjiedeguang/openai-forward:latest 
-```
-
-将映射宿主机的9999端口，通过`http://{ip}:9999`访问服务。  
-注：同样可以在启动命令中通过-e传入环境变量OPENAI_API_KEY=sk-xxx作为默认api key
-
-## 源码部署
-
-```bash
-git clone https://github.com/beidongjiedeguang/openai-forward.git --depth=1
-cd openai-forward
-```
-
-**Docker**
-
-```bash
-docker-compose up
-```
-
-**pip**
-
-```bash
-pip install -e .
-openai-forward run 
-```
-
-# 服务调用
-
-替换openai的api地址为该服务的地址即可，如：
-
-```bash
-https://api.openai.com/v1/chat/completions
-```
-
-替换为
-
-```bash
-http://{ip}:{port}/v1/chat/completions
-```
 
 ## 配置选项
 
@@ -251,7 +199,7 @@ FORWARD_KEY=fk-****** # 这里fk-token由我们自己定义
 
 **用例:**
 ```bash
-curl https://caloi.top/openai/v1/chat/completions \
+curl https://api.openai-forward.top/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer fk-mytoken-abcd" \
   -d '{
@@ -262,7 +210,7 @@ curl https://caloi.top/openai/v1/chat/completions \
 **Python**
 ```diff
   import openai
-+ openai.api_base = "https://caloi.top/openai/v1"
++ openai.api_base = "https://api.openai-forward.top/v1"
 - openai.api_key = "sk-******"
 + openai.api_key = "fk-******"
 ```
@@ -271,7 +219,7 @@ curl https://caloi.top/openai/v1/chat/completions \
 docker run -d \
     -p 3000:3000 \
     -e OPENAI_API_KEY="fk-******" \
-    -e BASE_URL="caloi.top/openai" \
+    -e BASE_URL="https://api.openai-forward.top" \
     -e CODE="<your password>" \
     yidadaa/chatgpt-next-web 
 ``` 
