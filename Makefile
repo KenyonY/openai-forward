@@ -47,3 +47,6 @@ build-push:
 
 pull:
 	 docker pull $(image)
+
+deploy:
+	vercel --prod

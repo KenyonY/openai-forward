@@ -47,7 +47,7 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 
 ---
 
-# 目录
+## 目录
 
 - [功能](#功能)
 - [应用](#应用)
@@ -57,21 +57,22 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 - [聊天日志](#聊天日志)
 - [高级配置](#高级配置)
 
-# 功能
+## 功能
 **基础功能**  
 - [x] 支持转发OpenAI所有接口
 - [x] 支持流式响应
 - [x] 支持指定转发路由前缀
 - [x] docker部署
 - [x] pip 安装部署
+- [x] vercel 一键部署
 
 **高级功能**  
 - [x] 实时记录聊天记录(包括流式响应的聊天内容)
-- [x] 支持默认openai api key(多api key 循环调用)
+- [x] 允许输入多个openai api key 形成轮询池
 - [x] 自定义forward api key 代替 openai api key (见高级配置)
 - [x] 支持请求IP验证(IP白名单与黑名单)
 
-# 应用
+## 应用
 
 > 这里以个人使用该项目搭建好的代理服务 https://caloi.top/openai 为例
 
@@ -84,7 +85,7 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 docker run -d \
     -p 3000:3000 \
     -e OPENAI_API_KEY="sk-******" \
-    -e BASE_URL="caloi.top/openai" \
+    -e BASE_URL="https://caloi.top/openai" \
     -e CODE="<your password>" \
     yidadaa/chatgpt-next-web 
 ``` 
@@ -125,11 +126,11 @@ curl --location 'https://caloi.top/openai/v1/images/generations' \
 }'
 ```
 
-# 安装部署
+## 安装部署
 
 选择一种即可
 
-## pip
+### pip
 
 **安装**
 
@@ -155,7 +156,7 @@ openai_forward run --port=9999 --api_key="sk-******"
 
 注: 如果既存在默认api key又在请求头中传入了api key，则以请求头中的api key会覆盖默认api key.
 
-## Docker (推荐)
+### Docker (推荐)
 
 ```bash
 docker run -d -p 9999:8000 beidongjiedeguang/openai-forward:latest 
@@ -198,7 +199,7 @@ https://api.openai.com/v1/chat/completions
 http://{ip}:{port}/v1/chat/completions
 ```
 
-# 配置选项
+## 配置选项
 
 **`openai-forward run`参数配置项**
 
@@ -220,7 +221,7 @@ http://{ip}:{port}/v1/chat/completions
 | IP_WHITELIST    | ip白名单, 空格分开                                                     |           无            |
 | IP_BLACKLIST    | ip黑名单, 空格分开                                                     |           无            | 
 
-# 聊天日志
+## 聊天日志
 
 保存路径在当前目录下的`Log/`路径中。  
 聊天日志以 `chat_`开头, 默认每5轮对话写入一次文件    
@@ -236,7 +237,7 @@ http://{ip}:{port}/v1/chat/completions
 ...
 ```
 
-# 高级配置
+## 高级配置
 
 **设置api_key为自己设置的forward key**  
 需要配置 OPENAI_API_KEY 和 FORWARD_KEY, 例如
@@ -275,12 +276,12 @@ docker run -d \
     yidadaa/chatgpt-next-web 
 ``` 
 
-# Backer and Sponsor
+## Backer and Sponsor
 
 <a href="https://www.jetbrains.com/?from=beidongjiedeguang/openai-forward" target="_blank">
 <img src=".github/images/jetbrains.svg" width="100px" height="100px">
 </a>
 
-# License
+## License
 
 Openai-forward is licensed under the [MIT](https://opensource.org/license/mit/) license.
