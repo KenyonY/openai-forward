@@ -4,8 +4,6 @@ from .base import OpenaiBase
 from .config import setting_log
 from .routers.schemas import OpenAIV1ChatCompletion
 
-setting_log(log_name="openai_forward")
-
 
 class Openai(OpenaiBase):
     def __init__(self):

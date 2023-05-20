@@ -1,0 +1,8 @@
+loguru
+sparrow-python>=0.1.3
+fastapi>=0.94.0
+uvicorn>=0.21.0
+orjson
+python-dotenv
+httpx
+pytz

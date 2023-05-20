@@ -7,7 +7,7 @@ from fastapi.responses import StreamingResponse
 from loguru import logger
 from starlette.background import BackgroundTask
 
-from .config import env2list, print_startup_info
+from .config import env2list, print_startup_info, setting_log
 from .content.chat import ChatSaver
 
 
@@ -29,9 +29,12 @@ class OpenaiBase:
             ROUTE_PREFIX = '/' + ROUTE_PREFIX
     timeout = 30
     chatsaver = ChatSaver(save_interval=10)
+
     print_startup_info(
         BASE_URL, ROUTE_PREFIX, _openai_api_key_list, _FWD_KEYS, _LOG_CHAT
     )
+    if _LOG_CHAT:
+        setting_log(log_name="openai_forward")
 
     def validate_request_host(self, ip):
         if self.IP_WHITELIST and ip not in self.IP_WHITELIST:
@@ -59,7 +62,7 @@ class OpenaiBase:
 
     @classmethod
     async def _reverse_proxy(cls, request: Request):
-        client: httpx.AsyncClient = request.app.state.client
+        client = httpx.AsyncClient(base_url=cls.BASE_URL)
         url_path = request.url.path
         url_path = url_path[len(cls.ROUTE_PREFIX) :]
         url = httpx.URL(path=url_path, query=request.url.query.encode('utf-8'))

@@ -47,14 +47,16 @@ class Cli:
         if ip_blacklist:
             os.environ['IP_BLACKLIST'] = ip_blacklist
 
+        ssl_keyfile = os.environ.get("ssl_keyfile", None) or None
+        ssl_certfile = os.environ.get("ssl_certfile", None) or None
         uvicorn.run(
             app="openai_forward.app:app",
             host="0.0.0.0",
             port=port,
             workers=workers,
             app_dir='..',
-            ssl_keyfile=os.environ.get("ssl_keyfile", None),
-            ssl_certfile=os.environ.get("ssl_certfile", None),
+            ssl_keyfile=ssl_keyfile,
+            ssl_certfile=ssl_certfile,
         )
 
 

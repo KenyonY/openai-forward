@@ -12,7 +12,6 @@ ssl/
 chat.yaml
 chat_*.yaml
 
-.env.example
 Log/
 Log-caloi-top/
 dist/
@@ -144,3 +143,4 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+.vercel
