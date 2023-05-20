@@ -85,8 +85,6 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 
 ## 应用
 
-> 这里以个人使用该项目搭建好的代理服务 https://api.openai-forward.top 为例
-
 ### [聊天应用](https://chat.beidongjiedeguang.top)
 
 基于开源项目[ChatGPT-Next-Web](https://github.com/Yidadaa/ChatGPT-Next-Web)搭建自己的chatgpt服务  

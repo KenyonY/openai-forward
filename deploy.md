@@ -40,8 +40,11 @@ https://api.openai.com/v1/chat/completions
 ```bash
 http://{ip}:{port}/v1/chat/completions
 ```
-## 开启SSL
-常用方式是使用nginx 代理转发 openai-forward 服务端口(9999)至443端口。需要注意的是，若要使用流式转发，在nginx配置中需要取消缓存操作：
+### 开启SSL
+首先准备好一个域名, 如本项目中使用的域名为`api.openai-forward.top`
+
+常用方式是使用nginx 代理转发 openai-forward 服务端口(9999)至443端口。  
+需要注意的是，若要使用流式转发，在nginx配置中需要添加取消代理缓存的配置：
    ```bash
     proxy_cache off; 
     proxy_buffering off; 
@@ -51,6 +54,9 @@ http://{ip}:{port}/v1/chat/completions
     keepalive_timeout 300;  
 ```
 
+然后就可以使用 `https://api.openai-forward.top` 进行https访问了。
+
+
 ## Docker (推荐)
 
 ```bash
@@ -58,8 +64,8 @@ docker run -d -p 9999:8000 beidongjiedeguang/openai-forward:latest
 ```
 
 将映射宿主机的9999端口，通过`http://{ip}:9999`访问服务。  
-注：同样可以在启动命令中通过-e传入环境变量OPENAI_API_KEY=sk-xxx作为默认api key
-
+注：同样可以在启动命令中通过-e传入环境变量OPENAI_API_KEY=sk-xxx作为默认api key  
+启用SSL同上.
 
 
 ## 源码部署
@@ -71,6 +77,7 @@ cd openai-forward
 pip install -e .
 openai-forward run 
 ```
+启用SSL同上.
 
 ## Vercel 一键部署
 
