@@ -1,4 +1,3 @@
-import chardet
 import httpx
 from sparrow.api import create_app
 
@@ -7,7 +6,6 @@ from .routers.openai_v1 import router as router_v1
 
 app = create_app(title="openai_forward", version="1.0")
 openai = Openai()
-use_http2 = False
 
 app.add_route(
     openai.ROUTE_PREFIX + '/{api_path:path}',

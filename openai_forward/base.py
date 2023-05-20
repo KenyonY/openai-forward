@@ -62,7 +62,7 @@ class OpenaiBase:
 
     @classmethod
     async def _reverse_proxy(cls, request: Request):
-        client = httpx.AsyncClient(base_url=cls.BASE_URL)
+        client = httpx.AsyncClient(base_url=cls.BASE_URL, http1=True, http2=False)
         url_path = request.url.path
         url_path = url_path[len(cls.ROUTE_PREFIX) :]
         url = httpx.URL(path=url_path, query=request.url.query.encode('utf-8'))
