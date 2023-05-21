@@ -65,6 +65,7 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 - [x] pip 安装部署
 - [x] vercel 一键个人免费部署
   [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fbeidongjiedeguang%2Fopenai-forward&project-name=openai-forward&repository-name=openai-forward&framework=other)
+- [x] cloudflare 部署
 
 **高级功能**  
 - [x] 实时记录聊天记录(包括流式响应的聊天内容)
@@ -74,12 +75,14 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 
 ## 部署指南
 
-提供三种部署方式
+提供四种部署方式
 1. [vps + pip 安装部署](deploy.md#pip-推荐) (推荐)
 2. [vps + Docker](deploy.md#docker-推荐) (推荐) 
     > https://api.openai-forward.top 
-3. [一键Vercel部署](deploy.md#vercel-一键部署) 
-   > https://vercel.openai-forward.top 
+3. [一键Vercel部署](deploy.md#vercel-一键部署) (目前不推荐)
+   > ~~https://vercel.openai-forward.top~~  
+4. [cloudflare部署](deploy.md#cloudflare-部署) (推荐)
+   > https://cloudflare.openai-forward.top
 
 ## 应用
 
