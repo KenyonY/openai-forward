@@ -58,7 +58,7 @@ class InterceptHandler(logging.Handler):
         )
 
 
-def setting_log(save_file=False, log_name=None, multi_process=True):
+def setting_log(save_file=False, log_name="openai_forward", multi_process=True):
     # TODO 修复时区配置
     if os.environ.get("TZ") == "Asia/Shanghai":
         os.environ['TZ'] = "UTC-8"
