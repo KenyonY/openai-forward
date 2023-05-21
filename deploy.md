@@ -93,3 +93,11 @@ openai-forward run
 > https://vercel.openai-forward.top  
 这里是使用Vercel一键部署的服务，仅供测试
 
+## Cloudflare 部署
+
+1. 复制[worker.js](worker.js) 到 [cloudflare](https://dash.cloudflare.com/) 的worker中 即可完成服务部署。
+2. 绑定自定义域名: cloudflare自动分配的域名国内也无法访问，所以也需要绑定自定义域名.  
+
+这种部署方式轻便简洁，支持流式转发，不过只有单一的转发功能.
+
+> https://cloudflare.openai-forward.top
