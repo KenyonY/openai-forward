@@ -33,7 +33,7 @@ class OpenaiBase:
         BASE_URL, ROUTE_PREFIX, _openai_api_key_list, _FWD_KEYS, _LOG_CHAT
     )
     if _LOG_CHAT:
-        setting_log(log_name="openai_forward")
+        setting_log(save_file=False)
         chatsaver = ChatSaver(save_interval=10)
 
     def validate_request_host(self, ip):

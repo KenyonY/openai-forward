@@ -10,7 +10,7 @@ class TestRun:
     @classmethod
     def setup_class(cls):
         kill(8000)
-        base_url = "https://caloi.top/openai"
+        base_url = "https://api.openai-forward.top"
         subprocess.Popen(["nohup", "openai-forward", "run", "--base_url", base_url])
         time.sleep(3)
 

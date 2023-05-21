@@ -58,7 +58,7 @@ class InterceptHandler(logging.Handler):
         )
 
 
-def setting_log(log_name, multi_process=True):
+def setting_log(save_file=False, log_name=None, multi_process=True):
     # TODO 修复时区配置
     if os.environ.get("TZ") == "Asia/Shanghai":
         os.environ['TZ'] = "UTC-8"
@@ -69,17 +69,19 @@ def setting_log(log_name, multi_process=True):
     for name in logging.root.manager.loggerDict.keys():
         logging.getLogger(name).handlers = []
         logging.getLogger(name).propagate = True
-    logger_config = {
-        "handlers": [
-            {"sink": sys.stdout, "level": "DEBUG"},
-            {
-                "sink": f"./Log/{log_name}.log",
-                "enqueue": multi_process,
-                "rotation": "100 MB",
-                "level": "INFO",
-            },
-        ],
-    }
+
+    config_handlers = [
+        {"sink": sys.stdout, "level": "DEBUG"},
+    ]
+    if save_file:
+        config_handlers += {
+            "sink": f"./Log/{log_name}.log",
+            "enqueue": multi_process,
+            "rotation": "100 MB",
+            "level": "INFO",
+        }
+
+    logger_config = {"handlers": config_handlers}
     logger.configure(**logger_config)
 
 
