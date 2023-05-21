@@ -74,12 +74,14 @@ def setting_log(save_file=False, log_name=None, multi_process=True):
         {"sink": sys.stdout, "level": "DEBUG"},
     ]
     if save_file:
-        config_handlers += {
-            "sink": f"./Log/{log_name}.log",
-            "enqueue": multi_process,
-            "rotation": "100 MB",
-            "level": "INFO",
-        }
+        config_handlers += [
+            {
+                "sink": f"./Log/{log_name}.log",
+                "enqueue": multi_process,
+                "rotation": "100 MB",
+                "level": "INFO",
+            }
+        ]
 
     logger_config = {"handlers": config_handlers}
     logger.configure(**logger_config)
