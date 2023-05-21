@@ -42,12 +42,10 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 
 ---
 
-本项目搭建的长期代理地址：
-> https://api.openai-forward.top/v1/chat/completions   
+由本项目搭建的长期代理地址：
+> https://api.openai-forward.top  
 
-或者说 https://api.openai-forward.top 等价于 https://api.openai.com
 
----
 
 ## 目录
 
@@ -70,8 +68,8 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 
 **高级功能**  
 - [x] 实时记录聊天记录(包括流式响应的聊天内容)
-- [x] 允许输入多个openai api key 形成轮询池
-- [x] 自定义forward api key 代替 openai api key (见高级配置)
+- [x] 允许输入多个openai api key 组成轮询池
+- [x] 自定义 api key (见高级配置)
 - [x] 支持请求IP验证(IP白名单与黑名单)
 
 ## 部署指南
@@ -122,7 +120,7 @@ docker run -d \
   openai.api_key = "sk-******"
 ```
 
-**bash**
+**gpt-3.5-turbo**
 ```bash
 curl https://api.openai-forward.top/v1/chat/completions \
   -H "Content-Type: application/json" \
@@ -133,6 +131,7 @@ curl https://api.openai-forward.top/v1/chat/completions \
   }'
 ```
 
+**Image Generation (DALL-E)**
 ```bash
 curl --location 'https://api.openai-forward.top/v1/images/generations' \
 --header 'Authorization: Bearer sk-******' \
@@ -154,6 +153,8 @@ curl --location 'https://api.openai-forward.top/v1/images/generations' \
 | --port    | 服务端口号 | 8000 |
 | --workers | 工作进程数 | 1 |
 
+更多参数 `openai-forward run --help` 查看
+
 **环境变量配置项**  
 支持从运行目录下的`.env`文件中读取: 
 
@@ -167,21 +168,6 @@ curl --location 'https://api.openai-forward.top/v1/images/generations' \
 | IP_WHITELIST    | ip白名单, 空格分开                                                     |           无            |
 | IP_BLACKLIST    | ip黑名单, 空格分开                                                     |           无            | 
 
-## 聊天日志
-
-保存路径在当前目录下的`Log/`路径中。  
-聊天日志以 `chat_`开头, 默认每5轮对话写入一次文件    
-记录格式为
-
-```text
-{'host': xxx, 'model': xxx, 'message': [{'user': xxx}, {'assistant': xxx}]}
-{'assistant': xxx}
-
-{'host': ...}
-{'assistant': ...}
-
-...
-```
 
 ## 高级配置
 
@@ -199,7 +185,7 @@ FORWARD_KEY=fk-****** # 这里fk-token由我们自己定义
 ```bash
 curl https://api.openai-forward.top/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer fk-mytoken-abcd" \
+  -H "Authorization: Bearer fk-******" \
   -d '{
     "model": "gpt-3.5-turbo",
     "messages": [{"role": "user", "content": "Hello!"}]
@@ -221,6 +207,22 @@ docker run -d \
     -e CODE="<your password>" \
     yidadaa/chatgpt-next-web 
 ``` 
+
+## 聊天日志
+
+保存路径在当前目录下的`Log/`路径中。  
+聊天日志以 `chat_`开头, 默认每5轮对话写入一次文件    
+记录格式为
+
+```text
+{'host': xxx, 'model': xxx, 'message': [{'user': xxx}, {'assistant': xxx}]}
+{'assistant': xxx}
+
+{'host': ...}
+{'assistant': ...}
+
+...
+```
 
 ## Backer and Sponsor
 
