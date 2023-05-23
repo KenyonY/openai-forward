@@ -54,8 +54,8 @@ This project is designed to solve the problem of some regions being unable to di
 
 ---
 
-Test access: https://api.openai-forward.top/v1/chat/completions   
-To put it another way, https://api.openai-forward.top is equivalent to https://api.openai.com.
+Test access: https://api.openai-forward.com/v1/chat/completions   
+To put it another way, https://api.openai-forward.com is equivalent to https://api.openai.com.
 
 ---
 
@@ -87,7 +87,7 @@ To put it another way, https://api.openai-forward.top is equivalent to https://a
 
 # Usage
 
-> Here, the proxy address set up by the individual, https://api.openai-forward.top, is used as an example
+> Here, the proxy address set up by the individual, https://api.openai-forward.com, is used as an example
 
 ### [Chat app](https://chat.beidongjiedeguang.top)
 
@@ -99,7 +99,7 @@ Replace `BASE_URL` in the docker startup command with the address of the proxy s
 docker run -d \
     -p 3000:3000 \
     -e OPENAI_API_KEY="sk-******" \
-    -e BASE_URL="https://api.openai-forward.top" \
+    -e BASE_URL="https://api.openai-forward.com" \
     -e CODE="kunyuan" \
     yidadaa/chatgpt-next-web 
 ``` 
@@ -112,7 +112,7 @@ Access to  https://chat.beidongjiedeguang.top. access code: `kunyuan`.
 
 ```diff
   import openai
-+ openai.api_base = "https://api.openai-forward.top/v1"
++ openai.api_base = "https://api.openai-forward.com/v1"
   openai.api_key = "sk-******"
 ```
 
@@ -122,7 +122,7 @@ Access to  https://chat.beidongjiedeguang.top. access code: `kunyuan`.
   import { Configuration } from "openai";
   
   const configuration = new Configuration({
-+ basePath: "https://api.openai-forward.top/v1",
++ basePath: "https://api.openai-forward.com/v1",
   apiKey: "sk-******",
   });
 ```
@@ -130,7 +130,7 @@ Access to  https://chat.beidongjiedeguang.top. access code: `kunyuan`.
 ### Image Generation (DALL-E):
 
 ```bash 
-curl --location 'https://api.openai-forward.top/v1/images/generations' \ 
+curl --location 'https://api.openai-forward.com/v1/images/generations' \ 
 --header 'Authorization: Bearer sk-******' \ 
 --header 'Content-Type: application/json' \ 
 --data '{ 
@@ -216,8 +216,6 @@ refer to the `.env` file in the project root directory
 | OPENAI_BASE_URL | Forwarding base URL | `https://api.openai.com` |
 |LOG_CHAT| Whether to log chat content |          `true`          |
 |ROUTE_PREFIX| Route prefix |           None           |
-| IP_WHITELIST    | IP whitelist, separated by space. |           None           |
-| IP_BLACKLIST    | IP blacklist, separated by space. |           None           |
 
 # Chat Log
 
@@ -251,7 +249,7 @@ If you set FORWARD_KEY to `fk-******`, then the client only needs to set the OPE
 **Python**
 ```diff
   import openai
-+ openai.api_base = "https://api.openai-forward.top/v1"
++ openai.api_base = "https://api.openai-forward.com/v1"
 - openai.api_key = "sk-******"
 + openai.api_key = "fk-******"
 ```
@@ -260,7 +258,7 @@ If you set FORWARD_KEY to `fk-******`, then the client only needs to set the OPE
 docker run -d \
     -p 3000:3000 \
     -e OPENAI_API_KEY="fk-******" \
-    -e BASE_URL="https://api.openai-forward.top/openai" \
+    -e BASE_URL="https://api.openai-forward.com/openai" \
     -e CODE="<your password>" \
     yidadaa/chatgpt-next-web 
 ``` 

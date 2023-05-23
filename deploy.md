@@ -41,7 +41,7 @@ https://api.openai.com/v1/chat/completions
 http://{ip}:{port}/v1/chat/completions
 ```
 ### 开启SSL
-首先准备好一个域名, 如本项目中使用的域名为`api.openai-forward.top`
+首先准备好一个域名, 如本项目中使用的域名为`api.openai-forward.com`
 
 常用方式是使用nginx 代理转发 openai-forward 服务端口(9999)至443端口。  
 需要注意的是，若要使用流式转发，在nginx配置中需要添加取消代理缓存的配置：
@@ -54,7 +54,7 @@ http://{ip}:{port}/v1/chat/completions
     keepalive_timeout 300;  
 ```
 
-然后就可以使用 `https://api.openai-forward.top` 进行https访问了。
+然后就可以使用 `https://api.openai-forward.com` 进行https访问了。
 
 
 ## Docker (推荐)
@@ -83,14 +83,16 @@ openai-forward run
 
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fbeidongjiedeguang%2Fopenai-forward&project-name=openai-forward&repository-name=openai-forward&framework=other)  
+⚠️目前Vercel中使用Serverless Function部署的方式尚不支持流式，没有Log记录, 而且仅提供较短的接口超时时间。
+所以现在不推荐使用这种部署方式。
+
 1. 点击按钮即可一键免费部署  
 也可fork本次仓库，再手动在vercel操作界面import项目
 2. [绑定自定义域名](https://vercel.com/docs/concepts/projects/domains/add-a-domain)：Vercel 分配的域名 DNS 在某些区域被污染了导致国内无法访问，绑定自定义域名即可直连。
 
-⚠️目前Vercel中使用Serverless Function部署的方式尚不支持流式，没有Log记录, 而且仅提供较短的接口超时时间。
-所以如果重度使用并不推荐。  
 
-> https://vercel.openai-forward.top  
+
+> https://vercel.openai-forward.com  
 这里是使用Vercel一键部署的服务，仅供测试
 
 ## Cloudflare 部署
@@ -98,6 +100,6 @@ openai-forward run
 1. 复制[worker.js](worker.js) 到 [cloudflare](https://dash.cloudflare.com/) 的worker中 即可完成服务部署。
 2. 绑定自定义域名: cloudflare自动分配的域名国内也无法访问，所以也需要绑定自定义域名.  
 
-这种部署方式轻便简洁，支持流式转发，不过只有单一的转发功能.
+这种部署方式轻便简洁，支持流式转发，不过只有单一的转发功能, 而不支持相关配置.
 
-> https://cloudflare.openai-forward.top
+> https://cloudflare.openai-forward.com

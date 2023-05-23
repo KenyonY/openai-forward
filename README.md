@@ -43,7 +43,7 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 ---
 
 由本项目搭建的长期代理地址：
-> https://api.openai-forward.top  
+> https://api.openai-forward.com  
 
 
 
@@ -78,11 +78,11 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 提供四种部署方式
 1. [vps + pip 安装部署](deploy.md#pip-推荐) (推荐)
 2. [vps + Docker](deploy.md#docker-推荐) (推荐) 
-    > https://api.openai-forward.top 
+    > https://api.openai-forward.com 
 3. [一键Vercel部署](deploy.md#vercel-一键部署) (目前不推荐)
-   > ~~https://vercel.openai-forward.top~~  
+   > ~~https://vercel.openai-forward.com~~  
 4. [cloudflare部署](deploy.md#cloudflare-部署) (推荐)
-   > https://cloudflare.openai-forward.top
+   > https://cloudflare.openai-forward.com
 
 ## 应用
 
@@ -95,7 +95,7 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 docker run -d \
     -p 3000:3000 \
     -e OPENAI_API_KEY="sk-******" \
-    -e BASE_URL="https://api.openai-forward.top" \
+    -e BASE_URL="https://api.openai-forward.com" \
     -e CODE="kunyuan" \
     yidadaa/chatgpt-next-web 
 ``` 
@@ -110,7 +110,7 @@ docker run -d \
   import { Configuration } from "openai";
   
   const configuration = new Configuration({
-+ basePath: "https://api.openai-forward.top/v1",
++ basePath: "https://api.openai-forward.com/v1",
   apiKey: "sk-******",
   });
 ```
@@ -119,13 +119,13 @@ docker run -d \
 
 ```diff
   import openai
-+ openai.api_base = "https://api.openai-forward.top/v1"
++ openai.api_base = "https://api.openai-forward.com/v1"
   openai.api_key = "sk-******"
 ```
 
 **gpt-3.5-turbo**
 ```bash
-curl https://api.openai-forward.top/v1/chat/completions \
+curl https://api.openai-forward.com/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-******" \
   -d '{
@@ -136,7 +136,7 @@ curl https://api.openai-forward.top/v1/chat/completions \
 
 **Image Generation (DALL-E)**
 ```bash
-curl --location 'https://api.openai-forward.top/v1/images/generations' \
+curl --location 'https://api.openai-forward.com/v1/images/generations' \
 --header 'Authorization: Bearer sk-******' \
 --header 'Content-Type: application/json' \
 --data '{
@@ -168,8 +168,6 @@ curl --location 'https://api.openai-forward.top/v1/images/generations' \
 | OPENAI_BASE_URL | 转发base url                                                      | `https://api.openai.com` |
 | LOG_CHAT        | 是否记录聊天内容                                                        |          `true`          |
 | ROUTE_PREFIX    | 路由前缀                                                            |            无             |
-| IP_WHITELIST    | ip白名单, 空格分开                                                     |           无            |
-| IP_BLACKLIST    | ip黑名单, 空格分开                                                     |           无            | 
 
 
 ## 高级配置
@@ -182,11 +180,12 @@ OPENAI_API_KEY=sk-*******
 FORWARD_KEY=fk-****** # 这里fk-token由我们自己定义
 ```
 这里我们配置了FORWARD_KEY为`fk-******`, 那么后面客户端在调用时只需设置OPENAI_API_KEY为我们自定义的`fk-******` 即可。  
-这样的好处是在使用一些需要输入OPENAI_API_KEY的第三方应用时，我们可以使用`fk-******`搭配proxy使用（如下面的例子） 而无需担心OPENAI_API_KEY被泄露。
+这样的好处是在使用一些需要输入OPENAI_API_KEY的第三方应用时，我们可以使用`fk-******`搭配代理服务使用（如下面的例子） 而无需担心OPENAI_API_KEY被泄露。  
+并且可以对外分发`fk-******`
 
 **用例:**
 ```bash
-curl https://api.openai-forward.top/v1/chat/completions \
+curl https://api.openai-forward.com/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer fk-******" \
   -d '{
@@ -197,7 +196,7 @@ curl https://api.openai-forward.top/v1/chat/completions \
 **Python**
 ```diff
   import openai
-+ openai.api_base = "https://api.openai-forward.top/v1"
++ openai.api_base = "https://api.openai-forward.com/v1"
 - openai.api_key = "sk-******"
 + openai.api_key = "fk-******"
 ```
@@ -206,7 +205,7 @@ curl https://api.openai-forward.top/v1/chat/completions \
 docker run -d \
     -p 3000:3000 \
     -e OPENAI_API_KEY="fk-******" \
-    -e BASE_URL="https://api.openai-forward.top" \
+    -e BASE_URL="https://api.openai-forward.com" \
     -e CODE="<your password>" \
     yidadaa/chatgpt-next-web 
 ``` 
