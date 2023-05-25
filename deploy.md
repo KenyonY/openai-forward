@@ -79,27 +79,72 @@ openai-forward run
 ```
 启用SSL同上.
 
-## Vercel 一键部署
+---
 
+## ~~Vercel 一键部署~~
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fbeidongjiedeguang%2Fopenai-forward&project-name=openai-forward&repository-name=openai-forward&framework=other)  
 ⚠️目前Vercel中使用Serverless Function部署的方式尚不支持流式，没有Log记录, 而且仅提供较短的接口超时时间。
 所以现在不推荐使用这种部署方式。
 
 1. 点击按钮即可一键免费部署  
-也可fork本次仓库，再手动在vercel操作界面import项目
+也可先fork本仓库，再手动在vercel操作界面import项目
 2. [绑定自定义域名](https://vercel.com/docs/concepts/projects/domains/add-a-domain)：Vercel 分配的域名 DNS 在某些区域被污染了导致国内无法访问，绑定自定义域名即可直连。
 
 
 
 > https://vercel.openai-forward.com  
-这里是使用Vercel一键部署的服务，仅供测试
+仅供测试
+
+---
 
 ## Cloudflare 部署
 
 1. 复制[worker.js](worker.js) 到 [cloudflare](https://dash.cloudflare.com/) 的worker中 即可完成服务部署。
-2. 绑定自定义域名: cloudflare自动分配的域名国内也无法访问，所以也需要绑定自定义域名.  
+2. 绑定自定义域名: cloudflare自动分配的域名国内也无法访问，所以也需要绑定自定义域名.
 
-这种部署方式轻便简洁，支持流式转发，不过只有单一的转发功能, 而不支持相关配置.
+绑定自定义域名需要将域名默认nameserver(域名服务器)绑定到cloudflare提供的nameserver，大体上过程是：
+```mermaid
+stateDiagram-v2
+    [*] --> 注册cloudflare
+    [*] --> 在任意机构注册域名
+    注册cloudflare --> 添加worker
+    添加worker --> 在cloudflare的worker中添加域名 : worker应用部署成功
+    在任意机构注册域名 --> 去注册域名机构更改默认nameserver为cloudflare提供的nameserver
+    去注册域名机构更改默认nameserver为cloudflare提供的nameserver --> 在cloudflare的worker中添加域名: 域名服务器更改验证成功
+    在cloudflare的worker中添加域名 --> [*]
+```
+这种部署方式轻便简洁，支持流式转发. 对于没有vps的用户还是提交推荐的。不过目前[worker.js](worker.js)这个简单脚本仅提供转发服务, 不提供额外功能。
 
 > https://cloudflare.openai-forward.com
+
+---
+
+## Railway 一键部署
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/tejCum?referralCode=U0-kXv)
+
+1. 点击上面部署按钮进行一键部署
+   也可先fork本仓库，再手动在操作界面connect到自己的github项目
+2. 填写环境变量，必填项`PORT` :`8000`, 可选项 如默认的OPENAI_API_KEY 等
+3. 绑定自定义域名
+
+注： Railway 每月提供 $5.0和500小时执行时间的免费计划。这意味着免费用户每个月只能使用大约21天
+
+> https://railway.openai-forward.com
+
+---
+
+## Render 一键部署
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/beidongjiedeguang/openai-forward)
+
+体验下来，Render应该算是所有部署中最简易的一种, 并且它生成的域名国内可以直接访问！
+
+1. 点击一键部署按钮  
+   也可先fork本仓库，再手动在操作界面connect到自己的github项目
+2. 填写环境变量，如默认的OPENAI_API_KEY 等,也可以不填
+
+然后等待部署完成即可。  
+它的免费计划: 每月750小时实例时间(意味着单个实例可以不间断运行)、100G带宽流量、500分钟构建时长.
+
+> https://render.openai-forward.com  
+> https://openai-forward.onrender.com 

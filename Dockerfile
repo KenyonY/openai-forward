@@ -12,14 +12,15 @@ RUN apk update && \
 
 RUN pip install --no-cache-dir  \
     "loguru" \
+    "sparrow-python>=0.1.3" \
     "fastapi" \
     "uvicorn" \
     "orjson" \
     "python-dotenv" \
-    "httpx"
+    "httpx" \
+    "pytz"
 
 COPY . /home/openai-forward
 WORKDIR /home/openai-forward
-RUN pip install -e . --no-cache-dir
 EXPOSE 8000
-ENTRYPOINT ["openai_forward", "run"]
+ENTRYPOINT ["python", "-m", "openai_forward.__main__", "run"]

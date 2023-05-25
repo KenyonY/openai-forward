@@ -63,26 +63,34 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 - [x] 支持指定转发路由前缀
 - [x] docker部署
 - [x] pip 安装部署
-- [x] vercel 一键个人免费部署
-  [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fbeidongjiedeguang%2Fopenai-forward&project-name=openai-forward&repository-name=openai-forward&framework=other)
 - [x] cloudflare 部署
+- [x] [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fbeidongjiedeguang%2Fopenai-forward&project-name=openai-forward&repository-name=openai-forward&framework=other) ~~Vercel一键部署(不建议)~~ 
+- [x] [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/tejCum?referralCode=U0-kXv)  Railway 一键部署 
+- [x] [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/beidongjiedeguang/openai-forward) Render 一键部署
 
 **高级功能**  
 - [x] 实时记录聊天记录(包括流式响应的聊天内容)
 - [x] 允许输入多个openai api key 组成轮询池
 - [x] 自定义 api key (见高级配置)
-- [x] 支持请求IP验证(IP白名单与黑名单)
 
 ## 部署指南
 
-提供四种部署方式
-1. [vps + pip 安装部署](deploy.md#pip-推荐) (推荐)
-2. [vps + Docker](deploy.md#docker-推荐) (推荐) 
-    > https://api.openai-forward.com 
-3. [一键Vercel部署](deploy.md#vercel-一键部署) (目前不推荐)
+提供以下几种部署方式  
+
+**有海外vps方案**  
+1. [pip 安装部署](deploy.md#pip-推荐) (推荐)
+2. [Docker部署](deploy.md#docker-推荐) (推荐) 
+    > https://api.openai-forward.com   
+
+**无vps免费部署方案**  
+1. [一键Vercel部署](deploy.md#vercel-一键部署) (不推荐)
    > ~~https://vercel.openai-forward.com~~  
-4. [cloudflare部署](deploy.md#cloudflare-部署) (推荐)
+2. [cloudflare部署](deploy.md#cloudflare-部署) (推荐)
    > https://cloudflare.openai-forward.com
+3. [Railway部署](deploy.md#Railway-一键部署)
+   > https://railway.openai-forward.com
+4. [Render一键部署](deploy.md#render-一键部署) (最佳推荐)
+   > https://render.openai-forward.com  
 
 ## 应用
 
@@ -212,16 +220,15 @@ docker run -d \
 
 ## 聊天日志
 
-保存路径在当前目录下的`Log/`路径中。  
-聊天日志以 `chat_`开头, 默认每5轮对话写入一次文件    
+保存路径在当前目录下的`Log/chat.log`路径中。  
 记录格式为
 
 ```text
-{'host': xxx, 'model': xxx, 'message': [{'user': xxx}, {'assistant': xxx}]}
-{'assistant': xxx}
+[{'host': xxx, 'model': xxx, 'message': [{'user': xxx}, {'assistant': xxx}]},  
+{'assistant': xxx}]
 
-{'host': ...}
-{'assistant': ...}
+[{'host': ...}, 
+{'assistant': ...}]
 
 ...
 ```
