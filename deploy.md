@@ -123,8 +123,8 @@ stateDiagram-v2
 ## Railway 一键部署
 [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/tejCum?referralCode=U0-kXv)
 
-1. 点击上面部署按钮进行一键部署
-   也可先fork本仓库，再手动在操作界面connect到自己的github项目
+1. 点击上面部署按钮进行一键部署  
+   也可先fork本仓库，再手动在操作界面导入自己的fork项目
 2. 填写环境变量，必填项`PORT` :`8000`, 可选项 如默认的OPENAI_API_KEY 等
 3. 绑定自定义域名
 
@@ -140,7 +140,7 @@ stateDiagram-v2
 体验下来，Render应该算是所有部署中最简易的一种, 并且它生成的域名国内可以直接访问！
 
 1. 点击一键部署按钮  
-   也可先fork本仓库，再手动在操作界面connect到自己的github项目
+   如果提示需要绑定卡，则可先fork本仓库 -->到Render的Dashboard上 New Web Services --> Connect 到刚刚fork到仓库
 2. 填写环境变量，如默认的OPENAI_API_KEY 等,也可以不填
 
 然后等待部署完成即可。  
