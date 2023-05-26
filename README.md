@@ -35,6 +35,14 @@
     </a>
 </p>
 
+[功能](#功能) | 
+[部署指南](#部署指南) |
+[应用](#应用) |
+[配置选项](#配置选项) |
+[聊天日志](#聊天日志)
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/tejCum?referralCode=U0-kXv)  
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/beidongjiedeguang/openai-forward)
 
 
 本项目用于解决一些地区无法直接访问OpenAI的问题，将该服务部署在可以正常访问openai
@@ -46,16 +54,6 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 > https://api.openai-forward.com  
 
 
-
-## 目录
-
-- [功能](#功能)
-- [部署指南](#部署指南)
-- [应用](#应用)
-- [配置选项](#配置选项)
-- [聊天日志](#聊天日志)
-- [高级配置](#高级配置)
-
 ## 功能
 **基础功能**  
 - [x] 支持转发OpenAI所有接口
@@ -64,14 +62,14 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 - [x] docker部署
 - [x] pip 安装部署
 - [x] cloudflare 部署
-- [x] [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fbeidongjiedeguang%2Fopenai-forward&project-name=openai-forward&repository-name=openai-forward&framework=other) ~~Vercel一键部署(不建议)~~ 
-- [x] [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/tejCum?referralCode=U0-kXv)  Railway 一键部署 
-- [x] [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/beidongjiedeguang/openai-forward) Render 一键部署
+- [x] ~~Vercel一键部署(不建议)~~ 
+- [x] Railway 一键部署 
+- [x] Render 一键部署
 
 **高级功能**  
 - [x] 实时记录聊天记录(包括流式响应的聊天内容)
 - [x] 允许输入多个openai api key 组成轮询池
-- [x] 自定义 api key (见高级配置)
+- [x] 自定义 api key (见[高级配置](#高级配置)
 
 ## 部署指南
 
@@ -89,7 +87,7 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
    > https://cloudflare.openai-forward.com
 3. [Railway部署](deploy.md#Railway-一键部署)
    > https://railway.openai-forward.com
-4. [Render一键部署](deploy.md#render-一键部署) (最佳推荐)
+4. [Render一键部署](deploy.md#render-一键部署) (推荐)
    > https://render.openai-forward.com  
 
 ## 应用
@@ -224,11 +222,11 @@ docker run -d \
 记录格式为
 
 ```text
-[{'host': xxx, 'model': xxx, 'message': [{'user': xxx}, {'assistant': xxx}]},  
-{'assistant': xxx}]
+{'message': [{'user': ''}, {'assistant': ''}], 'host': '', 'model': 'gpt3.5-turbo', 'uid': '' },  
+{'assistant': '', 'uid': ''}
 
-[{'host': ...}, 
-{'assistant': ...}]
+{'message': ...}, 
+{'assistant': ...}
 
 ...
 ```
