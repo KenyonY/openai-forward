@@ -1,4 +1,5 @@
 import os
+import uuid
 from itertools import cycle
 
 import httpx
@@ -23,18 +24,18 @@ class OpenaiBase:
     IP_BLACKLIST = env2list("IP_BLACKLIST", sep=" ")
 
     if ROUTE_PREFIX:
-        if ROUTE_PREFIX.endswith('/'):
+        if ROUTE_PREFIX.endswith("/"):
             ROUTE_PREFIX = ROUTE_PREFIX[:-1]
-        if not ROUTE_PREFIX.startswith('/'):
-            ROUTE_PREFIX = '/' + ROUTE_PREFIX
-    timeout = 30
+        if not ROUTE_PREFIX.startswith("/"):
+            ROUTE_PREFIX = "/" + ROUTE_PREFIX
+    timeout = 60
 
     print_startup_info(
         BASE_URL, ROUTE_PREFIX, _openai_api_key_list, _FWD_KEYS, _LOG_CHAT
     )
     if _LOG_CHAT:
         setting_log(save_file=False)
-        chatsaver = ChatSaver(save_interval=10)
+        chatsaver = ChatSaver()
 
     def validate_request_host(self, ip):
         if self.IP_WHITELIST and ip not in self.IP_WHITELIST:
@@ -49,14 +50,16 @@ class OpenaiBase:
             )
 
     @classmethod
-    async def aiter_bytes(cls, r: httpx.Response, route_path: str):
-        bytes_ = b''
+    async def aiter_bytes(cls, r: httpx.Response, route_path: str, uid: str):
+        bytes_ = b""
         async for chunk in r.aiter_bytes():
             bytes_ += chunk
             yield chunk
         try:
             target_info = cls.chatsaver.parse_bytes_to_content(bytes_, route_path)
-            cls.chatsaver.add_chat({target_info['role']: target_info['content']})
+            cls.chatsaver.add_chat(
+                {target_info["role"]: target_info["content"], "uid": uid}
+            )
         except Exception as e:
             logger.debug(f"log chat (not) error:\n{e=}")
 
@@ -65,11 +68,11 @@ class OpenaiBase:
         client = httpx.AsyncClient(base_url=cls.BASE_URL, http1=True, http2=False)
         url_path = request.url.path
         url_path = url_path[len(cls.ROUTE_PREFIX) :]
-        url = httpx.URL(path=url_path, query=request.url.query.encode('utf-8'))
+        url = httpx.URL(path=url_path, query=request.url.query.encode("utf-8"))
         headers = dict(request.headers)
         auth = headers.pop("authorization", None)
         if auth and str(auth).startswith("Bearer sk-"):
-            tmp_headers = {'Authorization': auth}
+            tmp_headers = {"Authorization": auth}
         elif cls._openai_api_key_list:
             logger.info(f"Use forward key: {cls._use_forward_key}")
             if cls._use_forward_key:
@@ -81,20 +84,21 @@ class OpenaiBase:
                     and auth[len("Bearer ") :] in cls._FWD_KEYS
                 ):
                     auth = "Bearer " + next(cls._cycle_api_key)
-                    tmp_headers = {'Authorization': auth}
+                    tmp_headers = {"Authorization": auth}
                 else:
                     tmp_headers = {}
             else:
                 auth = "Bearer " + next(cls._cycle_api_key)
-                tmp_headers = {'Authorization': auth}
+                tmp_headers = {"Authorization": auth}
         else:
             tmp_headers = {}
 
         log_chat_completions = False
-        if cls._LOG_CHAT and request.method == 'POST':
+        if cls._LOG_CHAT and request.method == "POST":
             try:
+                uid = uuid.uuid4().__str__()
                 chat_info = await cls.chatsaver.parse_payload_to_content(
-                    request, route_path=url_path
+                    request, route_path=url_path, uid=uid
                 )
                 if chat_info:
                     cls.chatsaver.add_chat(chat_info)
@@ -124,14 +128,15 @@ class OpenaiBase:
                 status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail=error_info
             )
         except Exception as e:
-            error_info = f"{type(e)}: {e}"
-            logger.error(error_info)
+            logger.exception(f"{type(e)}:")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_info
             )
 
         aiter_bytes = (
-            cls.aiter_bytes(r, url_path) if log_chat_completions else r.aiter_bytes()
+            cls.aiter_bytes(r, url_path, uid)
+            if log_chat_completions
+            else r.aiter_bytes()
         )
         return StreamingResponse(
             aiter_bytes,

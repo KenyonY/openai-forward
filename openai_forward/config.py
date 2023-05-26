@@ -16,7 +16,7 @@ def print_startup_info(base_url, route_prefix, api_key, forward_key, log_chat):
     try:
         from dotenv import load_dotenv
 
-        load_dotenv('.env')
+        load_dotenv(".env")
     except Exception:
         ...
     route_prefix = route_prefix or "/"
@@ -35,7 +35,7 @@ def print_startup_info(base_url, route_prefix, api_key, forward_key, log_chat):
         str(api_key_info),
         str(forward_key_info),
         str(log_chat),
-        "./Log/*.log",
+        "./Log/chat.log",
     )
     print(Panel(table, title="🤗openai-forward is ready to serve!", expand=False))
 
@@ -61,8 +61,8 @@ class InterceptHandler(logging.Handler):
 def setting_log(save_file=False, log_name="openai_forward", multi_process=True):
     # TODO 修复时区配置
     if os.environ.get("TZ") == "Asia/Shanghai":
-        os.environ['TZ'] = "UTC-8"
-        if hasattr(time, 'tzset'):
+        os.environ["TZ"] = "UTC-8"
+        if hasattr(time, "tzset"):
             time.tzset()
 
     logging.root.handlers = [InterceptHandler()]
@@ -72,6 +72,13 @@ def setting_log(save_file=False, log_name="openai_forward", multi_process=True):
 
     config_handlers = [
         {"sink": sys.stdout, "level": "DEBUG"},
+        {
+            "sink": f"./Log/chat.log",
+            "enqueue": multi_process,
+            "rotation": "20 MB",
+            "filter": lambda record: "chat" in record["extra"],
+            "format": "{message}",
+        },
     ]
     if save_file:
         config_handlers += [
@@ -87,7 +94,7 @@ def setting_log(save_file=False, log_name="openai_forward", multi_process=True):
     logger.configure(**logger_config)
 
 
-def yaml_dump(data, filepath, rel_path=False, mode='w'):
+def yaml_dump(data, filepath, rel_path=False, mode="w"):
     abs_path = relp(filepath, parents=1) if rel_path else filepath
     from yaml import dump
 
@@ -99,7 +106,7 @@ def yaml_dump(data, filepath, rel_path=False, mode='w'):
         fw.write(dump(data, Dumper=Dumper, allow_unicode=True, indent=4))
 
 
-def yaml_load(filepath, rel_path=False, mode='r'):
+def yaml_load(filepath, rel_path=False, mode="r"):
     abs_path = relp(filepath, parents=1) if rel_path else filepath
     from yaml import load
 
@@ -108,19 +115,18 @@ def yaml_load(filepath, rel_path=False, mode='r'):
     except ImportError:
         from yaml import Loader
     with open(abs_path, mode=mode, encoding="utf-8") as stream:
-        #     stream = stream.read()
         content = load(stream, Loader=Loader)
     return content
 
 
-def json_load(filepath: str, rel=False, mode='rb'):
+def json_load(filepath: str, rel=False, mode="rb"):
     abs_path = relp(filepath, parents=1) if rel else filepath
     with open(abs_path, mode=mode) as f:
         return orjson.loads(f.read())
 
 
 def json_dump(
-    data: Union[List, Dict], filepath: str, rel=False, indent_2=False, mode='wb'
+    data: Union[List, Dict], filepath: str, rel=False, indent_2=False, mode="wb"
 ):
     orjson_option = 0
     if indent_2:
@@ -130,7 +136,7 @@ def json_dump(
         f.write(orjson.dumps(data, option=orjson_option))
 
 
-def str2list(s: str, sep=' '):
+def str2list(s: str, sep=" "):
     if s:
         return [i.strip() for i in s.split(sep) if i.strip()]
     else:
@@ -139,3 +145,29 @@ def str2list(s: str, sep=' '):
 
 def env2list(env_name: str, sep=" "):
     return str2list(os.environ.get(env_name, "").strip(), sep=sep)
+
+
+def load_chat(filepath: str):
+    import json
+
+    import orjson
+
+    with open(filepath, 'r', encoding='utf-8') as f:
+        messages, assistant = [], []
+        for line in f.readlines():
+            content: dict = orjson.loads(line.replace("'", '"'))
+            if content.get('messages'):
+                messages.append(content)
+            else:
+                assistant.append(content)
+        print(messages)
+        print(assistant)
+        for idx_msg in range(len(messages)):
+            win = 5
+            half_win = (win + 1) // 2
+            range_list = [idx_msg + i * (-1) ** (i + 1) for i in range(half_win)]
+            # range_list = [idx_msg + 0, idx_msg + 1, idx_msg - 1, idx_msg + 2, idx_msg - 2, ...]
+            for idx_ass in range_list:
+                if assistant[idx_ass]['uid'] == messages[idx_msg]['uid']:
+                    ...
+                    break

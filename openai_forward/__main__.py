@@ -33,19 +33,19 @@ class Cli:
         ip_blacklist: str, None
         """
         if base_url:
-            os.environ['OPENAI_BASE_URL'] = base_url
+            os.environ["OPENAI_BASE_URL"] = base_url
         if api_key:
-            os.environ['OPENAI_API_KEY'] = api_key
+            os.environ["OPENAI_API_KEY"] = api_key
         if forward_key:
-            os.environ['FORWARD_KEY'] = forward_key
+            os.environ["FORWARD_KEY"] = forward_key
         if log_chat:
-            os.environ['LOG_CHAT'] = log_chat
+            os.environ["LOG_CHAT"] = log_chat
         if route_prefix:
-            os.environ['ROUTE_PREFIX'] = route_prefix
+            os.environ["ROUTE_PREFIX"] = route_prefix
         if ip_whitelist:
-            os.environ['IP_WHITELIST'] = ip_whitelist
+            os.environ["IP_WHITELIST"] = ip_whitelist
         if ip_blacklist:
-            os.environ['IP_BLACKLIST'] = ip_blacklist
+            os.environ["IP_BLACKLIST"] = ip_blacklist
 
         ssl_keyfile = os.environ.get("ssl_keyfile", None) or None
         ssl_certfile = os.environ.get("ssl_certfile", None) or None
@@ -54,7 +54,7 @@ class Cli:
             host="0.0.0.0",
             port=port,
             workers=workers,
-            app_dir='..',
+            app_dir="..",
             ssl_keyfile=ssl_keyfile,
             ssl_certfile=ssl_certfile,
         )
