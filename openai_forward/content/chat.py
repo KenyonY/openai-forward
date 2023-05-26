@@ -1,13 +1,10 @@
-import os
-from pathlib import Path
-from typing import Dict, List
+import uuid
 
 import orjson
 from fastapi import Request
 from httpx._decoders import LineDecoder
 from loguru import logger
 from orjson import JSONDecodeError
-from sparrow import relp
 
 decoder = LineDecoder()
 
@@ -55,7 +52,8 @@ class ChatSaver:
         self.logger = logger.bind(chat=True)
 
     @staticmethod
-    async def parse_payload_to_content(request: Request, route_path: str, uid: str):
+    async def parse_payload_to_content(request: Request, route_path: str):
+        uid = uuid.uuid4().__str__()
         payload = await request.json()
         if route_path == "/v1/chat/completions":
             msgs = payload["messages"]
@@ -64,7 +62,6 @@ class ChatSaver:
                 "messages": [{msg["role"]: msg["content"]} for msg in msgs],
                 "model": model,
                 "ip": request.headers.get("x-real-ip") or "",
-                # "ip": request.headers.get("x-forwarded-for") or "",
                 "uid": uid,
             }
         else:

@@ -94,14 +94,15 @@ class OpenaiBase:
             tmp_headers = {}
 
         log_chat_completions = False
+        uid = None
         if cls._LOG_CHAT and request.method == "POST":
             try:
-                uid = uuid.uuid4().__str__()
                 chat_info = await cls.chatsaver.parse_payload_to_content(
-                    request, route_path=url_path, uid=uid
+                    request, route_path=url_path
                 )
                 if chat_info:
                     cls.chatsaver.add_chat(chat_info)
+                    uid = chat_info.get('uid')
                     log_chat_completions = True
             except Exception as e:
                 logger.debug(
@@ -130,7 +131,7 @@ class OpenaiBase:
         except Exception as e:
             logger.exception(f"{type(e)}:")
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_info
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e
             )
 
         aiter_bytes = (
