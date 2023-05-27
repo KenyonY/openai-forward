@@ -50,39 +50,47 @@
     </a>
 
 </p>
+
+
+<div align="center">
+
+[Features](#Features) |
+[Usage](#Usage) |
+[Deploy](#Deploy) |
+[Service Usage](#Service-Usage) |
+[Configuration](#Configuration) |
+[Chat Log](#Chat-log) 
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/tejCum?referralCode=U0-kXv)  
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/beidongjiedeguang/openai-forward)
+
+</div>
+
 This project is designed to solve the problem of some regions being unable to directly access OpenAI. The service is deployed on a server that can access the OpenAI API, and OpenAI requests are forwarded through the service, i.e. a reverse proxy service is set up. 
 
 ---
 
-Test access: https://api.openai-forward.com/v1/chat/completions   
-To put it another way, https://api.openai-forward.com is equivalent to https://api.openai.com.
+由本项目搭建的长期代理地址：
+> https://api.openai-forward.com  
 
----
-
-# Table of Contents
-
-- [Features](#Features)
-- [Usage](#Usage)
-- [Deploy](#Deploy)
-- [Service Usage](#Service-Usage)
-- [Configuration](#Configuration)
-- [Chat Log](#Chat-log)
-- [Advanced Configuration](#Advanced-Configuration)
 
 # Features
 
 **Basic Features**
-- [x] Support forwarding all OpenAI APIs.
+- [x] Support forwarding all OpenAI interfaces.
 - [x] Support streaming responses.
-- [x] Support specifying forwarding route prefixes.
+- [x] Support specifying the forwarding route prefix.
 - [x] Docker deployment.
 - [x] Pip installation deployment.
+- [x] Cloudflare deployment.
+- [x] ~~Vercel one-click deployment (not recommended)~~
+- [x] Railway one-click deployment.
+- [x] Render one-click deployment.
 
 **Advanced Features**
 - [x] Real-time recording of chat logs (including chat content from streaming responses).
 - [x] Support default OpenAI API key (round-robin invocation of multiple API keys).
 - [x] Custom forward API key instead of OpenAI API key (see advanced configuration).
-- [x] Support request IP verification (IP whitelist and blacklist).
 
 
 # Usage
@@ -201,22 +209,27 @@ http://{ip}:{port}/v1/chat/completions
 
 **`openai-forward run` Parameter Configuration Options**
 
-| Configuration Option | Description | Default Value |
-|-----------| --- | :---: |
-| --port    | Service port number | 8000 |
+| Configuration Item | Description | Default Value |
+|-----------------|-------------------|:----------------------:|
+| --port | Server port number | 8000 |
 | --workers | Number of worker processes | 1 |
+| --base_url | Same as OPENAI_BASE_URL | https://api.openai.com |
+| --api_key | Same as OPENAI_API_KEY | `None` |
+| --forward_key | Same as FORWARD_KEY | `None` |
+| --route_prefix | Same as ROUTE_PREFIX | `None` |
+| --log_chat | Same as LOG_CHAT | `False` |
 
 **Environment Variable Configuration Options**  
 refer to the `.env` file in the project root directory
 
-| Environment Variable  | Description |      Default Value       |
-|-----------------|------------|:------------------------:|
-| OPENAI_API_KEY  | Default API key, supports multiple default API keys separated by space. |           None           |
-| FORWARD_KEY     | Allow the caller to use the key instead of the OpenAI API key, support multiple forward keys starting with "fk-" and separated by spaces. |          None           |
-| OPENAI_BASE_URL | Forwarding base URL | `https://api.openai.com` |
-|LOG_CHAT| Whether to log chat content |          `true`          |
-|ROUTE_PREFIX| Route prefix |           None           |
-
+| Environment Variable | Description                                                                                                                                                                                                                                                                                                |         Default Value        |
+|----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:---------------------------:|
+| OPENAI_BASE_URL      | Default OpenAI API address                                                                                                                                                                                                                                                                                 |    https://api.openai.com    |
+| OPENAI_API_KEY       | Default OpenAI API key(s), support multiple default API keys starting with `sk-`, separated by spaces                                                                                                                                                                                                      |             None            |
+| FORWARD_KEY          | Allow the caller to use this key instead of the OpenAI API key, support multiple forward keys separated by spaces; If OPENAI_API_KEY is set but FORWARD_KEY is not set, the key does not need to be provided when the client calls, it is not recommended to set FORWARD_KEY to empty for security reasons |             None            |
+| OPENAI_BASE_URL      | Forward base URL                                                                                                                                                                                                                                                                                           |    `https://api.openai.com` |
+| ROUTE_PREFIX         | Route prefix                                                                                                                                                                                                                                                                                               |             None            |
+| LOG_CHAT             | Whether to log the chat content                                                                                                                                                                                                                                                                            |           `false`           |
 # Chat Log
 
 The saved path is in the `Log/` directory under the current directory.  

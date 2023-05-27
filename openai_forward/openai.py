@@ -1,7 +1,6 @@
 from fastapi import Request
 
 from .base import OpenaiBase
-from .config import setting_log
 from .routers.schemas import OpenAIV1ChatCompletion
 
 

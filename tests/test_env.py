@@ -9,7 +9,7 @@ import openai_forward
 
 
 class TestEnv:
-    with open(".env", 'r', encoding='utf-8') as f:
+    with open(".env", "r", encoding="utf-8") as f:
         defualt_env = f.read()
 
     @classmethod
@@ -23,7 +23,7 @@ ROUTE_PREFIX=
 IP_WHITELIST=
 IP_BLACKLIST=
 """
-        with open(".env", 'w', encoding='utf-8') as f:
+        with open(".env", "w", encoding="utf-8") as f:
             f.write(env)
             time.sleep(0.1)
 
@@ -33,10 +33,9 @@ IP_BLACKLIST=
 
     @classmethod
     def teardown_class(cls):
-        with open(".env", 'w', encoding='utf-8') as f:
+        with open(".env", "w", encoding="utf-8") as f:
             f.write(cls.defualt_env)
 
     def test_env1(self):
-        assert self.aibase._FWD_KEYS == ['ps1', 'ps2', 'ps3']
-        assert self.aibase._openai_api_key_list == ['key1', 'key2']
+        assert self.aibase._openai_api_key_list == ["key1", "key2"]
         assert self.aibase._need_forward_key

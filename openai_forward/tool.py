@@ -72,8 +72,8 @@ def get_matches(messages: List[Dict], assistant: List[Dict]):
             if messages[idx_msg]["uid"] == assistant[idx_ass]["uid"]:
                 matches.append(
                     [
-                        {"q": messages[idx_msg]["messages"]},
-                        {"a": assistant[idx_ass]["assistant"]},
+                        {"messages": messages[idx_msg]["messages"]},
+                        {"assistant": assistant[idx_ass]["assistant"]},
                     ]
                 )
                 assis_idx_to_remove.append(idx_ass)
@@ -82,7 +82,7 @@ def get_matches(messages: List[Dict], assistant: List[Dict]):
     assis_remain = [i for j, i in enumerate(assistant) if j not in assis_idx_to_remove]
     msg_remain = [i for j, i in enumerate(messages) if j not in msg_idx_to_remove]
     remains = [
-        [{"q": x["messages"]}, {"a": y["assistant"]}]
+        [{"messages": x["messages"]}, {"assistant": y["assistant"]}]
         for x in msg_remain
         for y in assis_remain
         if x["uid"] == y["uid"]
@@ -91,7 +91,7 @@ def get_matches(messages: List[Dict], assistant: List[Dict]):
     return matches
 
 
-def load_chat(filepath: str):
+def parse_chat_log(filepath: str):
     with open(filepath, "r", encoding="utf-8") as f:
         messages, assistant = [], []
         for line in f.readlines():
@@ -110,5 +110,5 @@ def convert_chatlog_to_jsonl(log_path: str, target_path: str):
         raise ImportError(
             "import orjsonl error, please `pip install openai_forward[tool]` first"
         )
-    content_list = load_chat(log_path)
+    content_list = parse_chat_log(log_path)
     orjsonl.save(target_path, content_list)

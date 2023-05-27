@@ -61,7 +61,7 @@ class ChatSaver:
             content = {
                 "messages": [{msg["role"]: msg["content"]} for msg in msgs],
                 "model": model,
-                "ip": request.headers.get("x-real-ip") or "",
+                "host": request.headers.get("x-real-ip") or "",
                 "uid": uid,
             }
         else:

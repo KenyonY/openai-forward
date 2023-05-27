@@ -7,10 +7,9 @@ from loguru import logger
 from rich import print
 from rich.panel import Panel
 from rich.table import Table
-from sparrow import relp
 
 
-def print_startup_info(base_url, route_prefix, api_key, forward_key, log_chat):
+def print_startup_info(base_url, route_prefix, api_key, no_auth_mode, log_chat):
     try:
         from dotenv import load_dotenv
 
@@ -19,23 +18,22 @@ def print_startup_info(base_url, route_prefix, api_key, forward_key, log_chat):
         ...
     route_prefix = route_prefix or "/"
     api_key_info = True if len(api_key) else False
-    forward_key_info = True if len(forward_key) else False
     table = Table(title="", box=None, width=100)
     table.add_column("base-url", justify="left", style="#df412f")
-    table.add_column("route-prefix", justify="center", style="#df412f")
-    table.add_column("openai-api-key", justify="center", style="green")
-    table.add_column("forward-key", justify="center", style="green")
+    table.add_column("route-prefix", justify="center", style="green")
+    table.add_column("api-key-polling-pool", justify="center", style="green")
+    table.add_column(
+        "no-auth-mode", justify="center", style="red" if no_auth_mode else "green"
+    )
     table.add_column("Log-chat", justify="center", style="green")
-    table.add_column("Log-dir", justify="center", style="#f5bb00")
     table.add_row(
         base_url,
         route_prefix,
         str(api_key_info),
-        str(forward_key_info),
+        str(no_auth_mode),
         str(log_chat),
-        "./Log/chat.log",
     )
-    print(Panel(table, title="🤗openai-forward is ready to serve!", expand=False))
+    print(Panel(table, title="🤗 openai-forward is ready to serve! ", expand=False))
 
 
 class InterceptHandler(logging.Handler):

@@ -19,7 +19,7 @@ class OpenaiBase:
     _openai_api_key_list = env2list("OPENAI_API_KEY", sep=" ")
     _cycle_api_key = cycle(_openai_api_key_list)
     _FWD_KEYS = set(env2list("FORWARD_KEY", sep=" "))
-    _need_forward_key = _openai_api_key_list != [] and _FWD_KEYS != set()
+    _no_auth_mode = _openai_api_key_list != [] and _FWD_KEYS == set()
     IP_WHITELIST = env2list("IP_WHITELIST", sep=" ")
     IP_BLACKLIST = env2list("IP_BLACKLIST", sep=" ")
 
@@ -31,7 +31,7 @@ class OpenaiBase:
     timeout = 60
 
     print_startup_info(
-        BASE_URL, ROUTE_PREFIX, _openai_api_key_list, _FWD_KEYS, _LOG_CHAT
+        BASE_URL, ROUTE_PREFIX, _openai_api_key_list, _no_auth_mode, _LOG_CHAT
     )
     if _LOG_CHAT:
         setting_log(save_file=False)
@@ -70,24 +70,12 @@ class OpenaiBase:
         url_path = url_path[len(cls.ROUTE_PREFIX) :]
         url = httpx.URL(path=url_path, query=request.url.query.encode("utf-8"))
         headers = dict(request.headers)
-        auth = headers.pop("authorization", None)
+        auth = headers.pop("authorization", "")
+        auth_headers_dict = {"Content-Type": "application/json", "Authorization": auth}
         auth_prefix = "Bearer "
-        auth_headers_dict = {"Content-Type": "application/json"}
-        # custom forwarding key
-        if cls._openai_api_key_list:
-            logger.info(f"Need forward key? {cls._need_forward_key}")
-            if cls._need_forward_key:
-                if auth and auth[len(auth_prefix) :] in cls._FWD_KEYS:
-                    auth = auth_prefix + next(cls._cycle_api_key)
-                    auth_headers_dict["Authorization"] = auth
-            else:
-                auth = auth_prefix + next(cls._cycle_api_key)
-                auth_headers_dict["Authorization"] = auth
-        # openai key
-        elif auth and str(auth).startswith(auth_prefix):
+        if cls._no_auth_mode or auth and auth[len(auth_prefix) :] in cls._FWD_KEYS:
+            auth = auth_prefix + next(cls._cycle_api_key)
             auth_headers_dict["Authorization"] = auth
-        else:
-            ...
 
         log_chat_completions = False
         uid = None
