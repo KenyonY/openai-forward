@@ -38,4 +38,4 @@ IP_BLACKLIST=
 
     def test_env1(self):
         assert self.aibase._openai_api_key_list == ["key1", "key2"]
-        assert self.aibase._need_forward_key
+        assert self.aibase._no_auth_mode is False
