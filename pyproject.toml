@@ -50,6 +50,9 @@ bard = [
 edge = [
     "EdgeGPT",
 ]
+tool = [
+    "orjsonl"
+]
 
 [project.scripts]
 openai_forward = "openai_forward.__main__:main"
