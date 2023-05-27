@@ -202,7 +202,6 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 | OPENAI_BASE_URL  | 默认 openai官方 api 地址                                                                                                                |        https://api.openai.com           |
 | OPENAI_API_KEY  | 默认openai api key，支持多个默认api key, 以 `sk-` 开头， 以空格分割                                                                                 |            无             |
 | FORWARD_KEY     | 允许调用方使用该key代替openai api key，支持多个forward key, 以空格分割; 如果设置了OPENAI_API_KEY，而没有设置FORWARD_KEY, 则客户端调用时无需提供密钥, 此时出于安全考虑不建议FORWARD_KEY置空 |            无             |
-| OPENAI_BASE_URL | 转发base url                                                                                                                        | `https://api.openai.com` |
 | ROUTE_PREFIX    | 路由前缀                                                                                                                              |            无             |
 | LOG_CHAT        | 是否记录聊天内容                                                                                                                          |         `false`          |
 
@@ -269,9 +268,9 @@ docker run -d \
 记录格式为
 
 ```text
-{'messages': [{'user': 'hi'}], 'model': 'gpt-3.5-turbo', 'host': '', 'uid': '467a17ec-bf39-4b65-9ebd-e722b3bdd5c3'}
+{'messages': [{'user': 'hi'}], 'model': 'gpt-3.5-turbo', 'forwarded-for': '', 'uid': '467a17ec-bf39-4b65-9ebd-e722b3bdd5c3'}
 {'assistant': 'Hello! How can I assist you today?', 'uid': '467a17ec-bf39-4b65-9ebd-e722b3bdd5c3'}
-{'messages': [{'user': 'Hello!'}], 'model': 'gpt-3.5-turbo', 'host': '', 'uid': 'f844d156-e747-4887-aef8-e40d977b5ee7'}
+{'messages': [{'user': 'Hello!'}], 'model': 'gpt-3.5-turbo', 'forwarded-for': '', 'uid': 'f844d156-e747-4887-aef8-e40d977b5ee7'}
 {'assistant': 'Hi there! How can I assist you today?', 'uid': 'f844d156-e747-4887-aef8-e40d977b5ee7'}
 ...
 ```
@@ -285,30 +284,8 @@ openai-forward convert
 即可转换为以下格式：
 
 ```json lines
-[
-    {
-        "messages": [
-            {
-                "user": "hi!"
-            }
-        ]
-    },
-    {
-        "assistant": "Hello! How can I assist you today?"
-    }
-]
-[
-    {
-        "messages": [
-            {
-                "user": "Hello!"
-            }
-        ]
-    },
-    {
-        "assistant": "Hi there! How can I assist you today?"
-    }
-]
+[{"messages": [{"user": "hi!"}]},{"assistant": "Hello! How can I assist you today?"}]
+[{"messages": [{"user": "Hello!"}]},{"assistant": "Hi there! How can I assist you today?"}]
 ...
 ```
 
