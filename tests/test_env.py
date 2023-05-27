@@ -39,4 +39,4 @@ IP_BLACKLIST=
     def test_env1(self):
         assert self.aibase._FWD_KEYS == ['ps1', 'ps2', 'ps3']
         assert self.aibase._openai_api_key_list == ['key1', 'key2']
-        assert self.aibase._use_forward_key
+        assert self.aibase._need_forward_key

@@ -1,5 +1,4 @@
 import os
-import uuid
 from itertools import cycle
 
 import httpx
@@ -18,8 +17,8 @@ class OpenaiBase:
     _LOG_CHAT = os.environ.get("LOG_CHAT", "False").strip().lower() == "true"
     _openai_api_key_list = env2list("OPENAI_API_KEY", sep=" ")
     _cycle_api_key = cycle(_openai_api_key_list)
-    _FWD_KEYS = env2list("FORWARD_KEY", sep=" ")
-    _use_forward_key = _openai_api_key_list != [] and _FWD_KEYS != []
+    _FWD_KEYS = set(env2list("FORWARD_KEY", sep=" "))
+    _need_forward_key = _openai_api_key_list != [] and _FWD_KEYS != set()
     IP_WHITELIST = env2list("IP_WHITELIST", sep=" ")
     IP_BLACKLIST = env2list("IP_BLACKLIST", sep=" ")
 
@@ -71,27 +70,23 @@ class OpenaiBase:
         url = httpx.URL(path=url_path, query=request.url.query.encode("utf-8"))
         headers = dict(request.headers)
         auth = headers.pop("authorization", None)
-        if auth and str(auth).startswith("Bearer sk-"):
-            tmp_headers = {"Authorization": auth}
-        elif cls._openai_api_key_list:
-            logger.info(f"Use forward key: {cls._use_forward_key}")
-            if cls._use_forward_key:
-                fk_prefix = "Bearer fk-"
-                logger.info(f"current forward key: {auth}")
-                if (
-                    auth
-                    and str(auth).startswith(fk_prefix)
-                    and auth[len("Bearer ") :] in cls._FWD_KEYS
-                ):
-                    auth = "Bearer " + next(cls._cycle_api_key)
-                    tmp_headers = {"Authorization": auth}
-                else:
-                    tmp_headers = {}
+        auth_prefix = "Bearer "
+        auth_headers_dict = {"Content-Type": "application/json"}
+        # custom forwarding key
+        if cls._openai_api_key_list:
+            logger.info(f"Need forward key? {cls._need_forward_key}")
+            if cls._need_forward_key:
+                if auth and auth[len(auth_prefix) :] in cls._FWD_KEYS:
+                    auth = auth_prefix + next(cls._cycle_api_key)
+                    auth_headers_dict["Authorization"] = auth
             else:
-                auth = "Bearer " + next(cls._cycle_api_key)
-                tmp_headers = {"Authorization": auth}
+                auth = auth_prefix + next(cls._cycle_api_key)
+                auth_headers_dict["Authorization"] = auth
+        # openai key
+        elif auth and str(auth).startswith(auth_prefix):
+            auth_headers_dict["Authorization"] = auth
         else:
-            tmp_headers = {}
+            ...
 
         log_chat_completions = False
         uid = None
@@ -109,11 +104,10 @@ class OpenaiBase:
                     f"log chat error:\n{request.client.host=} {request.method=}: {e}"
                 )
 
-        tmp_headers.update({"Content-Type": "application/json"})
         req = client.build_request(
             request.method,
             url,
-            headers=tmp_headers,
+            headers=auth_headers_dict,
             content=request.stream(),
             timeout=cls.timeout,
         )
