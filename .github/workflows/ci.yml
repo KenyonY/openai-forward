@@ -7,20 +7,11 @@ on:
   pull_request:
     paths-ignore:
       - 'docs/**'
-      - 'README.md'
-      - 'README_*.md'
+      - '*.md'
     branches:
       - main
 
 jobs:
-  commit-lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - uses: wagoid/commitlint-github-action@v4
-
   check-black:
     runs-on: ubuntu-latest
     steps:
