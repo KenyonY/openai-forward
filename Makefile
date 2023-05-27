@@ -40,10 +40,10 @@ twine:
 	@rm -rf dist/*
 
 build:
-	docker build --tag $(image) -f docker/Dockerfile .
+	docker build --tag $(image) .
 
 build-push:
-	docker buildx build --push --platform linux/arm64/v8,linux/amd64 --tag $(image) -f docker/Dockerfile .
+	docker buildx build --push --platform linux/arm64/v8,linux/amd64 --tag $(image) .
 
 pull:
 	 docker pull $(image)
