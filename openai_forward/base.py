@@ -7,8 +7,9 @@ from fastapi.responses import StreamingResponse
 from loguru import logger
 from starlette.background import BackgroundTask
 
-from .config import env2list, print_startup_info, setting_log
+from .config import print_startup_info, setting_log
 from .content.chat import ChatSaver
+from .tool import env2list
 
 
 class OpenaiBase:
@@ -97,7 +98,7 @@ class OpenaiBase:
                 )
                 if chat_info:
                     cls.chatsaver.add_chat(chat_info)
-                    uid = chat_info.get('uid')
+                    uid = chat_info.get("uid")
                     log_chat_completions = True
             except Exception as e:
                 logger.debug(

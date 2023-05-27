@@ -59,6 +59,16 @@ class Cli:
             ssl_certfile=ssl_certfile,
         )
 
+    @staticmethod
+    def convert(
+        log_path: str = "./Log/chat.log", target_path: str = "./Log/chat.jsonl"
+    ):
+        """Convert log file  to jsonl file"""
+        from openai_forward.tool import convert_chatlog_to_jsonl
+
+        print(f"Convert {log_path} to {target_path}")
+        convert_chatlog_to_jsonl(log_path, target_path)
+
 
 def main():
     fire.Fire(Cli)
