@@ -3,6 +3,7 @@ import os
 from typing import Dict, List, Union
 
 import orjson
+from rich import print
 from sparrow import relp
 
 
@@ -60,8 +61,20 @@ def env2list(env_name: str, sep=" "):
 
 
 def get_matches(messages: List[Dict], assistant: List[Dict]):
+    msg_len, ass_len = len(messages), len(assistant)
+    if msg_len != ass_len:
+        print(f"message({msg_len}) 与 assistant({ass_len}) 长度不匹配")
     matches = []
     assis_idx_to_remove, msg_idx_to_remove = [], []
+
+    def cvt(msg: dict, ass: dict):
+        return {
+            "messages": msg["messages"],
+            "assistant": ass["assistant"],
+            "host": msg["host"],
+            "model": msg["model"],
+        }
+
     for idx_msg in range(len(messages)):
         win = min(5, len(messages) - 1)
         range_list = [idx_msg + (i + 1) // 2 * (-1) ** (i + 1) for i in range(win)]
@@ -70,24 +83,19 @@ def get_matches(messages: List[Dict], assistant: List[Dict]):
             if idx_ass >= len(assistant):
                 break
             if messages[idx_msg]["uid"] == assistant[idx_ass]["uid"]:
-                matches.append(
-                    [
-                        {"messages": messages[idx_msg]["messages"]},
-                        {"assistant": assistant[idx_ass]["assistant"]},
-                    ]
-                )
+                matches.append(cvt(messages[idx_msg], assistant[idx_ass]))
                 assis_idx_to_remove.append(idx_ass)
                 msg_idx_to_remove.append(idx_msg)
                 break
     assis_remain = [i for j, i in enumerate(assistant) if j not in assis_idx_to_remove]
     msg_remain = [i for j, i in enumerate(messages) if j not in msg_idx_to_remove]
     remains = [
-        [{"messages": x["messages"]}, {"assistant": y["assistant"]}]
-        for x in msg_remain
-        for y in assis_remain
-        if x["uid"] == y["uid"]
+        cvt(x, y) for x in msg_remain for y in assis_remain if x["uid"] == y["uid"]
     ]
     matches.extend(remains)
+    ref_len = max(msg_len, ass_len)
+    if len(matches) != ref_len:
+        print(f"存在{ref_len-len(matches)}条未匹配数据")
     return matches
 
 
