@@ -12,10 +12,9 @@ pip install openai-forward
 可通过`--port`指定端口号，默认为`8000`
 
 ```bash
-openai_forward run --port=9999 
+openai_forward run 
 ```
-
-服务就搭建完成了，使用方式只需将`https://api.openai.com` 替换为服务所在端口`http://{ip}:{port}` 即可。
+服务就搭建完成了，使用方式只需将`https://api.openai.com` 替换为服务所在端口`http://{ip}:{port}` 即可(默认`port=8000`)。
 
 当然也可以将 OPENAI_API_KEY 作为环境变量或`--api_key`参数传入作为默认api key， 这样客户端在请求相关路由时可以无需在Header中传入Authorization。
 带默认api key的启动方式(但这样存在安全风险，建议结合`--forward_key`一起使用, 见[使用方式](README.md#高级配置))：
