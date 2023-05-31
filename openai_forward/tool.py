@@ -69,10 +69,10 @@ def get_matches(messages: List[Dict], assistant: List[Dict]):
 
     def cvt(msg: dict, ass: dict):
         return {
+            "forwarded-for": msg["forwarded-for"],
+            "model": msg["model"],
             "messages": msg["messages"],
             "assistant": ass["assistant"],
-            "host": msg["host"],
-            "model": msg["model"],
         }
 
     for idx_msg in range(len(messages)):
@@ -112,11 +112,5 @@ def parse_chat_log(filepath: str):
 
 
 def convert_chatlog_to_jsonl(log_path: str, target_path: str):
-    try:
-        import orjsonl
-    except ImportError:
-        raise ImportError(
-            "import orjsonl error, please `pip install openai_forward[tool]` first"
-        )
     content_list = parse_chat_log(log_path)
-    orjsonl.save(target_path, content_list)
+    json_dump(content_list, target_path, indent_2=True)

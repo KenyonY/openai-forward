@@ -48,8 +48,8 @@
 
 </div>
 
-本项目用于解决一些地区无法直接访问OpenAI的问题，将该服务部署在可以正常访问openai
-api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代理服务。同时，允许输入多个openai api key 组成轮询池, 可自定义二次分发api key.
+本项目用于解决一些地区无法直接访问OpenAI的问题，将该服务部署在可以正常访问OpenAI API的(云)服务器上，
+通过该服务转发OpenAI的请求。即搭建反向代理服务; 允许输入多个OpenAI API-KEY 组成轮询池; 可自定义二次分发api key.
 
 ---
 
@@ -272,10 +272,9 @@ docker run -d \
 {'assistant': 'Hello! How can I assist you today?', 'uid': '467a17ec-bf39-4b65-9ebd-e722b3bdd5c3'}
 {'messages': [{'user': 'Hello!'}], 'model': 'gpt-3.5-turbo', 'forwarded-for': '', 'uid': 'f844d156-e747-4887-aef8-e40d977b5ee7'}
 {'assistant': 'Hi there! How can I assist you today?', 'uid': 'f844d156-e747-4887-aef8-e40d977b5ee7'}
-...
 ```
 
-转换为`jsonl`格式：
+转换为`json`格式：
 
 ```bash
 openai-forward convert
@@ -283,10 +282,29 @@ openai-forward convert
 
 即可转换为以下格式：
 
-```json lines
-[{"messages": [{"user": "hi!"}]},{"assistant": "Hello! How can I assist you today?"}]
-[{"messages": [{"user": "Hello!"}]},{"assistant": "Hi there! How can I assist you today?"}]
-...
+```json
+[
+    {
+        "forwarded-for": "",
+        "model": "gpt-3.5-turbo",
+        "messages": [
+            {
+                "user": "hi"
+            }
+        ],
+        "assistant": "Hello there! How can I assist you today?"
+    },
+    {
+        "forwarded-for": "",
+        "model": "gpt-3.5-turbo",
+        "messages": [
+            {
+                "user": "Hello!"
+            }
+        ],
+        "assistant": "Hi there! How can I assist you today?"
+    }
+]
 ```
 
 </details>
