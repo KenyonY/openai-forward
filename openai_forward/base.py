@@ -28,7 +28,7 @@ class OpenaiBase:
             ROUTE_PREFIX = ROUTE_PREFIX[:-1]
         if not ROUTE_PREFIX.startswith("/"):
             ROUTE_PREFIX = "/" + ROUTE_PREFIX
-    timeout = 60
+    timeout = 600
 
     print_startup_info(
         BASE_URL, ROUTE_PREFIX, _openai_api_key_list, _no_auth_mode, _LOG_CHAT

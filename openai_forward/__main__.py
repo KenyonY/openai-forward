@@ -60,9 +60,7 @@ class Cli:
         )
 
     @staticmethod
-    def convert(
-        log_path: str = "./Log/chat.log", target_path: str = "./Log/chat.jsonl"
-    ):
+    def convert(log_path: str = "./Log/chat.log", target_path: str = "./Log/chat.json"):
         """Convert log file  to jsonl file"""
         from openai_forward.tool import convert_chatlog_to_jsonl
 

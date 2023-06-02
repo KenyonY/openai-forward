@@ -53,9 +53,9 @@ class ChatSaver:
 
     @staticmethod
     async def parse_payload_to_content(request: Request, route_path: str):
-        uid = uuid.uuid4().__str__()
-        payload = await request.json()
         if route_path == "/v1/chat/completions":
+            uid = uuid.uuid4().__str__()
+            payload = await request.json()
             msgs = payload["messages"]
             model = payload["model"]
             content = {

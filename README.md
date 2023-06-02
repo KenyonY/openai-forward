@@ -48,13 +48,13 @@
 
 </div>
 
-本项目用于解决一些地区无法直接访问OpenAI的问题，将该服务部署在可以正常访问openai
-api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代理服务
+本项目用于解决一些地区无法直接访问OpenAI的问题，将该服务部署在可以正常访问OpenAI API的(云)服务器上，
+通过该服务转发OpenAI的请求。即搭建反向代理服务; 允许输入多个OpenAI API-KEY 组成轮询池; 可自定义二次分发api key.
 
 ---
 
 由本项目搭建的长期代理地址：
-> https://api.openai-forward.com
+> https://api.openai-forward.com  
 
 ## 功能
 
@@ -72,18 +72,19 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
 
 **高级功能**
 
-- [x] 实时记录聊天记录(包括流式响应的聊天内容)
 - [x] 允许输入多个openai api key 组成轮询池
 - [x] 自定义 转发api key (见[高级配置](#高级配置))
+- [x] 实时记录聊天记录(包括流式响应的聊天内容)
 
 ## 部署指南
 
-提供以下几种部署方式
+[部署文档](deploy.md)
 
+提供以下几种部署方式  
 **有海外vps方案**
 
-1. [pip 安装部署](deploy.md#pip-推荐) (推荐)
-2. [Docker部署](deploy.md#docker-推荐) (推荐)
+1. [pip 安装部署](deploy.md#pip部署) (推荐)
+2. [Docker部署](deploy.md#docker部署) (推荐)
    > https://api.openai-forward.com
 
 **无vps免费部署方案**
@@ -94,7 +95,7 @@ api的服务器上，通过该服务转发OpenAI的请求。即搭建反向代�
    > https://cloudflare.openai-forward.com
 3. [Railway部署](deploy.md#Railway-一键部署)
    > https://railway.openai-forward.com
-4. [Render一键部署](deploy.md#render-一键部署) (推荐)
+4. [Render一键部署](deploy.md#render-一键部署) (较推荐)
    > https://render.openai-forward.com
 
 ## 应用
@@ -174,11 +175,14 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 ## 配置选项
 
 配置的设置方式支持两种  
-一种为在shell中运行`openai-forward run --port=8000`的命令行方式指定;  
+一种为在命令行中执行`openai-forward run`的运行参数(如`--port=8000`)中指定;  
 另一种为读取环境变量的方式指定。
 
+### 命令行参数
+可通过 `openai-forward run --help` 查看
+
 <details markdown="1">
-<summary>Click for more details</summary>  
+  <summary>Click for more details</summary>
 
 **`openai-forward run`参数配置项**
 
@@ -192,10 +196,14 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 | --route_prefix | 同 ROUTE_PREFIX    |          `None`          |
 | --log_chat | 同 LOG_CHAT        |        `False`         |
 
-也可通过 `openai-forward run --help` 查看
 
-**环境变量配置项**  
+</details>
+
+### 环境变量配置项
 支持从运行目录下的`.env`文件中读取
+
+<details markdown="1">
+  <summary>Click for more details</summary>
 
 | 环境变量            | 说明                                                                                                                                |           默认值            |
 |-----------------|-----------------------------------------------------------------------------------------------------------------------------------|:------------------------:|
@@ -272,21 +280,39 @@ docker run -d \
 {'assistant': 'Hello! How can I assist you today?', 'uid': '467a17ec-bf39-4b65-9ebd-e722b3bdd5c3'}
 {'messages': [{'user': 'Hello!'}], 'model': 'gpt-3.5-turbo', 'forwarded-for': '', 'uid': 'f844d156-e747-4887-aef8-e40d977b5ee7'}
 {'assistant': 'Hi there! How can I assist you today?', 'uid': 'f844d156-e747-4887-aef8-e40d977b5ee7'}
-...
 ```
 
-转换为`jsonl`格式：
+转换为`json`格式：
 
 ```bash
 openai-forward convert
 ```
 
-即可转换为以下格式：
+得到`chat.json`：
 
-```json lines
-[{"messages": [{"user": "hi!"}]},{"assistant": "Hello! How can I assist you today?"}]
-[{"messages": [{"user": "Hello!"}]},{"assistant": "Hi there! How can I assist you today?"}]
-...
+```json
+[
+    {
+        "forwarded-for": "",
+        "model": "gpt-3.5-turbo",
+        "messages": [
+            {
+                "user": "hi"
+            }
+        ],
+        "assistant": "Hello there! How can I assist you today?"
+    },
+    {
+        "forwarded-for": "",
+        "model": "gpt-3.5-turbo",
+        "messages": [
+            {
+                "user": "Hello!"
+            }
+        ],
+        "assistant": "Hi there! How can I assist you today?"
+    }
+]
 ```
 
 </details>
