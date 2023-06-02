@@ -1,6 +1,6 @@
 # 部署指南
 
-## pip (推荐)
+## pip部署
 
 **安装**
 
@@ -58,7 +58,7 @@ http://{ip}:{port}/v1/chat/completions
 然后就可以使用 `https://api.openai-forward.com` 进行https访问了。
 
 
-## Docker (推荐)
+## Docker部署
 
 ```bash
 docker run -d -p 9999:8000 beidongjiedeguang/openai-forward:latest 

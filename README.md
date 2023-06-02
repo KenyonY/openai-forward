@@ -54,7 +54,7 @@
 ---
 
 由本项目搭建的长期代理地址：
-> https://api.openai-forward.com
+> https://api.openai-forward.com  
 
 ## 功能
 
@@ -82,8 +82,8 @@
 
 **有海外vps方案**
 
-1. [pip 安装部署](deploy.md#pip-推荐) (推荐)
-2. [Docker部署](deploy.md#docker-推荐) (推荐)
+1. [pip 安装部署](deploy.md#pip部署) (推荐)
+2. [Docker部署](deploy.md#docker部署) (推荐)
    > https://api.openai-forward.com
 
 **无vps免费部署方案**
@@ -94,7 +94,7 @@
    > https://cloudflare.openai-forward.com
 3. [Railway部署](deploy.md#Railway-一键部署)
    > https://railway.openai-forward.com
-4. [Render一键部署](deploy.md#render-一键部署) (推荐)
+4. [Render一键部署](deploy.md#render-一键部署) (较推荐)
    > https://render.openai-forward.com
 
 ## 应用
@@ -174,7 +174,7 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 ## 配置选项
 
 配置的设置方式支持两种  
-一种为在shell中运行`openai-forward run --port=8000`的命令行方式指定;  
+一种为在命令行中运行`openai-forward run`的运行参数(如`--port=8000`)中指定;  
 另一种为读取环境变量的方式指定。
 
 <details markdown="1">
