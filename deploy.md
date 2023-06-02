@@ -1,4 +1,18 @@
-# 部署指南
+
+<h1 align="center">
+    <br>
+    部署指南
+    <br>
+</h1>
+<div align="center">
+
+[pip部署](#pip部署) |
+[docker部署](#docker部署) |
+[cloudflare部署](#cloudflare-部署) |
+[railway一键部署](#railway-一键部署) |
+[render一键部署](#render-一键部署)
+
+</div>
 
 ## pip部署
 

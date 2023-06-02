@@ -78,8 +78,9 @@
 
 ## 部署指南
 
-提供以下几种部署方式
+[部署文档](deploy.md)
 
+提供以下几种部署方式  
 **有海外vps方案**
 
 1. [pip 安装部署](deploy.md#pip部署) (推荐)
@@ -174,11 +175,14 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 ## 配置选项
 
 配置的设置方式支持两种  
-一种为在命令行中运行`openai-forward run`的运行参数(如`--port=8000`)中指定;  
+一种为在命令行中执行`openai-forward run`的运行参数(如`--port=8000`)中指定;  
 另一种为读取环境变量的方式指定。
 
+### 命令行参数
+可通过 `openai-forward run --help` 查看
+
 <details markdown="1">
-<summary>Click for more details</summary>  
+  <summary>Click for more details</summary>
 
 **`openai-forward run`参数配置项**
 
@@ -192,10 +196,14 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 | --route_prefix | 同 ROUTE_PREFIX    |          `None`          |
 | --log_chat | 同 LOG_CHAT        |        `False`         |
 
-也可通过 `openai-forward run --help` 查看
 
-**环境变量配置项**  
+</details>
+
+### 环境变量配置项
 支持从运行目录下的`.env`文件中读取
+
+<details markdown="1">
+  <summary>Click for more details</summary>
 
 | 环境变量            | 说明                                                                                                                                |           默认值            |
 |-----------------|-----------------------------------------------------------------------------------------------------------------------------------|:------------------------:|
