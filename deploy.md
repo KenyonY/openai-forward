@@ -114,21 +114,24 @@ openai-forward run
 
 ## Cloudflare 部署
 
-1. 复制[worker.js](worker.js) 到 [cloudflare](https://dash.cloudflare.com/) 的worker中 即可完成服务部署。
-2. 绑定自定义域名: cloudflare自动分配的域名国内也无法访问，所以也需要绑定自定义域名.
+部署方式二选一： 
+* Pages部署: fork本仓库，在[cloudflare](https://dash.cloudflare.com/)上创建应用程序时选择Pages, 然后选择连接到Git, 选择刚刚fork的仓库即可完成部署。  
+* Workers部署: 在[cloudflare](https://dash.cloudflare.com/)上创建应用程序时选择Workers, 部署好示例代码后，点击快速修改（quick edit）复制[_worker.js](_worker.js) 至代码编辑器即可完成服务部署。    
+
+绑定自定义域名: cloudflare自动分配的域名国内也无法访问，所以也需要绑定自定义域名.
 
 绑定自定义域名需要将域名默认nameserver(域名服务器)绑定到cloudflare提供的nameserver，大体上过程是：
 ```mermaid
 stateDiagram-v2
     [*] --> 注册cloudflare
     [*] --> 在任意机构注册域名
-    注册cloudflare --> 添加worker
-    添加worker --> 在cloudflare的worker中添加域名 : worker应用部署成功
+    注册cloudflare --> 添加worker/page
+    添加worker/page --> 在cloudflare的worker/page中添加域名 : worker/page应用部署成功
     在任意机构注册域名 --> 去注册域名机构更改默认nameserver为cloudflare提供的nameserver
-    去注册域名机构更改默认nameserver为cloudflare提供的nameserver --> 在cloudflare的worker中添加域名: 域名服务器更改验证成功
-    在cloudflare的worker中添加域名 --> [*]
+    去注册域名机构更改默认nameserver为cloudflare提供的nameserver --> 在cloudflare的worker/page中添加域名: 域名服务器更改验证成功
+    在cloudflare的worker/page中添加域名 --> 成功 
 ```
-这种部署方式轻便简洁，支持流式转发. 对于没有vps的用户还是十分推荐的。不过目前[worker.js](worker.js)这个简单脚本仅提供转发服务, 不提供额外功能。
+这种部署方式轻便简洁，支持流式转发. 对于没有vps的用户还是十分推荐的。不过目前[_worker.js](_worker.js)这个简单脚本仅提供转发服务, 不提供额外功能。
 
 > https://cloudflare.openai-forward.com
 
