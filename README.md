@@ -92,10 +92,10 @@
 1. [一键Vercel部署](deploy.md#vercel-一键部署) (不推荐)
    > ~~https://vercel.openai-forward.com~~
 2. [cloudflare部署](deploy.md#cloudflare-部署) (推荐)
-   > https://cloudflare.openai-forward.com
+   > https://cloudflare.page.openai-forward.com
 3. [Railway部署](deploy.md#Railway-一键部署)
    > https://railway.openai-forward.com
-4. [Render一键部署](deploy.md#render-一键部署) (较推荐)
+4. [Render一键部署](deploy.md#render-一键部署) 
    > https://render.openai-forward.com
 
 ## 应用

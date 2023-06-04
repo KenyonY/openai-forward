@@ -22,54 +22,38 @@
 pip install openai-forward
 ```
 
-**运行转发服务**  
-可通过`--port`指定端口号，默认为`8000`
+**运行服务**  
 
 ```bash
 openai_forward run 
 ```
-服务就搭建完成了，使用方式只需将`https://api.openai.com` 替换为服务所在端口`http://{ip}:{port}` 即可(默认`port=8000`)。
-
-当然也可以将 OPENAI_API_KEY 作为环境变量或`--api_key`参数传入作为默认api key， 这样客户端在请求相关路由时可以无需在Header中传入Authorization。
-带默认api key的启动方式(但这样存在安全风险，建议结合`--forward_key`一起使用, 见[使用方式](README.md#高级配置))：
-
-```bash
-openai_forward run --port=9999 --api_key="sk-******"
-```
-
-注: 如果既存在默认api key又在请求头中传入了api key，则以请求头中的api key会覆盖默认api key.
-
-
+服务就搭建完成了。  
+配置见[配置](README.md#配置选项)
 
 ### 服务调用
 
-替换openai的api地址为该服务的地址即可，如：
-
+使用方式只需将`https://api.openai.com` 替换为服务所在端口`http://{ip}:{port}` 就可以了。  
+比如
 ```bash
+# 默认
 https://api.openai.com/v1/chat/completions
-```
-更多使用方式见 [应用](README.md#应用)
-
-替换为
-
-```bash
+#替换为
 http://{ip}:{port}/v1/chat/completions
 ```
-### 开启SSL
+
+更多使用方式见 [应用](README.md#应用)
+
+### 开启SSL (以https访问域名)
 首先准备好一个域名, 如本项目中使用的域名为`api.openai-forward.com`
 
-常用方式是使用nginx 代理转发 openai-forward 服务端口(9999)至443端口。  
+常用方式是使用nginx(不习惯用命令行配置的话可以考虑用 [Nginx Proxy Manager](https://github.com/NginxProxyManager/nginx-proxy-manager)) 代理转发 openai-forward 服务端口(默认8000)。  
 需要注意的是，若要使用流式转发，在nginx配置中需要添加取消代理缓存的配置：
    ```bash
     proxy_cache off; 
     proxy_buffering off; 
-    chunked_transfer_encoding on; 
-    tcp_nopush on;  
-    tcp_nodelay on;  
-    keepalive_timeout 300;  
 ```
 
-然后就可以使用 `https://api.openai-forward.com` 进行https访问了。
+然后就可以https访问了。
 
 
 ## Docker部署
@@ -79,8 +63,10 @@ docker run -d -p 9999:8000 beidongjiedeguang/openai-forward:latest
 ```
 
 将映射宿主机的9999端口，通过`http://{ip}:9999`访问服务。  
+
 注：同样可以在启动命令中通过-e传入环境变量OPENAI_API_KEY=sk-xxx作为默认api key  
 启用SSL同上.
+环境变量配置见[环境变量配置](README.md#环境变量配置项)
 
 
 ## 源码部署
@@ -133,7 +119,8 @@ stateDiagram-v2
 ```
 这种部署方式轻便简洁，支持流式转发. 对于没有vps的用户还是十分推荐的。不过目前[_worker.js](_worker.js)这个简单脚本仅提供转发服务, 不提供额外功能。
 
-> https://cloudflare.openai-forward.com
+> https://cloudflare.worker.openai-forward.com  
+> https://cloudflare.page.openai-forward.com  
 
 ---
 
