@@ -202,9 +202,6 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 ### 环境变量配置项
 支持从运行目录下的`.env`文件中读取
 
-<details markdown="1">
-  <summary>Click for more details</summary>
-
 | 环境变量            | 说明                                                                                                                                |           默认值            |
 |-----------------|-----------------------------------------------------------------------------------------------------------------------------------|:------------------------:|
 | OPENAI_BASE_URL  | 默认 openai官方 api 地址                                                                                                                |        https://api.openai.com           |
@@ -213,11 +210,10 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 | ROUTE_PREFIX    | 路由前缀                                                                                                                              |            无             |
 | LOG_CHAT        | 是否记录聊天内容                                                                                                                          |         `false`          |
 
-</details>
 
 ## 高级配置
 
-**设置api_key为自己设置的forward key**  
+**设置openai api_key为自定义的forward key**  
 需要配置 OPENAI_API_KEY 和 FORWARD_KEY, 例如
 <details markdown="1">
   <summary>Click for more details</summary>
