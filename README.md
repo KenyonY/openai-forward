@@ -41,7 +41,7 @@
 [部署指南](#部署指南) |
 [应用](#应用) |
 [配置选项](#配置选项) |
-[聊天日志](#聊天日志)
+[对话日志](#对话日志)
 
 [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/tejCum?referralCode=U0-kXv)  
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/beidongjiedeguang/openai-forward)
@@ -74,7 +74,7 @@
 
 - [x] 允许输入多个openai api key 组成轮询池
 - [x] 自定义 转发api key (见[高级配置](#高级配置))
-- [x] 实时记录聊天记录(包括流式响应的聊天内容)
+- [x] 流式响应对话日志
 
 ## 部署指南
 
@@ -95,7 +95,7 @@
    > https://cloudflare.page.openai-forward.com
 3. [Railway部署](deploy.md#Railway-一键部署)
    > https://railway.openai-forward.com
-4. [Render一键部署](deploy.md#render-一键部署) 
+4. [Render一键部署](deploy.md#render-一键部署) (推荐)
    > https://render.openai-forward.com
 
 ## 应用
@@ -262,9 +262,9 @@ docker run -d \
 
 </details>
 
-## 聊天日志
+## 对话日志
 
-默认不记录聊天日志，若要开启需设置环境变量`LOG_CHAT=true`
+默认不记录对话日志，若要开启需设置环境变量`LOG_CHAT=true`
 <details markdown="1">
   <summary>Click for more details</summary>
 
