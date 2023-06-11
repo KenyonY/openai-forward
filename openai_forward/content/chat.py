@@ -25,10 +25,12 @@ def parse_chat_completions(bytes_: bytes):
     line0 = txt_lines[0]
     target_info = dict()
     if line0.startswith("data:"):
+        is_stream = True
         line0 = orjson.loads(line0[6:])
         msg = line0["choices"][0]["delta"]
     else:
-        line0 = orjson.loads(line0)
+        is_stream = False
+        line0 = orjson.loads("".join(txt_lines))
         msg = line0["choices"][0]["message"]
 
     target_info["created"] = line0["created"]
@@ -36,6 +38,8 @@ def parse_chat_completions(bytes_: bytes):
     target_info["model"] = line0["model"]
     target_info["role"] = msg["role"]
     target_info["content"] = msg.get("content", "")
+    if not is_stream:
+        return target_info
     # loop for stream
     for line in txt_lines[1:]:
         if line in ("", "\n", "\n\n"):
