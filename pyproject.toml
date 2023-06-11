@@ -4,14 +4,14 @@ build-backend = "hatchling.build"
 
 [project]
 name = "openai_forward"
-description = "🚀 Openai api forward · OpenAI 接口转发服务 · stream forwarding"
+description = "🚀 OpenAI API Reverse Proxy · ChatGPT API Proxy"
 authors = [
     { name = "kunyuan", email = "beidongjiedeguang@gmail.com" },
 ]
 license = "MIT"
 requires-python = ">=3.6"
 readme = "README.md"
-keywords = ["openai", "chatgpt", "openai-api", "openai-proxy", "OpenAI API Forwarding", "streaming-api", "fastapi", "python", "httpx"]
+keywords = ["openai", "chatgpt", "openai-api", "openai-proxy", "OpenAI API Forwarding", "streaming-api", "fastapi", "python"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Operating System :: OS Independent",
@@ -38,18 +38,6 @@ Issues = "https://github.com/beidongjiedeguang/openai-forward/issues"
 Source = "https://github.com/beidongjiedeguang/openai-forward"
 
 [project.optional-dependencies]
-ssl = [
-    "certbot"
-]
-chatgpt = [
-    "revChatGPT",
-]
-bard = [
-    "GoogleBard",
-]
-edge = [
-    "EdgeGPT",
-]
 tool = [
     "orjsonl"
 ]
