@@ -1,3 +1,4 @@
+import time
 import uuid
 
 import orjson
@@ -10,7 +11,6 @@ decoder = LineDecoder()
 
 
 def _parse_iter_line_content(line: str):
-    line = line[6:]
     try:
         line_dict = orjson.loads(line)
         return line_dict["choices"][0]["delta"]["content"]
@@ -24,9 +24,10 @@ def parse_chat_completions(bytes_: bytes):
     txt_lines = decoder.decode(bytes_.decode("utf-8"))
     line0 = txt_lines[0]
     target_info = dict()
-    if line0.startswith("data:"):
+    _start_token = "data: "
+    if line0.startswith(_start_token):
         is_stream = True
-        line0 = orjson.loads(line0[6:])
+        line0 = orjson.loads(line0[len(_start_token) :])
         msg = line0["choices"][0]["delta"]
     else:
         is_stream = False
@@ -44,8 +45,10 @@ def parse_chat_completions(bytes_: bytes):
     for line in txt_lines[1:]:
         if line in ("", "\n", "\n\n"):
             continue
-        elif line.startswith("data: "):
-            target_info["content"] += _parse_iter_line_content(line)
+        elif line.startswith(_start_token):
+            target_info["content"] += _parse_iter_line_content(
+                line[len(_start_token) :]
+            )
         else:
             logger.warning(f"line not startswith data: {line}")
     return target_info
@@ -67,6 +70,7 @@ class ChatSaver:
                 "model": model,
                 "forwarded-for": request.headers.get("x-forwarded-for") or "",
                 "uid": uid,
+                "datetime": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
             }
         else:
             content = {}
