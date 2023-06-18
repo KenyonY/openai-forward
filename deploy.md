@@ -8,9 +8,10 @@
 
 [pip部署](#pip部署) |
 [docker部署](#docker部署) |
-[cloudflare部署](#cloudflare-部署) |
 [railway一键部署](#railway-一键部署) |
-[render一键部署](#render-一键部署)
+[render一键部署](#render-一键部署) |
+[Vercel一键部署](#Vercel-一键部署) |
+[cloudflare部署](#cloudflare-部署) |
 
 </div>
 
@@ -63,6 +64,7 @@ docker run -d -p 9999:8000 beidongjiedeguang/openai-forward:latest
 ```
 
 将映射宿主机的9999端口，通过`http://{ip}:9999`访问服务。  
+容器内日志路径为`/home/openai-forward/Log/`, 可以启动时将其映射出来。  
 
 注：同样可以在启动命令中通过-e传入环境变量OPENAI_API_KEY=sk-xxx作为默认api key  
 启用SSL同上.
@@ -80,47 +82,6 @@ openai-forward run
 ```
 启用SSL同上.
 
----
-
-## ~~Vercel 一键部署~~
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fbeidongjiedeguang%2Fopenai-forward&project-name=openai-forward&repository-name=openai-forward&framework=other)  
-⚠️目前Vercel中使用Serverless Function部署的方式尚不支持流式，没有Log记录, 而且仅提供较短的接口超时时间。
-所以现在不推荐使用这种部署方式。 (部署时需将环境变量`LOG_CHAT` 设置为`False`,否则会部署/运行失败。)
-
-1. 点击按钮即可一键免费部署  
-也可先fork本仓库，再手动在vercel操作界面import项目
-2. [绑定自定义域名](https://vercel.com/docs/concepts/projects/domains/add-a-domain)：Vercel 分配的域名 DNS 在某些区域被污染了导致国内无法访问，绑定自定义域名即可直连。
-
-
-> https://vercel.openai-forward.com  
-仅供测试
-
----
-
-## Cloudflare 部署
-
-部署方式二选一： 
-* Pages部署: fork本仓库，在[cloudflare](https://dash.cloudflare.com/)上创建应用程序时选择Pages, 然后选择连接到Git, 选择刚刚fork的仓库即可完成部署。  
-* Workers部署: 在[cloudflare](https://dash.cloudflare.com/)上创建应用程序时选择Workers, 部署好示例代码后，点击快速修改（quick edit）复制[_worker.js](_worker.js) 至代码编辑器即可完成服务部署。    
-
-绑定自定义域名: cloudflare自动分配的域名国内也无法访问，所以也需要绑定自定义域名.
-
-绑定自定义域名需要将域名默认nameserver(域名服务器)绑定到cloudflare提供的nameserver，大体上过程是：
-```mermaid
-stateDiagram-v2
-    [*] --> 注册cloudflare
-    [*] --> 在任意机构注册域名
-    注册cloudflare --> 添加worker/page
-    添加worker/page --> 在cloudflare的worker/page中添加域名 : worker/page应用部署成功
-    在任意机构注册域名 --> 去注册域名机构更改默认nameserver为cloudflare提供的nameserver
-    去注册域名机构更改默认nameserver为cloudflare提供的nameserver --> 在cloudflare的worker/page中添加域名: 域名服务器更改验证成功
-    在cloudflare的worker/page中添加域名 --> 成功 
-```
-这种部署方式轻便简洁，支持流式转发. 对于没有vps的用户还是十分推荐的。不过目前[_worker.js](_worker.js)这个简单脚本仅提供转发服务, 不提供额外功能。
-
-> https://cloudflare.worker.openai-forward.com  
-> https://cloudflare.page.openai-forward.com  
 
 ---
 
@@ -157,3 +118,45 @@ Render的免费计划: 每月750小时免费实例时间(意味着单个实例�
 > https://openai-forward.onrender.com 
 
 
+---
+
+⚠️下面两种部署方式仅提供简单的转发服务，没有任何额外功能。
+
+
+## Vercel 一键部署
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fbeidongjiedeguang%2Fopenai-forward&project-name=openai-forward&repository-name=openai-forward&framework=other)  
+因python的部署方式在vercel上存在诸多限制，因此现在将Vercel部署方式切换为直接转发。
+
+1. 点击按钮即可一键免费部署  
+   也可先fork本仓库，再手动在vercel操作界面import项目
+2. [绑定自定义域名](https://vercel.com/docs/concepts/projects/domains/add-a-domain)：Vercel 分配的DNS在某些区域被污染了导致国内无法访问，绑定自定义域名即可直连。
+
+
+> https://vercel.openai-forward.com  
+
+---
+
+## Cloudflare 部署
+
+部署方式二选一：
+* Pages部署: fork本仓库，在[cloudflare](https://dash.cloudflare.com/)上创建应用程序时选择Pages, 然后选择连接到Git, 选择刚刚fork的仓库即可完成部署。
+* Workers部署: 在[cloudflare](https://dash.cloudflare.com/)上创建应用程序时选择Workers, 部署好示例代码后，点击快速修改（quick edit）复制[_worker.js](_worker.js) 至代码编辑器即可完成服务部署。
+
+绑定自定义域名: cloudflare自动分配的域名国内也无法访问，所以也需要绑定自定义域名.
+
+绑定自定义域名需要将域名默认nameserver(域名服务器)绑定到cloudflare提供的nameserver，大体上过程是：
+```mermaid
+stateDiagram-v2
+    [*] --> 注册cloudflare
+    [*] --> 在任意机构注册域名
+    注册cloudflare --> 添加worker/page
+    添加worker/page --> 在cloudflare的worker/page中添加域名 : worker/page应用部署成功
+    在任意机构注册域名 --> 去注册域名机构更改默认nameserver为cloudflare提供的nameserver
+    去注册域名机构更改默认nameserver为cloudflare提供的nameserver --> 在cloudflare的worker/page中添加域名: 域名服务器更改验证成功
+    在cloudflare的worker/page中添加域名 --> 成功 
+```
+这种部署方式轻便简洁，支持流式转发. 对于没有vps的用户还是十分推荐的。不过目前[_worker.js](_worker.js)这个简单脚本仅提供转发服务, 不提供额外功能。
+
+> https://cloudflare.worker.openai-forward.com  
+> https://cloudflare.page.openai-forward.com  

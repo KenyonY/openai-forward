@@ -55,6 +55,11 @@
 
 由本项目搭建的长期代理地址：
 > https://api.openai-forward.com  
+> https://cloudflare.worker.openai-forward.com  
+> https://cloudflare.page.openai-forward.com  
+> https://vercel.openai-forward.com  
+> https://render.openai-forward.com  
+> https://railway.openai-forward.com
 
 ## 功能
 
@@ -84,22 +89,23 @@
 提供以下几种部署方式  
 **有海外vps方案**
 
-1. [pip 安装部署](deploy.md#pip部署) (推荐)
-2. [Docker部署](deploy.md#docker部署) (推荐)
+1. [pip 安装部署](deploy.md#pip部署) 
+2. [Docker部署](deploy.md#docker部署) 
    > https://api.openai-forward.com
 
 **无vps免费部署方案**
 1. [Railway部署](deploy.md#Railway-一键部署)
    > https://railway.openai-forward.com
-2. [Render一键部署](deploy.md#render-一键部署) (推荐)
+2. [Render一键部署](deploy.md#render-一键部署)
    > https://render.openai-forward.com
 
 
 ---
+下面的部署仅提供单一转发功能
 
-3. [cloudflare部署](deploy.md#cloudflare-部署) (推荐)
+3. [cloudflare部署](deploy.md#cloudflare-部署) 
    > https://cloudflare.page.openai-forward.com
-4. [一键Vercel部署](deploy.md#vercel-一键部署) (不推荐)
+4. [一键Vercel部署](deploy.md#vercel-一键部署) 
    > ~~https://vercel.openai-forward.com~~
 
 ## 应用
