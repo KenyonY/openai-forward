@@ -71,10 +71,11 @@ def get_matches(messages: List[Dict], assistant: List[Dict]):
 
     def cvt(msg: dict, ass: dict):
         return {
-            "forwarded-for": msg["forwarded-for"],
-            "model": msg["model"],
-            "messages": msg["messages"],
-            "assistant": ass["assistant"],
+            "datetime": msg.get('datetime'),
+            "forwarded-for": msg.get("forwarded-for"),
+            "model": msg.get("model"),
+            "messages": msg.get("messages"),
+            "assistant": ass.get("assistant"),
         }
 
     for idx_msg in range(len(messages)):

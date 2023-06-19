@@ -55,6 +55,11 @@
 
 由本项目搭建的长期代理地址：
 > https://api.openai-forward.com  
+> https://cloudflare.worker.openai-forward.com  
+> https://cloudflare.page.openai-forward.com  
+> https://vercel.openai-forward.com  
+> https://render.openai-forward.com  
+> https://railway.openai-forward.com
 
 ## 功能
 
@@ -66,7 +71,7 @@
 - [x] docker部署
 - [x] pip 安装部署
 - [x] cloudflare 部署
-- [x] ~~Vercel一键部署(不建议)~~
+- [x] Vercel一键部署
 - [x] Railway 一键部署
 - [x] Render 一键部署
 
@@ -78,25 +83,30 @@
 
 ## 部署指南
 
-[部署文档](deploy.md)
+👉 [部署文档](deploy.md)
+
 
 提供以下几种部署方式  
 **有海外vps方案**
 
-1. [pip 安装部署](deploy.md#pip部署) (推荐)
-2. [Docker部署](deploy.md#docker部署) (推荐)
+1. [pip 安装部署](deploy.md#pip部署) 
+2. [Docker部署](deploy.md#docker部署) 
    > https://api.openai-forward.com
 
 **无vps免费部署方案**
-
-1. [一键Vercel部署](deploy.md#vercel-一键部署) (不推荐)
-   > ~~https://vercel.openai-forward.com~~
-2. [cloudflare部署](deploy.md#cloudflare-部署) (推荐)
-   > https://cloudflare.page.openai-forward.com
-3. [Railway部署](deploy.md#Railway-一键部署)
+1. [Railway部署](deploy.md#Railway-一键部署)
    > https://railway.openai-forward.com
-4. [Render一键部署](deploy.md#render-一键部署) (推荐)
+2. [Render一键部署](deploy.md#render-一键部署)
    > https://render.openai-forward.com
+
+
+---
+下面的部署仅提供单一转发功能
+
+3. [一键Vercel部署](deploy.md#vercel-一键部署)
+   > https://vercel.openai-forward.com
+4. [cloudflare部署](deploy.md#cloudflare-部署) 
+   > https://cloudflare.page.openai-forward.com
 
 ## 应用
 
@@ -105,8 +115,9 @@
 基于开源项目[ChatGPT-Next-Web](https://github.com/Yidadaa/ChatGPT-Next-Web)搭建自己的chatgpt服务  
 替换docker启动命令中的 `BASE_URL`为我们自己搭建的代理服务地址
 
-<details markdown="1">
-<summary>Click for more details</summary>  
+
+<details >
+   <summary> details</summary>  
 
 ```bash 
 docker run -d \
@@ -131,7 +142,7 @@ https://chat.beidongjiedeguang.top , 访问密码: `kunyuan`
   openai.api_key = "sk-******"
 ```
 
-<details markdown="1">
+<details open>
   <summary>More Examples</summary>
 
 **JS/TS**
@@ -181,7 +192,7 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 ### 命令行参数
 可通过 `openai-forward run --help` 查看
 
-<details markdown="1">
+<details open>
   <summary>Click for more details</summary>
 
 **`openai-forward run`参数配置项**
@@ -224,9 +235,8 @@ FORWARD_KEY=fk-****** # 这里fk-token由我们自己定义
 ```
 
 这里我们配置了FORWARD_KEY为`fk-******`, 那么后面客户端在调用时只需设置OPENAI_API_KEY为我们自定义的`fk-******` 即可。  
-这样的好处是在使用一些需要输入OPENAI_API_KEY的第三方应用时，我们可以使用`fk-******`搭配代理服务使用（如下面的例子）
-而无需担心OPENAI_API_KEY被泄露。  
-并且可以对外分发`fk-******`
+这样的好处是在使用一些需要输入OPENAI_API_KEY的第三方应用时，我们可以使用自定义的api-key`fk-******`, 
+无需担心真正的OPENAI_API_KEY被泄露。并且可以对外分发`fk-******`。  
 
 **用例:**
 
@@ -265,7 +275,7 @@ docker run -d \
 ## 对话日志
 
 默认不记录对话日志，若要开启需设置环境变量`LOG_CHAT=true`
-<details markdown="1">
+<details open>
   <summary>Click for more details</summary>
 
 保存路径在当前目录下的`Log/chat.log`路径中。  
