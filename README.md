@@ -1,4 +1,4 @@
-**中文** | [**English**](./README_EN.md)
+**中文** | ~~[**English**](./README_EN.md)~~
 
 <h1 align="center">
     <br>
@@ -60,6 +60,16 @@
 > https://vercel.openai-forward.com  
 > https://render.openai-forward.com  
 > https://railway.openai-forward.com
+
+ 
+<details >
+<summary> 👉Tips  </summary>  
+
+🎉🎉🎉近期GPT-4 API 已经全面可用! 但它需要付费api账户，也就是需要先绑定信用卡。  
+目前比较推荐开源加密钱包[OneKey](https://github.com/OneKeyHQ)的VISA虚拟卡：[https://card.onekey.so](https://card.onekey.so/?i=O163GB) 
+
+</details>
+
 
 ## 功能
 
