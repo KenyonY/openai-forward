@@ -69,10 +69,17 @@ def setting_log(save_file=False, log_name="openai_forward", multi_process=True):
     config_handlers = [
         {"sink": sys.stdout, "level": "DEBUG"},
         {
-            "sink": f"./Log/chat.log",
+            "sink": f"./Log/chat/chat.log",
             "enqueue": multi_process,
-            "rotation": "20 MB",
+            "rotation": "50 MB",
             "filter": lambda record: "chat" in record["extra"],
+            "format": "{message}",
+        },
+        {
+            "sink": f"./Log/whisper/whisper.log",
+            "enqueue": multi_process,
+            "rotation": "30 MB",
+            "filter": lambda record: "whisper" in record["extra"],
             "format": "{message}",
         },
     ]

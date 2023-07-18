@@ -61,16 +61,6 @@
 > https://render.openai-forward.com  
 > https://railway.openai-forward.com
 
- 
-<details >
-<summary> 👉Tips  </summary>  
-
-🎉🎉🎉近期GPT-4 API 已经全面可用! 但它需要付费api账户，也就是需要先绑定信用卡。  
-目前比较推荐开源加密钱包[OneKey](https://github.com/OneKeyHQ)的VISA虚拟卡：[https://card.onekey.so](https://card.onekey.so/?i=O163GB) 
-
-</details>
-
-
 ## 功能
 
 **基础功能**
@@ -95,27 +85,26 @@
 
 👉 [部署文档](deploy.md)
 
-
 提供以下几种部署方式  
 **有海外vps方案**
 
-1. [pip 安装部署](deploy.md#pip部署) 
-2. [Docker部署](deploy.md#docker部署) 
+1. [pip 安装部署](deploy.md#pip部署)
+2. [Docker部署](deploy.md#docker部署)
    > https://api.openai-forward.com
 
 **无vps免费部署方案**
+
 1. [Railway部署](deploy.md#Railway-一键部署)
    > https://railway.openai-forward.com
 2. [Render一键部署](deploy.md#render-一键部署)
    > https://render.openai-forward.com
-
 
 ---
 下面的部署仅提供单一转发功能
 
 3. [一键Vercel部署](deploy.md#vercel-一键部署)
    > https://vercel.openai-forward.com
-4. [cloudflare部署](deploy.md#cloudflare-部署) 
+4. [cloudflare部署](deploy.md#cloudflare-部署)
    > https://cloudflare.page.openai-forward.com
 
 ## 应用
@@ -200,6 +189,7 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 另一种为读取环境变量的方式指定。
 
 ### 命令行参数
+
 可通过 `openai-forward run --help` 查看
 
 <details open>
@@ -217,10 +207,10 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 | --route_prefix | 同 ROUTE_PREFIX    |          `None`          |
 | --log_chat | 同 LOG_CHAT        |        `False`         |
 
-
 </details>
 
 ### 环境变量配置项
+
 支持从运行目录下的`.env`文件中读取
 
 | 环境变量            | 说明                                                                                                                                |           默认值            |
@@ -230,7 +220,6 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 | FORWARD_KEY     | 允许调用方使用该key代替openai api key，支持多个forward key, 以空格分割; 如果设置了OPENAI_API_KEY，而没有设置FORWARD_KEY, 则客户端调用时无需提供密钥, 此时出于安全考虑不建议FORWARD_KEY置空 |            无             |
 | ROUTE_PREFIX    | 路由前缀                                                                                                                              |            无             |
 | LOG_CHAT        | 是否记录聊天内容                                                                                                                          |         `false`          |
-
 
 ## 高级配置
 
@@ -245,8 +234,8 @@ FORWARD_KEY=fk-****** # 这里fk-token由我们自己定义
 ```
 
 这里我们配置了FORWARD_KEY为`fk-******`, 那么后面客户端在调用时只需设置OPENAI_API_KEY为我们自定义的`fk-******` 即可。  
-这样的好处是在使用一些需要输入OPENAI_API_KEY的第三方应用时，我们可以使用自定义的api-key`fk-******`, 
-无需担心真正的OPENAI_API_KEY被泄露。并且可以对外分发`fk-******`。  
+这样的好处是在使用一些需要输入OPENAI_API_KEY的第三方应用时，我们可以使用自定义的api-key`fk-******`,
+无需担心真正的OPENAI_API_KEY被泄露。并且可以对外分发`fk-******`。
 
 **用例:**
 
