@@ -20,7 +20,7 @@ classifiers = [
 
 dependencies = [
     "loguru",
-    "sparrow-python>=0.1.3",
+    "sparrow-python>=0.1.5",
     "fastapi",
     "uvicorn",
     "orjson",
@@ -38,8 +38,9 @@ Issues = "https://github.com/beidongjiedeguang/openai-forward/issues"
 Source = "https://github.com/beidongjiedeguang/openai-forward"
 
 [project.optional-dependencies]
-tool = [
-    "orjsonl"
+test = [
+    "openai",
+    "pytest",
 ]
 
 [project.scripts]
