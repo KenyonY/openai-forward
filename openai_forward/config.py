@@ -71,7 +71,7 @@ def setting_log(save_file=False, log_name="openai_forward", multi_process=True):
         {
             "sink": f"./Log/chat.log",
             "enqueue": multi_process,
-            "rotation": "20 MB",
+            "rotation": "50 MB",
             "filter": lambda record: "chat" in record["extra"],
             "format": "{message}",
         },
