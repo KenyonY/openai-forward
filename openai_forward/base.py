@@ -9,6 +9,7 @@ from starlette.background import BackgroundTask
 
 from .config import print_startup_info, setting_log
 from .content.chat import ChatSaver
+from .content.whisper import WhisperSaver
 from .tool import env2list
 
 
@@ -36,6 +37,7 @@ class OpenaiBase:
     if _LOG_CHAT:
         setting_log(save_file=False)
         chatsaver = ChatSaver()
+        whispersaver = WhisperSaver()
 
     def validate_request_host(self, ip):
         if self.IP_WHITELIST and ip not in self.IP_WHITELIST:
@@ -56,10 +58,13 @@ class OpenaiBase:
             bytes_ += chunk
             yield chunk
         try:
-            target_info = cls.chatsaver.parse_bytes_to_content(bytes_, route_path)
-            cls.chatsaver.add_chat(
-                {target_info["role"]: target_info["content"], "uid": uid}
-            )
+            if route_path == "/v1/chat/completions":
+                target_info = cls.chatsaver.parse_bytes_to_content(bytes_, route_path)
+                cls.chatsaver.add_chat(
+                    {target_info["role"]: target_info["content"], "uid": uid}
+                )
+            elif route_path.startswith("/v1/audio/"):
+                cls.whispersaver.add_log(bytes_)
         except Exception as e:
             logger.debug(f"log chat (not) error:\n{e=}")
 
@@ -71,23 +76,27 @@ class OpenaiBase:
         url = httpx.URL(path=url_path, query=request.url.query.encode("utf-8"))
         headers = dict(request.headers)
         auth = headers.pop("authorization", "")
-        auth_headers_dict = {"Content-Type": "application/json", "Authorization": auth}
+        content_type = headers.pop("content-type", "application/json")
+        auth_headers_dict = {"Content-Type": content_type, "Authorization": auth}
         auth_prefix = "Bearer "
         if cls._no_auth_mode or auth and auth[len(auth_prefix) :] in cls._FWD_KEYS:
             auth = auth_prefix + next(cls._cycle_api_key)
             auth_headers_dict["Authorization"] = auth
 
-        log_chat_completions = False
+        if_log = False
         uid = None
         if cls._LOG_CHAT and request.method == "POST":
             try:
-                chat_info = await cls.chatsaver.parse_payload_to_content(
-                    request, route_path=url_path
-                )
-                if chat_info:
-                    cls.chatsaver.add_chat(chat_info)
-                    uid = chat_info.get("uid")
-                    log_chat_completions = True
+                if url_path.startswith("/v1/audio/"):
+                    if_log = True
+                else:
+                    chat_info = await cls.chatsaver.parse_payload_to_content(
+                        request, route_path=url_path
+                    )
+                    if chat_info:
+                        cls.chatsaver.add_chat(chat_info)
+                        uid = chat_info.get("uid")
+                        if_log = True
             except Exception as e:
                 logger.debug(
                     f"log chat error:\n{request.client.host=} {request.method=}: {e}"
@@ -117,11 +126,7 @@ class OpenaiBase:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e
             )
 
-        aiter_bytes = (
-            cls.aiter_bytes(r, url_path, uid)
-            if log_chat_completions
-            else r.aiter_bytes()
-        )
+        aiter_bytes = cls.aiter_bytes(r, url_path, uid) if if_log else r.aiter_bytes()
         return StreamingResponse(
             aiter_bytes,
             status_code=r.status_code,

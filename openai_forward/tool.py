@@ -43,7 +43,6 @@ def get_matches(messages: List[Dict], assistants: List[Dict]):
         print(f"message({msg_len}) 与 assistant({ass_len}) 长度不匹配")
 
     cvt = lambda msg, ass: {
-        "auth": msg.get("auth"),
         "datetime": msg.get('datetime'),
         "forwarded-for": msg.get("forwarded-for"),
         "model": msg.get("model"),
