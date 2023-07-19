@@ -26,7 +26,7 @@ pip install openai-forward
 **运行服务**  
 
 ```bash
-openai_forward run 
+openai-forward run  # 或者使用别名 aifd run
 ```
 服务就搭建完成了。  
 配置见[配置](README.md#配置选项)
@@ -54,7 +54,7 @@ http://{ip}:{port}/v1/chat/completions
     proxy_buffering off; 
 ```
 
-然后就可以https访问了。
+然后就可以https进行流式访问了。
 
 
 ## Docker部署
@@ -78,7 +78,7 @@ git clone https://github.com/beidongjiedeguang/openai-forward.git --depth=1
 cd openai-forward
 
 pip install -e .
-openai-forward run 
+openai-forward run # 或使用别名 aifd run
 ```
 启用SSL同上.
 

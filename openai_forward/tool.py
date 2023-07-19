@@ -78,17 +78,19 @@ def parse_log_to_list(log_path: str):
 
 
 def convert_chatlog_to_jsonl(log_path: str, target_path: str):
+    """Convert single chatlog to jsonl"""
     message_list, assistant_list = parse_log_to_list(log_path)
     content_list = get_matches(messages=message_list, assistants=assistant_list)
     json_dump(content_list, target_path, indent_2=True)
 
 
-def sort_logname_by_datetime(log_path: str):
+def get_log_files_from_folder(log_path: str):
     return ls(log_path, "*.log", relp=False)
 
 
 def convert_folder_to_jsonl(folder_path: str, target_path: str):
-    log_files = sort_logname_by_datetime(folder_path)
+    """Convert chatlog folder to jsonl"""
+    log_files = get_log_files_from_folder(folder_path)
     messages = []
     assistants = []
     for log_path in log_files:

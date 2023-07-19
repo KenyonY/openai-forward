@@ -123,12 +123,10 @@ docker run -d \
     -p 3000:3000 \
     -e OPENAI_API_KEY="sk-******" \
     -e BASE_URL="https://api.openai-forward.com" \
-    -e CODE="kunyuan" \
+    -e CODE="******" \
     yidadaa/chatgpt-next-web 
 ``` 
 
-这里部署了一个，供大家轻度使用:  
-https://chat.beidongjiedeguang.top , 访问密码: `kunyuan`
 </details>
 
 ### 在代码中使用
@@ -185,17 +183,17 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 ## 配置选项
 
 配置的设置方式支持两种  
-一种为在命令行中执行`openai-forward run`的运行参数(如`--port=8000`)中指定;  
+一种为在命令行中执行`aifd run` 的运行参数(如`--port=8000`)中指定;  
 另一种为读取环境变量的方式指定。
 
 ### 命令行参数
 
-可通过 `openai-forward run --help` 查看
+可通过 `aifd run --help` 查看
 
 <details open>
   <summary>Click for more details</summary>
 
-**`openai-forward run`参数配置项**
+**`aifd run`参数配置项**
 
 | 配置项 | 说明                |          默认值           |
 |-----------------|-------------------|:----------------------:|
@@ -277,20 +275,20 @@ docker run -d \
 <details open>
   <summary>Click for more details</summary>
 
-保存路径在当前目录下的`Log/chat.log`路径中。  
+保存路径在当前目录下的`Log/chat`路径中。  
 记录格式为
 
 ```text
-{'messages': [{'user': 'hi'}], 'model': 'gpt-3.5-turbo', 'forwarded-for': '', 'uid': '467a17ec-bf39-4b65-9ebd-e722b3bdd5c3'}
-{'assistant': 'Hello! How can I assist you today?', 'uid': '467a17ec-bf39-4b65-9ebd-e722b3bdd5c3'}
-{'messages': [{'user': 'Hello!'}], 'model': 'gpt-3.5-turbo', 'forwarded-for': '', 'uid': 'f844d156-e747-4887-aef8-e40d977b5ee7'}
+{'messages': [{'user': 'hi'}], 'model': 'gpt-3.5-turbo', 'forwarded-for': '', 'uid': '467a17ec-bf39-4b65-9ebd-e722b3bdd5c3', 'datetime': '2023-07-18 14:01:21'}
+{'assistant': 'Hello there! How can I assist you today?', 'uid': '467a17ec-bf39-4b65-9ebd-e722b3bdd5c3'}
+{'messages': [{'user': 'Hello!'}], 'model': 'gpt-3.5-turbo', 'forwarded-for': '', 'uid': 'f844d156-e747-4887-aef8-e40d977b5ee7', 'datetime': '2023-07-18 14:01:23'}
 {'assistant': 'Hi there! How can I assist you today?', 'uid': 'f844d156-e747-4887-aef8-e40d977b5ee7'}
 ```
 
 转换为`json`格式：
 
 ```bash
-openai-forward convert
+aifd convert
 ```
 
 得到`chat.json`：
@@ -298,6 +296,7 @@ openai-forward convert
 ```json
 [
     {
+        "datetime": "2023-07-18 14:01:21",
         "forwarded-for": "",
         "model": "gpt-3.5-turbo",
         "messages": [
@@ -308,6 +307,7 @@ openai-forward convert
         "assistant": "Hello there! How can I assist you today?"
     },
     {
+        "datetime": "2023-07-18 14:01:23",
         "forwarded-for": "",
         "model": "gpt-3.5-turbo",
         "messages": [

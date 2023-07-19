@@ -19,13 +19,13 @@ classifiers = [
 ]
 
 dependencies = [
-    "loguru",
+    "loguru>=0.7.0",
     "sparrow-python>=0.1.5",
-    "fastapi",
-    "uvicorn",
-    "orjson",
+    "fastapi>=0.90.0",
+    "uvicorn>=0.23.1",
+    "orjson>=3.9.2",
     "python-dotenv",
-    "httpx",
+    "httpx>=0.24.1",
     "pytz",
 ]
 
@@ -39,14 +39,14 @@ Source = "https://github.com/beidongjiedeguang/openai-forward"
 
 [project.optional-dependencies]
 test = [
-    "openai",
+    "openai>=0.27.8",
     "pytest",
 ]
 
 [project.scripts]
 openai_forward = "openai_forward.__main__:main"
 openai-forward = "openai_forward.__main__:main"
-aifwd = "openai_forward.__main__:main"
+aifd = "openai_forward.__main__:main"
 
 [tool.hatch.version]
 path = "openai_forward/__init__.py"
