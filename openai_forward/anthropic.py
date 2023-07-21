@@ -1,4 +1,3 @@
-import os
 from loguru import logger
 
 import httpx
@@ -6,20 +5,13 @@ from fastapi import HTTPException, Request, status
 from fastapi.responses import StreamingResponse
 from starlette.background import BackgroundTask
 
-from openai_forward.routers.schemas import AnthropicChatCompletion
 from openai_forward.tool import env2list
 
 class AnthropicBase:
-    BASE_URL = os.environ.get("ANTHROPIC_BASE_URL", "https://api.anthropic.com").strip()
-    ROUTE_PREFIX = os.environ.get("ROUTE_PREFIX", "").strip()
+    BASE_URL = "https://api.anthropic.com"
     IP_WHITELIST = env2list("IP_WHITELIST", sep=" ")
     IP_BLACKLIST = env2list("IP_BLACKLIST", sep=" ")
 
-    if ROUTE_PREFIX:
-        if ROUTE_PREFIX.endswith("/"):
-            ROUTE_PREFIX = ROUTE_PREFIX[:-1]
-        if not ROUTE_PREFIX.startswith("/"):
-            ROUTE_PREFIX = "/" + ROUTE_PREFIX
     timeout = 600
 
     def validate_request_host(self, ip):
@@ -38,7 +30,6 @@ class AnthropicBase:
     async def _reverse_proxy(cls, request: Request):
         client = httpx.AsyncClient(base_url=cls.BASE_URL, http1=True, http2=False)
         url_path = request.url.path
-        url_path = url_path[len(cls.ROUTE_PREFIX) :]
         url = httpx.URL(path=url_path, query=request.url.query.encode("utf-8"))
         headers = dict(request.headers)
         auth = headers.pop("authorization", "")
@@ -91,6 +82,3 @@ class Anthropic(AnthropicBase):
         if self.validate_host:
             self.validate_request_host(request.client.host)
         return await self._reverse_proxy(request)
-
-    async def v1_chat_completions(self, data: AnthropicChatCompletion, request: Request):
-        ...

@@ -1,7 +1,6 @@
 from fastapi import Request
 
 from .base import OpenaiBase
-from .routers.schemas import OpenAIV1ChatCompletion
 
 
 class Openai(OpenaiBase):
@@ -15,6 +14,3 @@ class Openai(OpenaiBase):
         if self.validate_host:
             self.validate_request_host(request.client.host)
         return await self._reverse_proxy(request)
-
-    async def v1_chat_completions(self, data: OpenAIV1ChatCompletion, request: Request):
-        ...

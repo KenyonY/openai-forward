@@ -7,9 +7,7 @@ from fastapi.responses import StreamingResponse
 from loguru import logger
 from starlette.background import BackgroundTask
 
-from .config import print_startup_info, setting_log
-from .content.chat import ChatSaver
-from .content.whisper import WhisperSaver
+from .config import print_startup_info
 from .tool import env2list
 
 
@@ -23,11 +21,6 @@ class OpenaiBase:
     IP_WHITELIST = env2list("IP_WHITELIST", sep=" ")
     IP_BLACKLIST = env2list("IP_BLACKLIST", sep=" ")
 
-    if ROUTE_PREFIX:
-        if ROUTE_PREFIX.endswith("/"):
-            ROUTE_PREFIX = ROUTE_PREFIX[:-1]
-        if not ROUTE_PREFIX.startswith("/"):
-            ROUTE_PREFIX = "/" + ROUTE_PREFIX
     timeout = 600
 
     print_startup_info(
