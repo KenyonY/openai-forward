@@ -19,7 +19,7 @@ async def models_list(request: Request):
     """该接口只是为了document, 将此路由接口放在openai.reverse_proxy接口后面, 实际不会执行该接口。"""
     return await openai.reverse_proxy(request)
 
-@router.post("/complete")
+@router.post("/v1/complete")
 async def anthropic_completions(params: AnthropicChatCompletion, request: Request):
     return await anthropic.v1_chat_completions(params, request)
 
