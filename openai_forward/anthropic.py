@@ -10,7 +10,7 @@ from openai_forward.routers.schemas import AnthropicChatCompletion
 from openai_forward.tool import env2list
 
 class AnthropicBase:
-    BASE_URL = os.environ.get("ANTHROPIC_BASE_URL", "https://api.anthropic.com/v1").strip()
+    BASE_URL = os.environ.get("ANTHROPIC_BASE_URL", "https://api.anthropic.com").strip()
     ROUTE_PREFIX = os.environ.get("ROUTE_PREFIX", "").strip()
     IP_WHITELIST = env2list("IP_WHITELIST", sep=" ")
     IP_BLACKLIST = env2list("IP_BLACKLIST", sep=" ")
