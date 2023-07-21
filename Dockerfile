@@ -22,5 +22,7 @@ RUN pip install --no-cache-dir  \
 
 COPY . /home/openai-forward
 WORKDIR /home/openai-forward
+ENV ssl_keyfile="/home/openai-forward/privkey.pem"
+ENV ssl_certfile="/home/openai-forward/fullchain.pem"
 EXPOSE 8000
 ENTRYPOINT ["python", "-m", "openai_forward.__main__", "run"]

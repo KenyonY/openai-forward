@@ -57,3 +57,24 @@ class OpenAIV1ChatCompletion(BaseModel):
                 "logit_bias": None,
             }
         }
+
+class AnthropicChatCompletion(BaseModel):
+    """Creates a completion for the chat message"""
+
+    model: str = Field(
+        ..., description="The model to use for the completion", example="claude-v1"
+    )
+    prompt: str = Field(
+        ...,
+        description="The prompt to complete",
+        example="Hi! How are you?",
+    )
+    temperature: float = Field(default=1, description="0会导致更确定的结果，1会导致更随机的结果")
+    top_p: float = Field(default=1, description="0会导致更确定的结果，1会导致更随机的结果")
+    top_k: float = Field(default=50, description="0会导致更确定的结果，1会导致更随机的结果")
+    max_tokens_to_sample: Optional[int] = Field(
+        default=None,
+        description="max_tokens_to_sample.",
+    )
+    stream: bool = Field(default=False)
+

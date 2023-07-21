@@ -1,7 +1,7 @@
 from sparrow.api import create_app
 
 from .openai import Openai
-from .routers.openai_v1 import router as router_v1
+from .routers.v1 import router as router_v1
 
 app = create_app(title="openai_forward", version="1.0")
 openai = Openai()

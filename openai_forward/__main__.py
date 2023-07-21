@@ -7,12 +7,11 @@ import uvicorn
 class Cli:
     @staticmethod
     def run(
-        port=8000,
-        workers=1,
+        workers=20,
         api_key=None,
         forward_key=None,
         base_url=None,
-        log_chat=None,
+        log_chat=False,
         route_prefix=None,
         ip_whitelist=None,
         ip_blacklist=None,
@@ -47,8 +46,9 @@ class Cli:
         if ip_blacklist:
             os.environ["IP_BLACKLIST"] = ip_blacklist
 
-        ssl_keyfile = os.environ.get("ssl_keyfile", None) or None
-        ssl_certfile = os.environ.get("ssl_certfile", None) or None
+        ssl_keyfile = os.environ.get("ssl_keyfile", 'privkey.pem') or None
+        ssl_certfile = os.environ.get("ssl_certfile", 'fullchain.pem') or None
+        port = os.environ.get("port", 443) or 443
         uvicorn.run(
             app="openai_forward.app:app",
             host="0.0.0.0",
