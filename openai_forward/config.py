@@ -82,6 +82,13 @@ def setting_log(save_file=False, log_name="openai_forward", multi_process=True):
             "filter": lambda record: "whisper" in record["extra"],
             "format": "{message}",
         },
+        {
+            "sink": f"./Log/extra/extra.log",
+            "enqueue": multi_process,
+            "rotation": "50 MB",
+            "filter": lambda record: "extra" in record["extra"],
+            "format": "{message}",
+        },
     ]
     if save_file:
         config_handlers += [

@@ -3,7 +3,7 @@ from itertools import cycle
 import pytest
 from fastapi import HTTPException
 
-from openai_forward.openai import OpenaiBase
+from openai_forward.forwarding.base import OpenaiBase
 
 
 @pytest.fixture(scope="module")

@@ -35,6 +35,15 @@ def env2list(env_name: str, sep=" "):
     return str2list(os.environ.get(env_name, "").strip(), sep=sep)
 
 
+def format_route_prefix(route_prefix: str):
+    if route_prefix:
+        if route_prefix.endswith("/"):
+            route_prefix = route_prefix[:-1]
+        if not route_prefix.startswith("/"):
+            route_prefix = "/" + route_prefix
+    return route_prefix
+
+
 def get_matches(messages: List[Dict], assistants: List[Dict]):
     mt = MeasureTime()
     mt.start()
