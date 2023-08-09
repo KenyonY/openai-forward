@@ -12,7 +12,6 @@ RUN apk update && \
 
 RUN pip install --no-cache-dir  \
     "loguru" \
-    "sparrow-python>=0.1.3" \
     "fastapi" \
     "uvicorn" \
     "orjson" \

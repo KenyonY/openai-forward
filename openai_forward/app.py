@@ -1,9 +1,8 @@
 from fastapi import FastAPI, status
-from sparrow.api import create_app
 
 from .forwarding import get_fwd_anything_objs, get_fwd_openai_style_objs
 
-app = create_app(title="openai_forward", version="0.4")
+app = FastAPI(title="openai_forward", version="0.4")
 
 
 @app.get(
