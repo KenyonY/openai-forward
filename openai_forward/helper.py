@@ -24,14 +24,14 @@ def json_dump(
         f.write(orjson.dumps(data, option=orjson_option))
 
 
-def str2list(s: str, sep=" "):
+def str2list(s: str, sep):
     if s:
         return [i.strip() for i in s.split(sep) if i.strip()]
     else:
         return []
 
 
-def env2list(env_name: str, sep=" "):
+def env2list(env_name: str, sep=","):
     return str2list(os.environ.get(env_name, "").strip(), sep=sep)
 
 
@@ -70,7 +70,7 @@ def get_matches(messages: List[Dict], assistants: List[Dict]):
     ref_len = max(msg_len, ass_len)
     if len(matches) != ref_len:
         print(f"存在{ref_len - len(matches)}条未匹配数据")
-    mt.show_interval("计算耗时：")
+    mt.show_interval("match costs：")
     return matches
 
 

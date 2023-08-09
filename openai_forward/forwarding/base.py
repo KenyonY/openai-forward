@@ -1,5 +1,7 @@
 import os
+import traceback
 from itertools import cycle
+from typing import Any, AsyncGenerator, overload
 
 import httpx
 from fastapi import HTTPException, Request, status
@@ -7,54 +9,50 @@ from fastapi.responses import StreamingResponse
 from loguru import logger
 from starlette.background import BackgroundTask
 
-from ..config import setting_log
 from ..content import ChatSaver, ExtraForwardingSaver, WhisperSaver
-from ..tool import env2list, format_route_prefix
-
-BASE_URL_EXTRA = env2list("BASE_URL_EXTRA", sep=" ")
-ROUTE_PREFIX_EXTRA = [
-    format_route_prefix(i) for i in env2list("ROUTE_PREFIX_EXTRA", sep=" ")
-]
+from .settings import *
 
 
 class ForwardingBase:
     BASE_URL = None
     ROUTE_PREFIX = None
-    IP_WHITELIST = env2list("IP_WHITELIST", sep=" ")
-    IP_BLACKLIST = env2list("IP_BLACKLIST", sep=" ")
+    client: httpx.AsyncClient = None
+    if IP_BLACKLIST or IP_WHITELIST:
+        validate_host = True
+    else:
+        validate_host = False
 
-    timeout = 600
+    timeout = 5 * 60
 
-    _LOG_CHAT = os.environ.get("LOG_CHAT", "False").strip().lower() == "true"
-    if _LOG_CHAT:
-        setting_log(save_file=False)
+    if LOG_CHAT:
         extrasaver = ExtraForwardingSaver()
 
-    def validate_request_host(self, ip):
-        if self.IP_WHITELIST and ip not in self.IP_WHITELIST:
+    @staticmethod
+    def validate_request_host(ip):
+        if IP_WHITELIST and ip not in IP_WHITELIST:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Forbidden, ip={ip} not in whitelist!",
             )
-        if self.IP_BLACKLIST and ip in self.IP_BLACKLIST:
+        if IP_BLACKLIST and ip in IP_BLACKLIST:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Forbidden, ip={ip} in blacklist!",
             )
 
     @classmethod
-    async def aiter_bytes(cls, r: httpx.Response):
+    async def aiter_bytes(
+        cls, r: httpx.Response, **kwargs
+    ) -> AsyncGenerator[bytes, Any]:
         bytes_ = b""
         async for chunk in r.aiter_bytes():
             bytes_ += chunk
             yield chunk
         cls.extrasaver.add_log(bytes_)
 
-    async def send(
-        self, client: httpx.AsyncClient, req: httpx.Request, request: Request
-    ):
+    async def try_send(self, req: httpx.Request, request: Request):
         try:
-            r = await client.send(req, stream=True)
+            r = await self.client.send(req, stream=True)
             return r
         except (httpx.ConnectError, httpx.ConnectTimeout) as e:
             error_info = (
@@ -74,115 +72,110 @@ class ForwardingBase:
     def prepare_client(self, request: Request):
         assert self.BASE_URL is not None
         assert self.ROUTE_PREFIX is not None
-        client = httpx.AsyncClient(base_url=self.BASE_URL, http1=True, http2=False)
+        if self.validate_host:
+            ip = request.headers.get("x-forwarded-for") or ""
+            self.validate_request_host(ip)
+
         url_path = request.url.path
-        url_path = url_path[len(self.ROUTE_PREFIX) :]
-        url = httpx.URL(path=url_path, query=request.url.query.encode("utf-8"))
+        prefix_index = 0 if self.ROUTE_PREFIX == '/' else len(self.ROUTE_PREFIX)
+
+        route_path = url_path[prefix_index:]
+        url = httpx.URL(path=route_path, query=request.url.query.encode("utf-8"))
         headers = dict(request.headers)
         auth = headers.pop("authorization", "")
         content_type = headers.pop("content-type", "application/json")
         auth_headers_dict = {"Content-Type": content_type, "Authorization": auth}
-        req_config = {
+        client_config = {
             'auth': auth,
             'headers': auth_headers_dict,
             'url': url,
-            'url_path': url_path,
+            'url_path': route_path,
         }
-        return client, url, req_config
 
-    async def _reverse_proxy(self, request: Request):
-        client, url, req_config = self.prepare_client(request)
+        return client_config
 
-        req = client.build_request(
+    async def reverse_proxy(self, request: Request):
+        assert self.client is not None
+        client_config = self.prepare_client(request)
+
+        req = self.client.build_request(
             request.method,
-            url,
-            headers=req_config["headers"],
+            client_config['url'],
+            headers=client_config["headers"],
             content=request.stream(),
             timeout=self.timeout,
         )
-        r = await self.send(client, req, request)
+        r = await self.try_send(req, request)
 
         return StreamingResponse(
             self.aiter_bytes(r),
             status_code=r.status_code,
             media_type=r.headers.get("content-type"),
-            background=BackgroundTask(r.aclose),
         )
 
 
 class OpenaiBase(ForwardingBase):
-    BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com").strip()
-    ROUTE_PREFIX = os.environ.get("OPENAI_ROUTE_PREFIX", "").strip()
-    ROUTE_PREFIX = format_route_prefix(ROUTE_PREFIX)
-    _openai_api_key_list = env2list("OPENAI_API_KEY", sep=" ")
-    _cycle_api_key = cycle(_openai_api_key_list)
-    _FWD_KEYS = set(env2list("FORWARD_KEY", sep=" "))
-    _no_auth_mode = _openai_api_key_list != [] and _FWD_KEYS == set()
-    _LOG_CHAT = os.environ.get("LOG_CHAT", "False").strip().lower() == "true"
+    _cycle_api_key = cycle(OPENAI_API_KEYS)
+    _no_auth_mode = OPENAI_API_KEYS != [] and FWD_KEYS == set()
 
-    if _LOG_CHAT:
-        setting_log(save_file=False)
+    if LOG_CHAT:
         chatsaver = ChatSaver()
         whispersaver = WhisperSaver()
 
-    async def aiter_bytes(self, r: httpx.Response, route_path: str, uid: str):
-        bytes_ = b""
+    async def aiter_bytes(
+        self, r: httpx.Response, request: Request, route_path: str, uid: str
+    ):
+        byte_list = []
         async for chunk in r.aiter_bytes():
-            bytes_ += chunk
+            byte_list.append(chunk)
             yield chunk
+        await r.aclose()
         try:
-            if route_path == "/v1/chat/completions":
-                target_info = self.chatsaver.parse_bytes_to_content(bytes_, route_path)
-                self.chatsaver.add_chat(
-                    {target_info["role"]: target_info["content"], "uid": uid}
-                )
-            elif route_path.startswith("/v1/audio/"):
-                self.whispersaver.add_log(bytes_)
+            if LOG_CHAT and request.method == "POST":
+                if route_path == "/v1/chat/completions":
+                    target_info = self.chatsaver.parse_byte_list_to_target(byte_list)
+                    self.chatsaver.add_chat(
+                        {target_info["role"]: target_info["content"], "uid": uid}
+                    )
+                elif route_path.startswith("/v1/audio/"):
+                    self.whispersaver.add_log(b"".join([_ for _ in byte_list]))
         except Exception as e:
-            logger.debug(f"log chat (not) error:\n{e=}")
+            logger.debug(f"log chat (not) error:\n{traceback.format_exc()}")
 
-    async def _reverse_proxy(self, request: Request):
-        client, url, req_config = self.prepare_client(request)
+    async def reverse_proxy(self, request: Request):
+        client_config = self.prepare_client(request)
         auth_prefix = "Bearer "
-        auth = req_config["auth"]
-        auth_headers_dict = req_config["headers"]
-        url_path = req_config["url_path"]
-        if self._no_auth_mode or auth and auth[len(auth_prefix) :] in self._FWD_KEYS:
+        auth = client_config["auth"]
+        auth_headers_dict = client_config["headers"]
+        url_path = client_config["url_path"]
+        if self._no_auth_mode or auth and auth[len(auth_prefix) :] in FWD_KEYS:
             auth = auth_prefix + next(self._cycle_api_key)
             auth_headers_dict["Authorization"] = auth
 
-        if_log = False
         uid = None
-        if self._LOG_CHAT and request.method == "POST":
+        if LOG_CHAT and request.method == "POST":
             try:
-                if url_path.startswith("/v1/audio/"):
-                    if_log = True
-                else:
-                    chat_info = await self.chatsaver.parse_payload_to_content(
-                        request, route_path=url_path
-                    )
+                if url_path == "/v1/chat/completions":
+                    chat_info = await self.chatsaver.parse_payload_to_content(request)
                     if chat_info:
                         self.chatsaver.add_chat(chat_info)
                         uid = chat_info.get("uid")
-                        if_log = True
             except Exception as e:
                 logger.debug(
-                    f"log chat error:\n{request.client.host=} {request.method=}: {e}"
+                    f"log chat error:\n{request.client.host=} {request.method=}: {traceback.format_exc()}"
                 )
 
-        req = client.build_request(
+        req = self.client.build_request(
             request.method,
-            url,
+            client_config['url'],
             headers=auth_headers_dict,
             content=request.stream(),
             timeout=self.timeout,
         )
-        r = await self.send(client, req, request)
-
-        aiter_bytes = self.aiter_bytes(r, url_path, uid) if if_log else r.aiter_bytes()
+        r = await self.try_send(req, request)
+        aiter_bytes = self.aiter_bytes(r, request, url_path, uid)
         return StreamingResponse(
             aiter_bytes,
             status_code=r.status_code,
             media_type=r.headers.get("content-type"),
-            background=BackgroundTask(r.aclose),
         )

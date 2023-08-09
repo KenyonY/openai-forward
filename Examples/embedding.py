@@ -1,7 +1,9 @@
 import openai
+from sparrow import yaml_load
 
-openai.api_base = "http://localhost:8000/v1"
-openai.api_key = "sk-******"
+config = yaml_load("config.yaml")
+openai.api_base = config["api_base"]
+openai.api_key = config["api_key"]
 response = openai.Embedding.create(
     input="Your text string goes here", model="text-embedding-ada-002"
 )

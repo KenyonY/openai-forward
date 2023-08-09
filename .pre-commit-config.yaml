@@ -1,3 +1,6 @@
+# Install
+# 1. pip install pre-commit
+# 2. pre-commit install (first time)
 repos:
 - repo: https://github.com/timothycrosley/isort
   rev: 5.12.0

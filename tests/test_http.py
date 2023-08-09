@@ -20,7 +20,7 @@ class TestRun:
         rm("nohup.out")
 
     def test_get_doc(self):
-        resp = httpx.get("http://localhost:8000/docs")
+        resp = httpx.get("http://localhost:8000/healthz")
         assert resp.is_success
 
     def test_get_chat_completions(self):

@@ -1,24 +1,29 @@
-from fastapi import Request
-
 from ..config import print_startup_info
 from .base import OpenaiBase
+from .settings import LOG_CHAT, OPENAI_API_KEYS
 
 
-class Openai(OpenaiBase):
-    def __init__(self):
-        if self.IP_BLACKLIST or self.IP_WHITELIST:
-            self.validate_host = True
-        else:
-            self.validate_host = False
+class OpenaiForwarding(OpenaiBase):
+    def __init__(self, base_url: str, route_prefix: str):
+        import httpx
+
+        self.BASE_URL = base_url
+        self.ROUTE_PREFIX = route_prefix
+        self.client = httpx.AsyncClient(base_url=self.BASE_URL, http1=True, http2=False)
         print_startup_info(
             self.BASE_URL,
             self.ROUTE_PREFIX,
-            self._openai_api_key_list,
+            OPENAI_API_KEYS,
             self._no_auth_mode,
-            self._LOG_CHAT,
+            LOG_CHAT,
         )
 
-    async def reverse_proxy(self, request: Request):
-        if self.validate_host:
-            self.validate_request_host(request.client.host)
-        return await self._reverse_proxy(request)
+
+def get_fwd_openai_style_objs():
+    """获取openai风格路由转发对象"""
+    from .settings import OPENAI_BASE_URL, OPENAI_ROUTE_PREFIX
+
+    fwd_objs = []
+    for base_url, route_prefix in zip(OPENAI_BASE_URL, OPENAI_ROUTE_PREFIX):
+        fwd_objs.append(OpenaiForwarding(base_url, route_prefix))
+    return fwd_objs

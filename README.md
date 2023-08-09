@@ -22,7 +22,7 @@
         <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/beidongjiedeguang/openai-forward">
     </a>
     <a href="https://hub.docker.com/r/beidongjiedeguang/openai-forward">
-        <img alt="docer image size" src="https://img.shields.io/docker/image-size/beidongjiedeguang/openai-forward?style=flat&label=docker image">
+        <img alt="docker image size" src="https://img.shields.io/docker/image-size/beidongjiedeguang/openai-forward?style=flat&label=docker image">
     </a>
     <a href="https://github.com/beidongjiedeguang/openai-forward/actions/workflows/ci.yml">
         <img alt="tests" src="https://img.shields.io/github/actions/workflow/status/beidongjiedeguang/openai-forward/ci.yml?label=tests">
@@ -70,16 +70,17 @@
 - [x] 支持指定转发路由前缀
 - [x] docker部署
 - [x] pip 安装部署
-- [x] cloudflare 部署
-- [x] Vercel一键部署
 - [x] Railway 一键部署
 - [x] Render 一键部署
+- [x] cloudflare 部署
+- [x] Vercel一键部署
 
 **高级功能**
 
 - [x] 允许输入多个openai api key 组成轮询池
 - [x] 自定义 转发api key (见[高级配置](#高级配置))
 - [x] 流式响应对话日志
+- [x] 多接口转发
 
 ## 部署指南
 
@@ -195,15 +196,17 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 
 **`aifd run`参数配置项**
 
-| 配置项 | 说明                |          默认值           |
-|-----------------|-------------------|:----------------------:|
-| --port | 服务端口号             |          8000          |
-| --workers | 工作进程数             |           1            |
-| --base_url | 同 OPENAI_BASE_URL | https://api.openai.com |
-| --api_key | 同 OPENAI_API_KEY  |         `None`         |
-| --forward_key | 同 FORWARD_KEY     |         `None`         |
-| --route_prefix | 同 ROUTE_PREFIX    |          `None`          |
-| --log_chat | 同 LOG_CHAT        |        `False`         |
+| 配置项                   | 说明                    |          默认值           |
+|-----------------------|-----------------------|:----------------------:|
+| --port                | 服务端口号                 |          8000          |
+| --workers             | 工作进程数                 |           1            |
+| --openai_base_url     | 同 OPENAI_BASE_URL     | https://api.openai.com |
+| --openai_route_prefix | 同 OPENAI_ROUTE_PREFIX |         `None`         |
+| --api_key             | 同 OPENAI_API_KEY      |         `None`         |
+| --forward_key         | 同 FORWARD_KEY         |         `None`         |
+| --extra_base_url      | 同 EXTRA_BASE_URL      |         `None`         |
+| --extra_route_prefix  | 同 EXTRA_ROUTE_PREFIX  |         `None`         |
+| --log_chat            | 同 LOG_CHAT            |        `False`         |
 
 </details>
 
@@ -211,20 +214,23 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 
 支持从运行目录下的`.env`文件中读取
 
-| 环境变量            | 说明                                                                                                                                |           默认值            |
-|-----------------|-----------------------------------------------------------------------------------------------------------------------------------|:------------------------:|
-| OPENAI_BASE_URL  | 默认 openai官方 api 地址                                                                                                                |        https://api.openai.com           |
-| OPENAI_API_KEY  | 默认openai api key，支持多个默认api key, 以 `sk-` 开头， 以空格分割                                                                                 |            无             |
-| FORWARD_KEY     | 允许调用方使用该key代替openai api key，支持多个forward key, 以空格分割; 如果设置了OPENAI_API_KEY，而没有设置FORWARD_KEY, 则客户端调用时无需提供密钥, 此时出于安全考虑不建议FORWARD_KEY置空 |            无             |
-| ROUTE_PREFIX    | 路由前缀                                                                                                                              |            无             |
-| LOG_CHAT        | 是否记录聊天内容                                                                                                                          |         `false`          |
+| 环境变量                | 说明                                                                                                                                |          默认值           |
+|---------------------|-----------------------------------------------------------------------------------------------------------------------------------|:----------------------:|
+| OPENAI_BASE_URL     | 默认 openai官方 api 地址                                                                                                                | https://api.openai.com |
+| OPENAI_ROUTE_PREFIX | openai(接口格式)路由前缀                                                                                                                  |           /            |
+| OPENAI_API_KEY      | 默认openai api key，支持多个默认api key, 以 `sk-` 开头， 以逗号分隔                                                                                 |           无            |
+| FORWARD_KEY         | 允许调用方使用该key代替openai api key，支持多个forward key, 以逗号分隔; 如果设置了OPENAI_API_KEY，而没有设置FORWARD_KEY, 则客户端调用时无需提供密钥, 此时出于安全考虑不建议FORWARD_KEY置空 |           无            |
+| EXTRA_BASE_URL      | 额外转发服务地址                                                                                                                          |           无            |
+| EXTRA_ROUTE_PREFIX  | 额外转发服务路由前缀                                                                                                                        |           无            |
+| LOG_CHAT            | 是否记录聊天内容                                                                                                                          |        `false`         |
 
 ## 高级配置
 
-**设置openai api_key为自定义的forward key**  
-需要配置 OPENAI_API_KEY 和 FORWARD_KEY, 例如
+### 设置openai api_key为自定义的forward key
 <details markdown="1">
   <summary>Click for more details</summary>
+
+需要配置 OPENAI_API_KEY 和 FORWARD_KEY, 例如
 
 ```bash
 OPENAI_API_KEY=sk-*******
@@ -268,6 +274,12 @@ docker run -d \
 ``` 
 
 </details>
+
+### 多路由转发
+
+支持转发不同地址的服务至同一端口的不同路由下，基本可以转发任何服务。  
+用例见  `.env.example`
+
 
 ## 对话日志
 
