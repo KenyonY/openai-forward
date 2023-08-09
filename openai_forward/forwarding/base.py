@@ -1,13 +1,11 @@
-import os
 import traceback
 from itertools import cycle
-from typing import Any, AsyncGenerator, overload
+from typing import Any, AsyncGenerator
 
 import httpx
 from fastapi import HTTPException, Request, status
 from fastapi.responses import StreamingResponse
 from loguru import logger
-from starlette.background import BackgroundTask
 
 from ..content import ChatSaver, ExtraForwardingSaver, WhisperSaver
 from .settings import *
@@ -115,8 +113,8 @@ class ForwardingBase:
 
 
 class OpenaiBase(ForwardingBase):
-    _cycle_api_key = cycle(OPENAI_API_KEYS)
-    _no_auth_mode = OPENAI_API_KEYS != [] and FWD_KEYS == set()
+    _cycle_api_key = cycle(OPENAI_API_KEY)
+    _no_auth_mode = OPENAI_API_KEY != [] and FWD_KEY == set()
 
     if LOG_CHAT:
         chatsaver = ChatSaver()
@@ -148,7 +146,7 @@ class OpenaiBase(ForwardingBase):
         auth = client_config["auth"]
         auth_headers_dict = client_config["headers"]
         url_path = client_config["url_path"]
-        if self._no_auth_mode or auth and auth[len(auth_prefix) :] in FWD_KEYS:
+        if self._no_auth_mode or auth and auth[len(auth_prefix) :] in FWD_KEY:
             auth = auth_prefix + next(self._cycle_api_key)
             auth_headers_dict["Authorization"] = auth
 

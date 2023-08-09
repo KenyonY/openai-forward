@@ -1,6 +1,6 @@
 from ..config import print_startup_info
 from .base import OpenaiBase
-from .settings import LOG_CHAT, OPENAI_API_KEYS
+from .settings import LOG_CHAT, OPENAI_API_KEY
 
 
 class OpenaiForwarding(OpenaiBase):
@@ -13,7 +13,7 @@ class OpenaiForwarding(OpenaiBase):
         print_startup_info(
             self.BASE_URL,
             self.ROUTE_PREFIX,
-            OPENAI_API_KEYS,
+            OPENAI_API_KEY,
             self._no_auth_mode,
             LOG_CHAT,
         )

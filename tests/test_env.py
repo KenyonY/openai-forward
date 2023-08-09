@@ -28,8 +28,11 @@ IP_BLACKLIST=
             time.sleep(0.1)
 
         load_dotenv(override=True)
-        importlib.reload(openai_forward.forwarding.base)
-        cls.aibase = openai_forward.forwarding.base.OpenaiBase()
+        importlib.reload(openai_forward.forwarding.openai)
+        importlib.reload(openai_forward.forwarding.settings)
+        cls.aibase = openai_forward.forwarding.openai.OpenaiForwarding(
+            'https://api.openai.com', '/'
+        )
 
     @classmethod
     def teardown_class(cls):
@@ -37,5 +40,8 @@ IP_BLACKLIST=
             f.write(cls.defualt_env)
 
     def test_env1(self):
-        assert self.aibase.OPENAI_API_KEYS == ["key1", "key2"]
+        from openai_forward.forwarding.settings import FWD_KEY, OPENAI_API_KEY
+
+        assert OPENAI_API_KEY == ["key1", "key2"]
+        assert FWD_KEY == ["ps1", "ps2", "ps3"]
         assert self.aibase._no_auth_mode is False
