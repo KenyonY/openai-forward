@@ -20,12 +20,13 @@ classifiers = [
 
 dependencies = [
     "loguru>=0.7.0",
-    "sparrow-python>=0.1.5",
     "fastapi>=0.90.0",
     "uvicorn>=0.23.1",
     "orjson>=3.9.2",
     "python-dotenv",
     "httpx>=0.24.1",
+    "rich",
+    "fire",
     "pytz",
 ]
 
@@ -41,6 +42,7 @@ Source = "https://github.com/beidongjiedeguang/openai-forward"
 test = [
     "openai>=0.27.8",
     "pytest",
+    "sparrow-python"
 ]
 
 [project.scripts]
@@ -60,11 +62,6 @@ include = [
 ]
 exclude = [
 ]
-
-artifacts = [
-    "openai_forward/web/index.js",
-]
-
 
 [tool.hatch.build.targets.wheel]
 packages = ["openai_forward"]
