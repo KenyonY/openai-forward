@@ -132,7 +132,7 @@ def convert_folder_to_jsonl(folder_path: str, target_path: str):
         msg_len, ass_len = len(msg), len(ass)
         if msg_len != ass_len:
             print(
-                f"{log_path=} Length mismatch between message({msg_len}) and assistant({ass_len}) "
+                f"{log_path}: Length mismatch between message({msg_len}) and assistant({ass_len}) "
             )
         messages.extend(msg)
         assistants.extend(ass)

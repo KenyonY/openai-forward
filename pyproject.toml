@@ -21,10 +21,10 @@ classifiers = [
 dependencies = [
     "loguru>=0.7.0",
     "fastapi>=0.90.0",
-    "uvicorn>=0.23.1",
-    "orjson>=3.9.2",
+    "uvicorn>=0.21.0",
+    "orjson>=3.9",
     "python-dotenv",
-    "httpx>=0.24.1",
+    "httpx>=0.24",
     "rich",
     "fire",
     "pytz",

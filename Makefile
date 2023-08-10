@@ -5,14 +5,14 @@ container := "openai-forward-container"
 compose_path := "docker-compose.yaml"
 
 start:
-	docker run -d \
+	@docker run -d \
     --name $(container) \
     --env-file .env \
     -p 8000:8000 \
     -v $(shell pwd)/Log:/home/openai-forward/Log \
     -v $(shell pwd)/openai_forward:/home/openai-forward/openai_forward \
     $(image)
-
+	@make log
 
 exec:
 	docker exec -it $(container) sh

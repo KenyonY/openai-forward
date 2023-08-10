@@ -160,7 +160,7 @@ class OpenaiBase(ForwardingBase):
                         uid = chat_info.get("uid")
             except Exception as e:
                 logger.debug(
-                    f"log chat error:\n{request.client.host=} {request.method=}: {traceback.format_exc()}"
+                    f"log chat error:\nhost:{request.client.host} method:{request.method}: {traceback.format_exc()}"
                 )
 
         req = self.client.build_request(

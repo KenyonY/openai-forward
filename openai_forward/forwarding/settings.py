@@ -4,12 +4,13 @@ from ..config import setting_log
 from ..helper import env2list, format_route_prefix
 
 ENV_VAR_SEP = ","
-OPENAI_BASE_URL = env2list("OPENAI_BASE_URL", sep=ENV_VAR_SEP)
+OPENAI_BASE_URL = env2list("OPENAI_BASE_URL", sep=ENV_VAR_SEP) or [
+    "https://api.openai.com"
+]
+
 OPENAI_ROUTE_PREFIX = [
     format_route_prefix(i) for i in env2list("OPENAI_ROUTE_PREFIX", sep=ENV_VAR_SEP)
-]
-if not OPENAI_ROUTE_PREFIX:
-    OPENAI_ROUTE_PREFIX = ['/']
+] or ['/']
 
 EXTRA_BASE_URL = env2list("EXTRA_BASE_URL", sep=ENV_VAR_SEP)
 EXTRA_ROUTE_PREFIX = [
