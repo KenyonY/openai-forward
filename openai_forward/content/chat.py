@@ -10,16 +10,6 @@ from orjson import JSONDecodeError
 from .decode import parse_to_lines
 
 
-def parse_one_line(line: str):
-    try:
-        line_dict = orjson.loads(line)
-        return line_dict["choices"][0]["delta"]["content"]
-    except JSONDecodeError:
-        return ""
-    except KeyError:
-        return ""
-
-
 class ChatSaver:
     def __init__(self):
         self.logger = logger.bind(chat=True)
@@ -39,8 +29,7 @@ class ChatSaver:
         }
         return content
 
-    @staticmethod
-    def parse_iter_bytes(byte_list: List[bytes]):
+    def parse_iter_bytes(self, byte_list: List[bytes]):
         txt_lines = parse_to_lines(byte_list)
 
         start_line = txt_lines[0]
@@ -61,17 +50,25 @@ class ChatSaver:
         target_info["model"] = start_line["model"]
         target_info["role"] = msg["role"]
         target_info["content"] = msg.get("content", "")
+
         if not stream:
             return target_info
+
         # loop for stream
         for line in txt_lines[1:]:
-            if line in ("", "\n", "\n\n"):
-                continue
-            elif line.startswith(start_token):
-                target_info["content"] += parse_one_line(line[start_token_len:])
-            else:
-                logger.warning(f"line not startswith data: {line}")
+            if line.startswith(start_token):
+                target_info["content"] += self._parse_one_line(line[start_token_len:])
         return target_info
+
+    @staticmethod
+    def _parse_one_line(line: str):
+        try:
+            line_dict = orjson.loads(line)
+            return line_dict["choices"][0]["delta"]["content"]
+        except JSONDecodeError:
+            return ""
+        except KeyError:
+            return ""
 
     def add_chat(self, chat_info: dict):
         self.logger.debug(f"{chat_info}")

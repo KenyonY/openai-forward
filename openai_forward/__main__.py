@@ -18,6 +18,7 @@ class Cli:
         extra_route_prefix=None,
         ip_whitelist=None,
         ip_blacklist=None,
+        proxy=None,
     ):
         """Run forwarding serve.
 
@@ -54,6 +55,8 @@ class Cli:
             os.environ["IP_WHITELIST"] = ip_whitelist
         if ip_blacklist:
             os.environ["IP_BLACKLIST"] = ip_blacklist
+        if proxy:
+            os.environ["PROXY"] = proxy
 
         ssl_keyfile = os.environ.get("ssl_keyfile", None) or None
         ssl_certfile = os.environ.get("ssl_certfile", None) or None
