@@ -10,7 +10,7 @@ from orjson import JSONDecodeError
 from .decode import parse_to_lines
 
 
-def _parse_iter_line_content(line: str):
+def parse_one_line(line: str):
     try:
         line_dict = orjson.loads(line)
         return line_dict["choices"][0]["delta"]["content"]
@@ -25,7 +25,7 @@ class ChatSaver:
         self.logger = logger.bind(chat=True)
 
     @staticmethod
-    async def parse_payload_to_content(request: Request):
+    async def parse_payload(request: Request):
         uid = uuid.uuid4().__str__()
         payload = await request.json()
         msgs = payload["messages"]
@@ -40,24 +40,25 @@ class ChatSaver:
         return content
 
     @staticmethod
-    def parse_byte_list_to_target(byte_list: List[bytes]):
+    def parse_iter_bytes(byte_list: List[bytes]):
         txt_lines = parse_to_lines(byte_list)
 
-        line0 = txt_lines[0]
+        start_line = txt_lines[0]
         target_info = dict()
-        _start_token = "data: "
-        if line0.startswith(_start_token):
+        start_token = "data: "
+        start_token_len = len(start_token)
+        if start_line.startswith(start_token):
             stream = True
-            line0 = orjson.loads(line0[len(_start_token) :])
-            msg = line0["choices"][0]["delta"]
+            start_line = orjson.loads(start_line[start_token_len:])
+            msg = start_line["choices"][0]["delta"]
         else:
             stream = False
-            line0 = orjson.loads("".join(txt_lines))
-            msg = line0["choices"][0]["message"]
+            start_line = orjson.loads("".join(txt_lines))
+            msg = start_line["choices"][0]["message"]
 
-        target_info["created"] = line0["created"]
-        target_info["id"] = line0["id"]
-        target_info["model"] = line0["model"]
+        target_info["created"] = start_line["created"]
+        target_info["id"] = start_line["id"]
+        target_info["model"] = start_line["model"]
         target_info["role"] = msg["role"]
         target_info["content"] = msg.get("content", "")
         if not stream:
@@ -66,10 +67,8 @@ class ChatSaver:
         for line in txt_lines[1:]:
             if line in ("", "\n", "\n\n"):
                 continue
-            elif line.startswith(_start_token):
-                target_info["content"] += _parse_iter_line_content(
-                    line[len(_start_token) :]
-                )
+            elif line.startswith(start_token):
+                target_info["content"] += parse_one_line(line[start_token_len:])
             else:
                 logger.warning(f"line not startswith data: {line}")
         return target_info

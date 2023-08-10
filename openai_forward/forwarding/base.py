@@ -131,7 +131,7 @@ class OpenaiBase(ForwardingBase):
         try:
             if LOG_CHAT and request.method == "POST":
                 if route_path == "/v1/chat/completions":
-                    target_info = self.chatsaver.parse_byte_list_to_target(byte_list)
+                    target_info = self.chatsaver.parse_iter_bytes(byte_list)
                     self.chatsaver.add_chat(
                         {target_info["role"]: target_info["content"], "uid": uid}
                     )
@@ -154,7 +154,7 @@ class OpenaiBase(ForwardingBase):
         if LOG_CHAT and request.method == "POST":
             try:
                 if url_path == "/v1/chat/completions":
-                    chat_info = await self.chatsaver.parse_payload_to_content(request)
+                    chat_info = await self.chatsaver.parse_payload(request)
                     if chat_info:
                         self.chatsaver.add_chat(chat_info)
                         uid = chat_info.get("uid")
