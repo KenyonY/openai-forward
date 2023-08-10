@@ -1,10 +1,37 @@
 import ast
+import inspect
 import os
+from pathlib import Path
 from typing import Dict, List, Union
 
 import orjson
 from rich import print
-from sparrow import MeasureTime, ls, relp
+
+
+def relp(rel_path: Union[str, Path], parents=0, return_str=True, strict=False):
+    currentframe = inspect.currentframe()
+    f = currentframe.f_back
+    for _ in range(parents):
+        f = f.f_back
+    current_path = Path(f.f_code.co_filename).parent
+    pathlib_path = current_path / rel_path
+    pathlib_path = pathlib_path.resolve(strict=strict)
+    if return_str:
+        return str(pathlib_path)
+    else:
+        return pathlib_path
+
+
+def ls(_dir, *patterns, concat='extend', recursive=False):
+    from glob import glob
+
+    path_list = []
+    for pattern in patterns:
+        if concat == 'extend':
+            path_list.extend(glob(os.path.join(_dir, pattern), recursive=recursive))
+        else:
+            path_list.append(glob(os.path.join(_dir, pattern), recursive=recursive))
+    return path_list
 
 
 def json_load(filepath: str, rel=False, mode="rb"):
@@ -24,23 +51,30 @@ def json_dump(
         f.write(orjson.dumps(data, option=orjson_option))
 
 
-def str2list(s: str, sep=" "):
+def str2list(s: str, sep):
     if s:
         return [i.strip() for i in s.split(sep) if i.strip()]
     else:
         return []
 
 
-def env2list(env_name: str, sep=" "):
+def env2list(env_name: str, sep=","):
     return str2list(os.environ.get(env_name, "").strip(), sep=sep)
 
 
+def format_route_prefix(route_prefix: str):
+    if route_prefix:
+        if route_prefix.endswith("/"):
+            route_prefix = route_prefix[:-1]
+        if not route_prefix.startswith("/"):
+            route_prefix = "/" + route_prefix
+    return route_prefix
+
+
 def get_matches(messages: List[Dict], assistants: List[Dict]):
-    mt = MeasureTime()
-    mt.start()
     msg_len, ass_len = len(messages), len(assistants)
     if msg_len != ass_len:
-        print(f"message({msg_len}) 与 assistant({ass_len}) 长度不匹配")
+        print(f"Length mismatch between message({msg_len}) and assistant({ass_len}) ")
 
     cvt = lambda msg, ass: {
         "datetime": msg.get('datetime'),
@@ -60,8 +94,7 @@ def get_matches(messages: List[Dict], assistants: List[Dict]):
 
     ref_len = max(msg_len, ass_len)
     if len(matches) != ref_len:
-        print(f"存在{ref_len - len(matches)}条未匹配数据")
-    mt.show_interval("计算耗时：")
+        print(f"There are {ref_len - len(matches)} mismatched items")
     return matches
 
 
@@ -85,7 +118,7 @@ def convert_chatlog_to_jsonl(log_path: str, target_path: str):
 
 
 def get_log_files_from_folder(log_path: str):
-    return ls(log_path, "*.log", relp=False)
+    return ls(log_path, "*.log")
 
 
 def convert_folder_to_jsonl(folder_path: str, target_path: str):
@@ -98,8 +131,12 @@ def convert_folder_to_jsonl(folder_path: str, target_path: str):
 
         msg_len, ass_len = len(msg), len(ass)
         if msg_len != ass_len:
-            print(f"{log_path=} message({msg_len}) 与 assistant({ass_len}) 长度不匹配")
+            print(
+                f"{log_path=} Length mismatch between message({msg_len}) and assistant({ass_len}) "
+            )
         messages.extend(msg)
         assistants.extend(ass)
     content_list = get_matches(messages=messages, assistants=assistants)
     json_dump(content_list, target_path, indent_2=True)
+    print("Converted successfully")
+    print(f"File saved to {target_path}")
