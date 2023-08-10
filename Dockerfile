@@ -17,6 +17,8 @@ RUN pip install --no-cache-dir  \
     "orjson" \
     "python-dotenv" \
     "httpx" \
+    "fire" \
+    "rich" \
     "pytz"
 
 COPY . /home/openai-forward

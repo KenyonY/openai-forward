@@ -7,7 +7,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./Log-caloi-top:/home/openai-forward/Log
+      - ./Log:/home/openai-forward/Log
       - ./openai_forward:/home/openai-forward/openai_forward
     command:
       - --port=8000

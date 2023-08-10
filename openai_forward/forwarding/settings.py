@@ -25,3 +25,6 @@ IP_BLACKLIST = env2list("IP_BLACKLIST", sep=ENV_VAR_SEP)
 
 OPENAI_API_KEY = env2list("OPENAI_API_KEY", sep=ENV_VAR_SEP)
 FWD_KEY = env2list("FORWARD_KEY", sep=ENV_VAR_SEP)
+
+PROXY = os.environ.get("PROXY", "").strip()
+PROXY = PROXY if PROXY else None

@@ -20,7 +20,7 @@ class ForwardingBase:
     else:
         validate_host = False
 
-    timeout = 5 * 60
+    timeout = 600
 
     if LOG_CHAT:
         extrasaver = ExtraForwardingSaver()
