@@ -1,6 +1,7 @@
 import traceback
+import uuid
 from itertools import cycle
-from typing import Any, AsyncGenerator
+from typing import Any, AsyncGenerator, List
 
 import httpx
 from fastapi import HTTPException, Request, status
@@ -122,30 +123,43 @@ class OpenaiBase(ForwardingBase):
         chatsaver = ChatSaver()
         whispersaver = WhisperSaver()
 
-    def _add_result_log(self, byte_list: List[bytes], uid: str, route_path: str):
+    def _add_result_log(
+        self, byte_list: List[bytes], uid: str, route_path: str, request_method: str
+    ):
         try:
-            if LOG_CHAT and request.method == "POST":
+            if LOG_CHAT and request_method == "POST":
                 if route_path == "/v1/chat/completions":
                     target_info = self.chatsaver.parse_iter_bytes(byte_list)
-                    self.chatsaver.log(
+                    self.chatsaver.log_chat(
                         {target_info["role"]: target_info["content"], "uid": uid}
                     )
+
                 elif route_path.startswith("/v1/audio/"):
                     self.whispersaver.add_log(b"".join([_ for _ in byte_list]))
-        except Exception as e:
-            logger.debug(f"log chat (not) error:\n{traceback.format_exc()}")
 
-    async def _add_payload_log(self, requst: Request):
+                else:
+                    ...
+        except Exception as e:
+            logger.warning(f"log chat (not) error:\n{traceback.format_exc()}")
+
+    async def _add_payload_log(self, request: Request, url_path: str):
         uid = None
         if LOG_CHAT and request.method == "POST":
             try:
                 if url_path == "/v1/chat/completions":
                     chat_info = await self.chatsaver.parse_payload(request)
+                    uid = chat_info.get("uid")
                     if chat_info:
-                        self.chatsaver.log(chat_info)
-                        uid = chat_info.get("uid")
+                        self.chatsaver.log_chat(chat_info)
+
+                elif url_path.startswith("/v1/audio/"):
+                    uid = uuid.uuid4().__str__()
+
+                else:
+                    ...
+
             except Exception as e:
-                logger.debug(
+                logger.warning(
                     f"log chat error:\nhost:{request.client.host} method:{request.method}: {traceback.format_exc()}"
                 )
         return uid
@@ -157,9 +171,15 @@ class OpenaiBase(ForwardingBase):
         async for chunk in r.aiter_bytes():
             byte_list.append(chunk)
             yield chunk
+
         await r.aclose()
 
-        self._add_result_log(byte_list, uid, route_path)
+        if uid:
+            if r.is_success:
+                self._add_result_log(byte_list, uid, route_path, request.method)
+            else:
+                response_info = b"".join([_ for _ in byte_list])
+                logger.warning(f'uid: {uid}\n' f'{response_info}')
 
     async def reverse_proxy(self, request: Request):
         client_config = self.prepare_client(request)
@@ -175,7 +195,7 @@ class OpenaiBase(ForwardingBase):
 
         set_apikey_from_preset()
 
-        uid = await self._add_payload_log(request)
+        uid = await self._add_payload_log(request, url_path)
 
         r = await self.try_send(client_config, request)
 
