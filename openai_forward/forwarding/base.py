@@ -46,10 +46,19 @@ class ForwardingBase:
         async for chunk in r.aiter_bytes():
             bytes_ += chunk
             yield chunk
+        await r.aclose()
         cls.extrasaver.add_log(bytes_)
 
-    async def try_send(self, req: httpx.Request, request: Request):
+    async def try_send(self, client_config: dict, request: Request):
         try:
+            req = self.client.build_request(
+                method=request.method,
+                url=client_config['url'],
+                headers=client_config["headers"],
+                content=request.stream(),
+                timeout=self.timeout,
+            )
+
             r = await self.client.send(req, stream=True)
             return r
         except (httpx.ConnectError, httpx.ConnectTimeout) as e:
@@ -96,14 +105,7 @@ class ForwardingBase:
         assert self.client is not None
         client_config = self.prepare_client(request)
 
-        req = self.client.build_request(
-            request.method,
-            client_config['url'],
-            headers=client_config["headers"],
-            content=request.stream(),
-            timeout=self.timeout,
-        )
-        r = await self.try_send(req, request)
+        r = await self.try_send(client_config, request)
 
         return StreamingResponse(
             self.aiter_bytes(r),
@@ -120,6 +122,34 @@ class OpenaiBase(ForwardingBase):
         chatsaver = ChatSaver()
         whispersaver = WhisperSaver()
 
+    def _add_result_log(self, byte_list: List[bytes], uid: str, route_path: str):
+        try:
+            if LOG_CHAT and request.method == "POST":
+                if route_path == "/v1/chat/completions":
+                    target_info = self.chatsaver.parse_iter_bytes(byte_list)
+                    self.chatsaver.log(
+                        {target_info["role"]: target_info["content"], "uid": uid}
+                    )
+                elif route_path.startswith("/v1/audio/"):
+                    self.whispersaver.add_log(b"".join([_ for _ in byte_list]))
+        except Exception as e:
+            logger.debug(f"log chat (not) error:\n{traceback.format_exc()}")
+
+    async def _add_payload_log(self, requst: Request):
+        uid = None
+        if LOG_CHAT and request.method == "POST":
+            try:
+                if url_path == "/v1/chat/completions":
+                    chat_info = await self.chatsaver.parse_payload(request)
+                    if chat_info:
+                        self.chatsaver.log(chat_info)
+                        uid = chat_info.get("uid")
+            except Exception as e:
+                logger.debug(
+                    f"log chat error:\nhost:{request.client.host} method:{request.method}: {traceback.format_exc()}"
+                )
+        return uid
+
     async def aiter_bytes(
         self, r: httpx.Response, request: Request, route_path: str, uid: str
     ):
@@ -128,52 +158,29 @@ class OpenaiBase(ForwardingBase):
             byte_list.append(chunk)
             yield chunk
         await r.aclose()
-        try:
-            if LOG_CHAT and request.method == "POST":
-                if route_path == "/v1/chat/completions":
-                    target_info = self.chatsaver.parse_iter_bytes(byte_list)
-                    self.chatsaver.add_chat(
-                        {target_info["role"]: target_info["content"], "uid": uid}
-                    )
-                elif route_path.startswith("/v1/audio/"):
-                    self.whispersaver.add_log(b"".join([_ for _ in byte_list]))
-        except Exception as e:
-            logger.debug(f"log chat (not) error:\n{traceback.format_exc()}")
+
+        self._add_result_log(byte_list, uid, route_path)
 
     async def reverse_proxy(self, request: Request):
         client_config = self.prepare_client(request)
-        auth_prefix = "Bearer "
-        auth = client_config["auth"]
-        auth_headers_dict = client_config["headers"]
         url_path = client_config["url_path"]
-        if self._no_auth_mode or auth and auth[len(auth_prefix) :] in FWD_KEY:
-            auth = auth_prefix + next(self._cycle_api_key)
-            auth_headers_dict["Authorization"] = auth
 
-        uid = None
-        if LOG_CHAT and request.method == "POST":
-            try:
-                if url_path == "/v1/chat/completions":
-                    chat_info = await self.chatsaver.parse_payload(request)
-                    if chat_info:
-                        self.chatsaver.add_chat(chat_info)
-                        uid = chat_info.get("uid")
-            except Exception as e:
-                logger.debug(
-                    f"log chat error:\nhost:{request.client.host} method:{request.method}: {traceback.format_exc()}"
-                )
+        def set_apikey_from_preset():
+            nonlocal client_config
+            auth_prefix = "Bearer "
+            auth = client_config["auth"]
+            if self._no_auth_mode or auth and auth[len(auth_prefix) :] in FWD_KEY:
+                auth = auth_prefix + next(self._cycle_api_key)
+                client_config["headers"]["Authorization"] = auth
 
-        req = self.client.build_request(
-            request.method,
-            client_config['url'],
-            headers=auth_headers_dict,
-            content=request.stream(),
-            timeout=self.timeout,
-        )
-        r = await self.try_send(req, request)
-        aiter_bytes = self.aiter_bytes(r, request, url_path, uid)
+        set_apikey_from_preset()
+
+        uid = await self._add_payload_log(request)
+
+        r = await self.try_send(client_config, request)
+
         return StreamingResponse(
-            aiter_bytes,
+            self.aiter_bytes(r, request, url_path, uid),
             status_code=r.status_code,
             media_type=r.headers.get("content-type"),
         )

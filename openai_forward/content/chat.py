@@ -70,5 +70,5 @@ class ChatSaver:
         except KeyError:
             return ""
 
-    def add_chat(self, chat_info: dict):
+    def log(self, chat_info: dict):
         self.logger.debug(f"{chat_info}")
