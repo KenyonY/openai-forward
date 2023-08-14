@@ -16,6 +16,7 @@ class ForwardingBase:
     BASE_URL = None
     ROUTE_PREFIX = None
     client: httpx.AsyncClient = None
+    # token_counts: int = None
     if IP_BLACKLIST or IP_WHITELIST:
         validate_host = True
     else:
@@ -104,6 +105,9 @@ class ForwardingBase:
 
     async def reverse_proxy(self, request: Request):
         assert self.client is not None
+        # if token_limit:
+        # assert self.token_counts is not None
+
         client_config = self.prepare_client(request)
 
         r = await self.try_send(client_config, request)
@@ -164,7 +168,7 @@ class OpenaiBase(ForwardingBase):
                 )
         return uid
 
-    async def aiter_bytes(
+    async def aiter_append(
         self, r: httpx.Response, request: Request, route_path: str, uid: str
     ):
         byte_list = []
@@ -200,7 +204,7 @@ class OpenaiBase(ForwardingBase):
         r = await self.try_send(client_config, request)
 
         return StreamingResponse(
-            self.aiter_bytes(r, request, url_path, uid),
+            self.aiter_append(r, request, url_path, uid),
             status_code=r.status_code,
             media_type=r.headers.get("content-type"),
         )

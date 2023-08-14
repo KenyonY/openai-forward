@@ -5,7 +5,16 @@ from pathlib import Path
 from typing import Dict, List, Union
 
 import orjson
+from fastapi import Request
 from rich import print
+
+
+def get_client_ip(request: Request):
+    if "x-forwarded-for" in request.headers:
+        return request.headers["x-forwarded-for"]
+    elif not request.client or not request.client.host:
+        return "127.0.0.1"
+    return request.client.host
 
 
 def relp(rel_path: Union[str, Path], parents=0, return_str=True, strict=False):
@@ -51,6 +60,13 @@ def json_dump(
         f.write(orjson.dumps(data, option=orjson_option))
 
 
+def toml_load(filepath: str, rel=False):
+    import toml
+
+    abs_path = relp(filepath, parents=1) if rel else filepath
+    return toml.load(abs_path)
+
+
 def str2list(s: str, sep):
     if s:
         return [i.strip() for i in s.split(sep) if i.strip()]
@@ -60,6 +76,15 @@ def str2list(s: str, sep):
 
 def env2list(env_name: str, sep=","):
     return str2list(os.environ.get(env_name, "").strip(), sep=sep)
+
+
+def env2dict(env_name: str) -> Dict:
+    if not env_name:
+        return {}
+    import json
+
+    env_str = os.environ.get(env_name, "").strip()
+    return json.loads(env_str)
 
 
 def format_route_prefix(route_prefix: str):

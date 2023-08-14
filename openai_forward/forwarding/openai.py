@@ -12,6 +12,7 @@ class OpenaiForwarding(OpenaiBase):
         self.client = httpx.AsyncClient(
             base_url=self.BASE_URL, proxies=proxy, http1=True, http2=False
         )
+        self.token_counts = 0
         print_startup_info(
             self.BASE_URL,
             self.ROUTE_PREFIX,
