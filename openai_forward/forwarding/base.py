@@ -10,6 +10,7 @@ from fastapi.responses import StreamingResponse
 from loguru import logger
 
 from ..content import ChatSaver, WhisperSaver
+from ..helper import async_retry, retry
 from .settings import *
 
 
@@ -45,6 +46,7 @@ class ForwardingBase:
             yield chunk
         await r.aclose()
 
+    @async_retry(max_retries=3, delay=0.5, backoff=2, exceptions=(HTTPException,))
     async def try_send(self, client_config: dict, request: Request):
         try:
             req = self.client.build_request(

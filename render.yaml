@@ -2,3 +2,5 @@ services:
   - name: openai-forward
     type: web
     env: docker
+    region: singapore
+    plan: free

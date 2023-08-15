@@ -16,6 +16,10 @@ class Cli:
         openai_route_prefix=None,
         extra_base_url=None,
         extra_route_prefix=None,
+        rate_limit=None,
+        global_rate_limit=None,
+        rate_limit_strategy=None,
+        token_rate_limit=None,
         ip_whitelist=None,
         ip_blacklist=None,
         proxy=None,
@@ -37,6 +41,7 @@ class Cli:
         ip_whitelist: str, None
         ip_blacklist: str, None
         """
+
         if log_chat:
             os.environ["LOG_CHAT"] = log_chat
         if openai_base_url:
@@ -51,6 +56,17 @@ class Cli:
             os.environ["EXTRA_ROUTE_PREFIX"] = extra_route_prefix
         if forward_key:
             os.environ["FORWARD_KEY"] = forward_key
+        if rate_limit:
+            import json
+
+            assert isinstance(rate_limit, dict)
+            os.environ["RATE_LIMIT"] = json.dumps(rate_limit)
+        if global_rate_limit:
+            os.environ["GLOBAL_RATE_LIMIT"] = global_rate_limit
+        if rate_limit_strategy:
+            os.environ["RATE_LIMIT_STRATEGY"] = rate_limit_strategy
+        if token_rate_limit:
+            os.environ["TOKEN_RATE_LIMIT"] = token_rate_limit
         if ip_whitelist:
             os.environ["IP_WHITELIST"] = ip_whitelist
         if ip_blacklist:
@@ -71,12 +87,24 @@ class Cli:
         )
 
     @staticmethod
-    def convert(log_folder: str = "./Log/chat", target_path: str = "./Log/chat.json"):
+    def convert(log_folder: str = None, target_path: str = None):
         """Convert log folder to jsonl file"""
+        from openai_forward.forwarding.settings import OPENAI_ROUTE_PREFIX
         from openai_forward.helper import convert_folder_to_jsonl
 
-        print(f"Convert {log_folder}/*.log to {target_path}")
-        convert_folder_to_jsonl(log_folder, target_path)
+        print(60 * '-')
+        if log_folder is None:
+            _prefix_list = [i.replace("/", "_") for i in OPENAI_ROUTE_PREFIX]
+            for _prefix in _prefix_list:
+                log_folder = f"./Log/chat/{_prefix}"
+                target_path = f"./Log/chat{_prefix}.json"
+                print(f"Convert {log_folder}/*.log to {target_path}")
+                convert_folder_to_jsonl(log_folder, target_path)
+                print(60 * '-')
+        else:
+            print(f"Convert {log_folder}/*.log to {target_path}")
+            convert_folder_to_jsonl(log_folder, target_path)
+            print(60 * '-')
 
 
 def main():
