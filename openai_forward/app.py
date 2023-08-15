@@ -31,7 +31,8 @@ def healthz(request: Request):
 
 add_route = lambda obj: app.add_route(
     obj.ROUTE_PREFIX + "{api_path:path}",
-    limiter.limit(dynamic_rate_limit)(obj.reverse_proxy),
+    # limiter.limit(dynamic_rate_limit)(obj.reverse_proxy),
+    obj.reverse_proxy,
     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH", "TRACE"],
 )
 

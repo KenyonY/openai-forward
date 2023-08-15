@@ -1,3 +1,4 @@
+import functools
 import logging
 import os
 import sys
@@ -54,7 +55,13 @@ class InterceptHandler(logging.Handler):
         )
 
 
-def setting_log(save_file=False, log_name="openai_forward", multi_process=True):
+def setting_log(
+    save_file=False,
+    openai_route_prefix=None,
+    extra_route_prefix=None,
+    log_name="openai_forward",
+    multi_process=True,
+):
     # TODO 修复时区配置
     if os.environ.get("TZ") == "Asia/Shanghai":
         os.environ["TZ"] = "UTC-8"
@@ -68,28 +75,45 @@ def setting_log(save_file=False, log_name="openai_forward", multi_process=True):
 
     config_handlers = [
         {"sink": sys.stdout, "level": "DEBUG"},
-        {
-            "sink": f"./Log/chat/chat.log",
-            "enqueue": multi_process,
-            "rotation": "50 MB",
-            "filter": lambda record: "chat" in record["extra"],
-            "format": "{message}",
-        },
-        {
-            "sink": f"./Log/whisper/whisper.log",
-            "enqueue": multi_process,
-            "rotation": "30 MB",
-            "filter": lambda record: "whisper" in record["extra"],
-            "format": "{message}",
-        },
-        {
-            "sink": f"./Log/extra/extra.log",
-            "enqueue": multi_process,
-            "rotation": "50 MB",
-            "filter": lambda record: "extra" in record["extra"],
-            "format": "{message}",
-        },
     ]
+
+    def filter_func(_prefix, _postfix, record):
+        chat_key = f"{_prefix}{_postfix}"
+        return chat_key in record["extra"]
+
+    for prefix in openai_route_prefix or []:
+        _prefix = prefix.replace('/', '_')
+
+        config_handlers.extend(
+            [
+                {
+                    "sink": f"./Log/chat/{_prefix}/chat.log",
+                    "enqueue": multi_process,
+                    "rotation": "50 MB",
+                    "filter": functools.partial(filter_func, _prefix, "_chat"),
+                    "format": "{message}",
+                },
+                {
+                    "sink": f"./Log/whisper/{_prefix}/whisper.log",
+                    "enqueue": multi_process,
+                    "rotation": "30 MB",
+                    "filter": functools.partial(filter_func, _prefix, "_whisper"),
+                    "format": "{message}",
+                },
+            ]
+        )
+
+    for prefix in extra_route_prefix or []:
+        _prefix = prefix.replace('/', '_')
+        config_handlers.append(
+            {
+                "sink": f"./Log/extra/{_prefix}/extra.log",
+                "enqueue": multi_process,
+                "rotation": "50 MB",
+                "filter": functools.partial(filter_func, _prefix, "_extra"),
+                "format": "{message}",
+            }
+        )
     if save_file:
         config_handlers += [
             {

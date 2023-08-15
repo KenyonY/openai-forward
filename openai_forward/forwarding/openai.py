@@ -1,5 +1,7 @@
+import time
+
 from ..config import print_startup_info
-from .base import OpenaiBase
+from .base import ChatSaver, OpenaiBase, WhisperSaver
 from .settings import LOG_CHAT, OPENAI_API_KEY
 
 
@@ -9,10 +11,14 @@ class OpenaiForwarding(OpenaiBase):
 
         self.BASE_URL = base_url
         self.ROUTE_PREFIX = route_prefix
+        if LOG_CHAT:
+            self.chatsaver = ChatSaver(route_prefix)
+            self.whispersaver = WhisperSaver(route_prefix)
         self.client = httpx.AsyncClient(
             base_url=self.BASE_URL, proxies=proxy, http1=True, http2=False
         )
         self.token_counts = 0
+        self.token_limit_dict = {'time': time.time(), 'count': 0}
         print_startup_info(
             self.BASE_URL,
             self.ROUTE_PREFIX,

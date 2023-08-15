@@ -1,3 +1,4 @@
+import time
 import traceback
 import uuid
 from itertools import cycle
@@ -16,16 +17,15 @@ class ForwardingBase:
     BASE_URL = None
     ROUTE_PREFIX = None
     client: httpx.AsyncClient = None
-    # token_counts: int = None
+
+    if LOG_CHAT:
+        extrasaver: ExtraForwardingSaver = None
     if IP_BLACKLIST or IP_WHITELIST:
         validate_host = True
     else:
         validate_host = False
 
     timeout = 600
-
-    if LOG_CHAT:
-        extrasaver = ExtraForwardingSaver()
 
     @staticmethod
     def validate_request_host(ip):
@@ -40,16 +40,15 @@ class ForwardingBase:
                 detail=f"Forbidden, ip={ip} in blacklist!",
             )
 
-    @classmethod
     async def aiter_bytes(
-        cls, r: httpx.Response, **kwargs
+        self, r: httpx.Response, **kwargs
     ) -> AsyncGenerator[bytes, Any]:
         bytes_ = b""
         async for chunk in r.aiter_bytes():
             bytes_ += chunk
             yield chunk
         await r.aclose()
-        cls.extrasaver.add_log(bytes_)
+        self.extrasaver.add_log(bytes_)
 
     async def try_send(self, client_config: dict, request: Request):
         try:
@@ -85,11 +84,11 @@ class ForwardingBase:
             ip = request.headers.get("x-forwarded-for") or ""
             self.validate_request_host(ip)
 
-        url_path = request.url.path
+        _url_path = request.url.path
         prefix_index = 0 if self.ROUTE_PREFIX == '/' else len(self.ROUTE_PREFIX)
 
-        route_path = url_path[prefix_index:]
-        url = httpx.URL(path=route_path, query=request.url.query.encode("utf-8"))
+        url_path = _url_path[prefix_index:]
+        url = httpx.URL(path=url_path, query=request.url.query.encode("utf-8"))
         headers = dict(request.headers)
         auth = headers.pop("authorization", "")
         content_type = headers.pop("content-type", "application/json")
@@ -98,15 +97,13 @@ class ForwardingBase:
             'auth': auth,
             'headers': auth_headers_dict,
             'url': url,
-            'url_path': route_path,
+            'url_path': url_path,
         }
 
         return client_config
 
     async def reverse_proxy(self, request: Request):
         assert self.client is not None
-        # if token_limit:
-        # assert self.token_counts is not None
 
         client_config = self.prepare_client(request)
 
@@ -123,9 +120,8 @@ class OpenaiBase(ForwardingBase):
     _cycle_api_key = cycle(OPENAI_API_KEY)
     _no_auth_mode = OPENAI_API_KEY != [] and FWD_KEY == set()
 
-    if LOG_CHAT:
-        chatsaver = ChatSaver()
-        whispersaver = WhisperSaver()
+    chatsaver: ChatSaver = None
+    whispersaver: WhisperSaver = None
 
     def _add_result_log(
         self, byte_list: List[bytes], uid: str, route_path: str, request_method: str
@@ -168,12 +164,24 @@ class OpenaiBase(ForwardingBase):
                 )
         return uid
 
-    async def aiter_append(
+    async def aiter_bytes(
         self, r: httpx.Response, request: Request, route_path: str, uid: str
     ):
         byte_list = []
+        start_time = time.perf_counter()
+        idx = 0
         async for chunk in r.aiter_bytes():
+            idx += 1
             byte_list.append(chunk)
+            # print(f"{chunk=}")
+            if TOKEN_INTERVAL > 0:
+                current_time = time.perf_counter()
+                delta = current_time - start_time
+                sleep_time = TOKEN_INTERVAL - delta
+                print(f"{delta=} {sleep_time=}")
+                if sleep_time > 0:
+                    time.sleep(sleep_time)
+                start_time = time.perf_counter()
             yield chunk
 
         await r.aclose()
@@ -204,7 +212,7 @@ class OpenaiBase(ForwardingBase):
         r = await self.try_send(client_config, request)
 
         return StreamingResponse(
-            self.aiter_append(r, request, url_path, uid),
+            self.aiter_bytes(r, request, url_path, uid),
             status_code=r.status_code,
             media_type=r.headers.get("content-type"),
         )

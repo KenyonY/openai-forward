@@ -1,5 +1,6 @@
 import os
 
+import limits
 from fastapi import Request
 
 from ..config import setting_log
@@ -21,7 +22,9 @@ EXTRA_ROUTE_PREFIX = [
 
 LOG_CHAT = os.environ.get("LOG_CHAT", "False").strip().lower() == "true"
 if LOG_CHAT:
-    setting_log()
+    setting_log(
+        openai_route_prefix=OPENAI_ROUTE_PREFIX, extra_route_prefix=EXTRA_ROUTE_PREFIX
+    )
 
 IP_WHITELIST = env2list("IP_WHITELIST", sep=ENV_VAR_SEP)
 IP_BLACKLIST = env2list("IP_BLACKLIST", sep=ENV_VAR_SEP)
@@ -49,3 +52,17 @@ def dynamic_rate_limit(key: str):
         if key.startswith(route):
             return rate_limit_conf[route]
     return GLOBAL_RATE_LIMIT
+
+
+TOKEN_RATE_LIMIT = os.environ.get("TOKEN_RATE_LIMIT").strip()
+if TOKEN_RATE_LIMIT:
+    rate_limit_item = limits.parse(TOKEN_RATE_LIMIT)
+    print(
+        f"{rate_limit_item.amount=} {rate_limit_item=} {rate_limit_item.GRANULARITY} {rate_limit_item.multiples=}"
+    )
+    TOKEN_INTERVAL = (
+        rate_limit_item.multiples * rate_limit_item.GRANULARITY.seconds
+    ) / rate_limit_item.amount
+    print(f"{TOKEN_INTERVAL=}")
+else:
+    TOKEN_INTERVAL = 0

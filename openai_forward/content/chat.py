@@ -12,8 +12,10 @@ from .decode import parse_to_lines
 
 
 class ChatSaver:
-    def __init__(self):
-        self.logger = logger.bind(chat=True)
+    def __init__(self, route_prefix: str):
+        _prefix = route_prefix.replace('/', '_')
+        kwargs = {_prefix + "_chat": True}
+        self.logger = logger.bind(**kwargs)
 
     @staticmethod
     async def parse_payload(request: Request):
