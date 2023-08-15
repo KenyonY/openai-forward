@@ -9,7 +9,7 @@ from fastapi import HTTPException, Request, status
 from fastapi.responses import StreamingResponse
 from loguru import logger
 
-from ..content import ChatSaver, ExtraForwardingSaver, WhisperSaver
+from ..content import ChatSaver, WhisperSaver
 from .settings import *
 
 
@@ -18,8 +18,6 @@ class ForwardingBase:
     ROUTE_PREFIX = None
     client: httpx.AsyncClient = None
 
-    if LOG_CHAT:
-        extrasaver: ExtraForwardingSaver = None
     if IP_BLACKLIST or IP_WHITELIST:
         validate_host = True
     else:
@@ -43,12 +41,9 @@ class ForwardingBase:
     async def aiter_bytes(
         self, r: httpx.Response, **kwargs
     ) -> AsyncGenerator[bytes, Any]:
-        bytes_ = b""
         async for chunk in r.aiter_bytes():
-            bytes_ += chunk
             yield chunk
         await r.aclose()
-        self.extrasaver.add_log(bytes_)
 
     async def try_send(self, client_config: dict, request: Request):
         try:

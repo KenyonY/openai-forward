@@ -22,9 +22,7 @@ EXTRA_ROUTE_PREFIX = [
 
 LOG_CHAT = os.environ.get("LOG_CHAT", "False").strip().lower() == "true"
 if LOG_CHAT:
-    setting_log(
-        openai_route_prefix=OPENAI_ROUTE_PREFIX, extra_route_prefix=EXTRA_ROUTE_PREFIX
-    )
+    setting_log(openai_route_prefix=OPENAI_ROUTE_PREFIX)
 
 IP_WHITELIST = env2list("IP_WHITELIST", sep=ENV_VAR_SEP)
 IP_BLACKLIST = env2list("IP_BLACKLIST", sep=ENV_VAR_SEP)

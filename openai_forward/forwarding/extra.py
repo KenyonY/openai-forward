@@ -1,13 +1,11 @@
 from ..config import print_startup_info
-from .base import LOG_CHAT, ExtraForwardingSaver, ForwardingBase
+from .base import LOG_CHAT, ForwardingBase
 
 
 class AnyForwarding(ForwardingBase):
     def __init__(self, base_url: str, route_prefix: str, proxy=None):
         import httpx
 
-        if LOG_CHAT:
-            self.extrasaver = ExtraForwardingSaver(route_prefix)
         self.BASE_URL = base_url
         self.ROUTE_PREFIX = route_prefix
         self.client = httpx.AsyncClient(

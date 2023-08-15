@@ -58,7 +58,6 @@ class InterceptHandler(logging.Handler):
 def setting_log(
     save_file=False,
     openai_route_prefix=None,
-    extra_route_prefix=None,
     log_name="openai_forward",
     multi_process=True,
 ):
@@ -103,17 +102,6 @@ def setting_log(
             ]
         )
 
-    for prefix in extra_route_prefix or []:
-        _prefix = prefix.replace('/', '_')
-        config_handlers.append(
-            {
-                "sink": f"./Log/extra/{_prefix}/extra.log",
-                "enqueue": multi_process,
-                "rotation": "50 MB",
-                "filter": functools.partial(filter_func, _prefix, "_extra"),
-                "format": "{message}",
-            }
-        )
     if save_file:
         config_handlers += [
             {
