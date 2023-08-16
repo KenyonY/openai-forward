@@ -51,15 +51,17 @@
 本项目用于解决一些地区无法直接访问OpenAI的问题，将该服务部署在可以正常访问OpenAI API的(云)服务器上，
 通过该服务转发OpenAI的请求。即搭建反向代理服务; 允许输入多个OpenAI API-KEY 组成轮询池; 可自定义二次分发api key.
 
----
+
+<picture>
+   <source type="image/webp" srcset="https://raw.githubusercontent.com/beidongjiedeguang/openai-forward/.github/images/separators/aqua.webp">
+   <img src="https://raw.githubusercontent.com/beidongjiedeguang/openai-forward/.github/images/separators/aqua.png" height=8px width="100%">
+</picture>
 
 由本项目搭建的长期代理地址：
 > https://api.openai-forward.com  
-> https://cloudflare.worker.openai-forward.com  
+> https://render.openai-forward.com  
 > https://cloudflare.page.openai-forward.com  
 > https://vercel.openai-forward.com  
-> https://render.openai-forward.com  
-> https://railway.openai-forward.com
 
 ## 功能
 

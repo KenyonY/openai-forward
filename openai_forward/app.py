@@ -11,7 +11,7 @@ from .forwarding.settings import (
 
 limiter = Limiter(key_func=get_limiter_key, strategy=RATE_LIMIT_STRATEGY)
 
-app = FastAPI(title="openai_forward", version="0.4")
+app = FastAPI(title="openai_forward", version="0.5")
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -31,8 +31,7 @@ def healthz(request: Request):
 
 add_route = lambda obj: app.add_route(
     obj.ROUTE_PREFIX + "{api_path:path}",
-    # limiter.limit(dynamic_rate_limit)(obj.reverse_proxy),
-    obj.reverse_proxy,
+    limiter.limit(dynamic_rate_limit)(obj.reverse_proxy),
     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH", "TRACE"],
 )
 

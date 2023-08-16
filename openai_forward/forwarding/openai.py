@@ -1,8 +1,7 @@
 import time
 
-from ..config import print_startup_info
 from .base import ChatSaver, OpenaiBase, WhisperSaver
-from .settings import LOG_CHAT, OPENAI_API_KEY
+from .settings import LOG_CHAT
 
 
 class OpenaiForwarding(OpenaiBase):
@@ -19,13 +18,6 @@ class OpenaiForwarding(OpenaiBase):
         )
         self.token_counts = 0
         self.token_limit_dict = {'time': time.time(), 'count': 0}
-        print_startup_info(
-            self.BASE_URL,
-            self.ROUTE_PREFIX,
-            OPENAI_API_KEY,
-            self._no_auth_mode,
-            LOG_CHAT,
-        )
 
 
 def get_fwd_openai_style_objs():

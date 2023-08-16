@@ -1,5 +1,4 @@
-from ..config import print_startup_info
-from .base import LOG_CHAT, ForwardingBase
+from .base import ForwardingBase
 
 
 class AnyForwarding(ForwardingBase):
@@ -11,7 +10,6 @@ class AnyForwarding(ForwardingBase):
         self.client = httpx.AsyncClient(
             base_url=self.BASE_URL, proxies=proxy, http1=True, http2=False
         )
-        print_startup_info(self.BASE_URL, self.ROUTE_PREFIX, [], "\\", LOG_CHAT)
 
 
 def get_fwd_anything_objs():
