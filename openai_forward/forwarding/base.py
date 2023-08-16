@@ -264,7 +264,6 @@ class OpenaiBase(ForwardingBase):
                 current_time = time.perf_counter()
                 delta = current_time - start_time
                 sleep_time = TOKEN_INTERVAL - delta
-                print(f"{delta=} {sleep_time=}")
                 if sleep_time > 0:
                     time.sleep(sleep_time)
                 start_time = time.perf_counter()

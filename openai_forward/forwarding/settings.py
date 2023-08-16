@@ -3,7 +3,7 @@ import os
 import limits
 from fastapi import Request
 
-from ..config import setting_log
+from ..config import print_startup_info, setting_log, show_rate_limit_info
 from ..helper import env2dict, env2list, format_route_prefix, get_client_ip
 
 ENV_VAR_SEP = ","
@@ -60,7 +60,6 @@ if TOKEN_RATE_LIMIT:
 else:
     TOKEN_INTERVAL = 0
 
-from ..config import print_startup_info, show_rate_limit_info
 
 for base_url, route_prefix in zip(OPENAI_BASE_URL, OPENAI_ROUTE_PREFIX):
     print_startup_info(base_url, route_prefix, OPENAI_API_KEY, FWD_KEY, LOG_CHAT)
