@@ -1,11 +1,23 @@
 import ast
+import asyncio
 import inspect
 import os
+import time
+from functools import wraps
 from pathlib import Path
 from typing import Dict, List, Union
 
 import orjson
+from fastapi import Request
 from rich import print
+
+
+def get_client_ip(request: Request):
+    if "x-forwarded-for" in request.headers:
+        return request.headers["x-forwarded-for"]
+    elif not request.client or not request.client.host:
+        return "127.0.0.1"
+    return request.client.host
 
 
 def relp(rel_path: Union[str, Path], parents=0, return_str=True, strict=False):
@@ -34,6 +46,70 @@ def ls(_dir, *patterns, concat='extend', recursive=False):
     return path_list
 
 
+def retry(max_retries=3, delay=1, backoff=2, exceptions=(Exception,)):
+    """
+    Retry decorator.
+
+    Parameters:
+    - max_retries: Maximum number of retries.
+    - delay: Initial delay in seconds.
+    - backoff: Multiplier for delay after each retry.
+    - exceptions: Exceptions to catch and retry on, as a tuple.
+
+    """
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            retries = 0
+            current_delay = delay
+            while retries < max_retries:
+                try:
+                    return func(*args, **kwargs)
+                except exceptions as e:
+                    retries += 1
+                    if retries >= max_retries:
+                        raise
+                    time.sleep(current_delay)
+                    current_delay *= backoff
+
+        return wrapper
+
+    return decorator
+
+
+def async_retry(max_retries=3, delay=1, backoff=2, exceptions=(Exception,)):
+    """
+    Retry decorator for asynchronous functions.
+
+    Parameters:
+    - max_retries: Maximum number of retries.
+    - delay: Initial delay in seconds.
+    - backoff: Multiplier for delay after each retry.
+    - exceptions: Exceptions to catch and retry on, as a tuple.
+
+    """
+
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            retries = 0
+            current_delay = delay
+            while retries < max_retries:
+                try:
+                    return await func(*args, **kwargs)
+                except exceptions as e:
+                    retries += 1
+                    if retries >= max_retries:
+                        raise
+                    await asyncio.sleep(current_delay)
+                    current_delay *= backoff
+
+        return wrapper
+
+    return decorator
+
+
 def json_load(filepath: str, rel=False, mode="rb"):
     abs_path = relp(filepath, parents=1) if rel else filepath
     with open(abs_path, mode=mode) as f:
@@ -51,6 +127,13 @@ def json_dump(
         f.write(orjson.dumps(data, option=orjson_option))
 
 
+def toml_load(filepath: str, rel=False):
+    import toml
+
+    abs_path = relp(filepath, parents=1) if rel else filepath
+    return toml.load(abs_path)
+
+
 def str2list(s: str, sep):
     if s:
         return [i.strip() for i in s.split(sep) if i.strip()]
@@ -60,6 +143,15 @@ def str2list(s: str, sep):
 
 def env2list(env_name: str, sep=","):
     return str2list(os.environ.get(env_name, "").strip(), sep=sep)
+
+
+def env2dict(env_name: str) -> Dict:
+    import json
+
+    env_str = os.environ.get(env_name, "").strip()
+    if not env_str:
+        return {}
+    return json.loads(env_str)
 
 
 def format_route_prefix(route_prefix: str):

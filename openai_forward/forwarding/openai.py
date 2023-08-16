@@ -1,6 +1,7 @@
-from ..config import print_startup_info
-from .base import OpenaiBase
-from .settings import LOG_CHAT, OPENAI_API_KEY
+import time
+
+from .base import ChatSaver, OpenaiBase, WhisperSaver
+from .settings import LOG_CHAT
 
 
 class OpenaiForwarding(OpenaiBase):
@@ -9,16 +10,14 @@ class OpenaiForwarding(OpenaiBase):
 
         self.BASE_URL = base_url
         self.ROUTE_PREFIX = route_prefix
+        if LOG_CHAT:
+            self.chatsaver = ChatSaver(route_prefix)
+            self.whispersaver = WhisperSaver(route_prefix)
         self.client = httpx.AsyncClient(
             base_url=self.BASE_URL, proxies=proxy, http1=True, http2=False
         )
-        print_startup_info(
-            self.BASE_URL,
-            self.ROUTE_PREFIX,
-            OPENAI_API_KEY,
-            self._no_auth_mode,
-            LOG_CHAT,
-        )
+        self.token_counts = 0
+        self.token_limit_dict = {'time': time.time(), 'count': 0}
 
 
 def get_fwd_openai_style_objs():

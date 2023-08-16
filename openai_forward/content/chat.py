@@ -7,12 +7,15 @@ from fastapi import Request
 from loguru import logger
 from orjson import JSONDecodeError
 
+from ..helper import get_client_ip
 from .decode import parse_to_lines
 
 
 class ChatSaver:
-    def __init__(self):
-        self.logger = logger.bind(chat=True)
+    def __init__(self, route_prefix: str):
+        _prefix = route_prefix.replace('/', '_')
+        kwargs = {_prefix + "_chat": True}
+        self.logger = logger.bind(**kwargs)
 
     @staticmethod
     async def parse_payload(request: Request):
@@ -23,7 +26,7 @@ class ChatSaver:
         content = {
             "messages": [{msg["role"]: msg["content"]} for msg in msgs],
             "model": model,
-            "forwarded-for": request.headers.get("x-forwarded-for") or "",
+            "forwarded-for": get_client_ip(request) or "",
             "uid": uid,
             "datetime": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
         }

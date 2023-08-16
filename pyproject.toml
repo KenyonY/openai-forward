@@ -28,6 +28,7 @@ dependencies = [
     "rich",
     "fire",
     "pytz",
+    "slowapi==0.1.8",
 ]
 
 dynamic = ["version"]
@@ -40,9 +41,15 @@ Source = "https://github.com/beidongjiedeguang/openai-forward"
 
 [project.optional-dependencies]
 test = [
-    "openai>=0.27.8",
     "pytest",
-    "sparrow-python"
+    "openai>=0.27.8",
+    "sparrow-python",
+]
+
+dev = [
+    "openai>=0.27.8",
+    "sparrow-python",
+    "schedule",
 ]
 
 [project.scripts]
