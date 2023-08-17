@@ -54,7 +54,9 @@ http://{ip}:{port}/v1/chat/completions
     proxy_buffering off; 
 ```
 
-
+<a>
+   <img src="https://raw.githubusercontent.com/beidongjiedeguang/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">
+</a>
 
 ## Docker部署
 
@@ -82,8 +84,9 @@ openai-forward run # 或使用别名 aifd run
 启用SSL同上.
 
 
----
-
+<a>
+   <img src="https://raw.githubusercontent.com/beidongjiedeguang/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">
+</a>
 
 ## Render 一键部署
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/beidongjiedeguang/openai-forward)
@@ -105,7 +108,9 @@ Render的免费计划: 每月750小时免费实例时间(意味着单个实例�
 > https://openai-forward.onrender.com 
 
 
----
+<a>
+   <img src="https://raw.githubusercontent.com/beidongjiedeguang/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">
+</a>
 
 ## Railway 一键部署
 [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/tejCum?referralCode=U0-kXv)
@@ -119,8 +124,9 @@ Render的免费计划: 每月750小时免费实例时间(意味着单个实例�
 
 > https://railway.openai-forward.com
 
-
----
+<a>
+   <img src="https://raw.githubusercontent.com/beidongjiedeguang/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">
+</a>
 
 ⚠️下面两种部署方式仅提供简单的转发服务，没有任何额外功能。
 
@@ -137,7 +143,10 @@ Render的免费计划: 每月750小时免费实例时间(意味着单个实例�
 
 > https://vercel.openai-forward.com  
 
----
+
+<a>
+   <img src="https://raw.githubusercontent.com/beidongjiedeguang/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">
+</a>
 
 ## Cloudflare 部署
 

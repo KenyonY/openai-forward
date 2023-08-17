@@ -1,16 +1,18 @@
+import asyncio
 import time
 import traceback
 import uuid
 from itertools import cycle
 from typing import Any, AsyncGenerator, List
 
+import anyio
 import httpx
 from fastapi import HTTPException, Request, status
 from fastapi.responses import StreamingResponse
 from loguru import logger
 
 from ..content import ChatSaver, WhisperSaver
-from ..helper import async_retry, retry
+from ..helper import async_retry
 from .settings import *
 
 
@@ -24,7 +26,7 @@ class ForwardingBase:
     else:
         validate_host = False
 
-    timeout = 600
+    timeout = TIMEOUT
 
     @staticmethod
     def validate_request_host(ip):
@@ -55,7 +57,12 @@ class ForwardingBase:
             yield chunk
         await r.aclose()
 
-    @async_retry(max_retries=3, delay=0.5, backoff=2, exceptions=(HTTPException,))
+    @async_retry(
+        max_retries=3,
+        delay=0.5,
+        backoff=2,
+        exceptions=(HTTPException, anyio.EndOfStream),
+    )
     async def try_send(self, client_config: dict, request: Request):
         """
         Try to send the request.
@@ -90,8 +97,13 @@ class ForwardingBase:
             raise HTTPException(
                 status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail=error_info
             )
+        except anyio.EndOfStream:
+            logger.warning(
+                "trying to read from a stream that has been closed from the other end."
+            )
+            raise
         except Exception as e:
-            logger.exception(f"{type(e)}:")
+            logger.warning(f"{type(e)}: {e}")
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e
             )
@@ -239,7 +251,7 @@ class OpenaiBase(ForwardingBase):
                 )
         return uid
 
-    async def aiter_bytes(
+    async def openai_aiter_bytes(
         self, r: httpx.Response, request: Request, route_path: str, uid: str
     ):
         """
@@ -263,9 +275,9 @@ class OpenaiBase(ForwardingBase):
             if TOKEN_INTERVAL > 0:
                 current_time = time.perf_counter()
                 delta = current_time - start_time
-                sleep_time = TOKEN_INTERVAL - delta
-                if sleep_time > 0:
-                    time.sleep(sleep_time)
+                delay = TOKEN_INTERVAL - delta
+                if delay > 0:
+                    await asyncio.sleep(delay)
                 start_time = time.perf_counter()
             yield chunk
 
@@ -306,7 +318,7 @@ class OpenaiBase(ForwardingBase):
         r = await self.try_send(client_config, request)
 
         return StreamingResponse(
-            self.aiter_bytes(r, request, url_path, uid),
+            self.openai_aiter_bytes(r, request, url_path, uid),
             status_code=r.status_code,
             media_type=r.headers.get("content-type"),
         )

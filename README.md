@@ -6,7 +6,7 @@
     <br>
 </h1>
 <p align="center">
-    <b> OpenAI API 接口转发服务 <br/>
+    <b> OpenAI API风格接口转发服务 <br/>
     The fastest way to deploy openai api forwarding </b>
 </p>
 
@@ -52,10 +52,9 @@
 通过该服务转发OpenAI的请求。即搭建反向代理服务; 允许输入多个OpenAI API-KEY 组成轮询池; 可自定义二次分发api key.
 
 
-<picture>
-   <source type="image/webp" srcset="https://raw.githubusercontent.com/beidongjiedeguang/openai-forward/.github/images/separators/aqua.webp">
-   <img src="https://raw.githubusercontent.com/beidongjiedeguang/openai-forward/.github/images/separators/aqua.png" height=8px width="100%">
-</picture>
+<a>
+   <img src="https://raw.githubusercontent.com/beidongjiedeguang/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">
+</a>
 
 由本项目搭建的长期代理地址：
 > https://api.openai-forward.com  

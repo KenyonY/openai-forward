@@ -3,8 +3,10 @@ import os
 import limits
 from fastapi import Request
 
-from ..config import print_startup_info, setting_log, show_rate_limit_info
+from ..config import print_rate_limit_info, print_startup_info, setting_log
 from ..helper import env2dict, env2list, format_route_prefix, get_client_ip
+
+TIMEOUT = 600
 
 ENV_VAR_SEP = ","
 OPENAI_BASE_URL = env2list("OPENAI_BASE_URL", sep=ENV_VAR_SEP) or [
@@ -66,7 +68,7 @@ for base_url, route_prefix in zip(OPENAI_BASE_URL, OPENAI_ROUTE_PREFIX):
 for base_url, route_prefix in zip(EXTRA_BASE_URL, EXTRA_ROUTE_PREFIX):
     print_startup_info(base_url, route_prefix, "\\", "\\", LOG_CHAT)
 
-show_rate_limit_info(
+print_rate_limit_info(
     rate_limit_conf,
     strategy=RATE_LIMIT_STRATEGY,
     global_rate_limit=GLOBAL_RATE_LIMIT if GLOBAL_RATE_LIMIT else 'inf',

@@ -21,7 +21,12 @@ class OpenaiForwarding(OpenaiBase):
 
 
 def get_fwd_openai_style_objs():
-    """获取openai风格路由转发对象"""
+    """
+    Generate OPENAI route style forwarding objects.
+
+    Returns:
+        fwd_objs (list): A list of OpenaiForwarding objects.
+    """
     from .settings import OPENAI_BASE_URL, OPENAI_ROUTE_PREFIX, PROXY
 
     fwd_objs = []

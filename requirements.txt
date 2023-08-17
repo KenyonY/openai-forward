@@ -1,9 +1,0 @@
-loguru
-fastapi>=0.94.0
-uvicorn>=0.21.0
-orjson
-python-dotenv
-httpx>=0.24.1
-rich
-fire
-pytz
