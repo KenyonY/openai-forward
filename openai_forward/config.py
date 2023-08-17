@@ -10,7 +10,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 
-def print_startup_info(base_url, route_prefix, api_key, fwd_key, log_chat):
+def print_startup_info(base_url, route_prefix, api_key, fwd_key, log_chat, style):
     """
     Prints the startup information of the application.
     """
@@ -28,16 +28,27 @@ def print_startup_info(base_url, route_prefix, api_key, fwd_key, log_chat):
     table = Table(title="", box=None, width=50)
 
     matrcs = {
-        "base url": {'value': base_url, 'style': "#df412f"},
-        "route prefix": {'value': route_prefix, 'style': "green"},
-        "api keys": {'value': str(api_key), 'style': "green"},
-        "forward keys": {'value': str(fwd_key), 'style': "green" if fwd_key else "red"},
-        "Log chat": {'value': str(log_chat), 'style': "green"},
+        "base url": {
+            'value': base_url,
+        },
+        "route prefix": {
+            'value': route_prefix,
+        },
+        "api keys": {
+            'value': str(api_key),
+        },
+        "forward keys": {
+            'value': str(fwd_key),
+            'style': "#62E883" if fwd_key or not api_key else "red",
+        },
+        "Log chat": {
+            'value': str(log_chat),
+        },
     }
     table.add_column("", justify='left', width=10)
     table.add_column("", justify='left')
     for key, value in matrcs.items():
-        table.add_row(key, value['value'], style=value['style'])
+        table.add_row(key, value['value'], style=value.get('style', style))
 
     print(Panel(table, title="🤗 openai-forward is ready to serve! ", expand=False))
 
@@ -46,10 +57,10 @@ def print_rate_limit_info(rate_limit: dict, strategy: str, **kwargs):
     """
     Print rate limit information.
 
-    Parameters:
-        rate_limit (dict): A dictionary containing rate limit information.
+    Args:
+        rate_limit (dict): A dictionary containing route rate limit.
         strategy (str): The strategy used for rate limiting.
-        **kwargs: Additional keyword arguments.
+        **kwargs: Other limits info.
 
     Returns:
         None
@@ -57,11 +68,11 @@ def print_rate_limit_info(rate_limit: dict, strategy: str, **kwargs):
     table = Table(title="", box=None, width=50)
     table.add_column("")
     table.add_column("", justify='left')
-    table.add_row("strategy", strategy, style='blue')
+    table.add_row("strategy", strategy, style='#7CD9FF')
     for key, value in rate_limit.items():
-        table.add_row(key, str(value), style='green')
+        table.add_row(key, str(value), style='#C5FF95')
     for key, value in kwargs.items():
-        table.add_row(key, str(value), style='green')
+        table.add_row(key, str(value), style='#C5FF95')
     print(Panel(table, title="⏱️ Rate Limit configuration", expand=False))
 
 

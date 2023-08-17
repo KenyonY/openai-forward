@@ -33,7 +33,7 @@ class ForwardingBase:
         """
         Validates the request host IP address against the IP whitelist and blacklist.
 
-        Parameters:
+        Args:
             ip (str): The IP address to be validated.
 
         Raises:
@@ -50,9 +50,8 @@ class ForwardingBase:
                 detail=f"Forbidden, ip={ip} in blacklist!",
             )
 
-    async def aiter_bytes(
-        self, r: httpx.Response, **kwargs
-    ) -> AsyncGenerator[bytes, Any]:
+    @staticmethod
+    async def aiter_bytes(r: httpx.Response) -> AsyncGenerator[bytes, Any]:
         async for chunk in r.aiter_bytes():
             yield chunk
         await r.aclose()
@@ -85,27 +84,33 @@ class ForwardingBase:
                 content=request.stream(),
                 timeout=self.timeout,
             )
+            return await self.client.send(req, stream=True)
 
-            r = await self.client.send(req, stream=True)
-            return r
         except (httpx.ConnectError, httpx.ConnectTimeout) as e:
             error_info = (
                 f"{type(e)}: {e} | "
                 f"Please check if host={request.client.host} can access [{self.BASE_URL}] successfully?"
             )
-            logger.error(error_info)
+            traceback_info = traceback.format_exc()
+            logger.error(f"{error_info} traceback={traceback_info}")
             raise HTTPException(
                 status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail=error_info
             )
+
         except anyio.EndOfStream:
-            logger.warning(
-                "trying to read from a stream that has been closed from the other end."
-            )
-            raise
-        except Exception as e:
-            logger.warning(f"{type(e)}: {e}")
+            error_info = "EndOfStream Error: trying to read from a stream that has been closed from the other end."
+            traceback_info = traceback.format_exc()
+            logger.error(f"{error_info} traceback={traceback_info}")
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_info
+            )
+
+        except Exception as e:
+            error_info = f"{type(e)}: {e}"
+            traceback_info = traceback.format_exc()
+            logger.error(f"{error_info} traceback={traceback_info}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_info
             )
 
     def prepare_client(self, request: Request):

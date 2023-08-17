@@ -1,10 +1,11 @@
+import itertools
 import os
 
 import limits
 from fastapi import Request
 
 from ..config import print_rate_limit_info, print_startup_info, setting_log
-from ..helper import env2dict, env2list, format_route_prefix, get_client_ip
+from ..helper import env2dict, env2list, format_route_prefix
 
 TIMEOUT = 600
 
@@ -37,7 +38,7 @@ PROXY = PROXY if PROXY else None
 
 GLOBAL_RATE_LIMIT = os.environ.get("GLOBAL_RATE_LIMIT", "fixed-window").strip() or None
 RATE_LIMIT_STRATEGY = os.environ.get("RATE_LIMIT_STRATEGY", "").strip() or None
-rate_limit_conf = env2dict('RATE_LIMIT')
+route_rate_limit_conf = env2dict('ROUTE_RATE_LIMIT')
 
 
 def get_limiter_key(request: Request):
@@ -47,9 +48,9 @@ def get_limiter_key(request: Request):
 
 
 def dynamic_rate_limit(key: str):
-    for route in rate_limit_conf:
+    for route in route_rate_limit_conf:
         if key.startswith(route):
-            return rate_limit_conf[route]
+            return route_rate_limit_conf[route]
     return GLOBAL_RATE_LIMIT
 
 
@@ -62,14 +63,18 @@ if TOKEN_RATE_LIMIT:
 else:
     TOKEN_INTERVAL = 0
 
-
+styles = itertools.cycle(
+    ["#7CD9FF", "#BDADFF", "#9EFFE3", "#f1b8e4", "#F5A88E", "#BBCA89"]
+)
 for base_url, route_prefix in zip(OPENAI_BASE_URL, OPENAI_ROUTE_PREFIX):
-    print_startup_info(base_url, route_prefix, OPENAI_API_KEY, FWD_KEY, LOG_CHAT)
+    print_startup_info(
+        base_url, route_prefix, OPENAI_API_KEY, FWD_KEY, LOG_CHAT, style=next(styles)
+    )
 for base_url, route_prefix in zip(EXTRA_BASE_URL, EXTRA_ROUTE_PREFIX):
-    print_startup_info(base_url, route_prefix, "\\", "\\", LOG_CHAT)
+    print_startup_info(base_url, route_prefix, "\\", "\\", LOG_CHAT, style=next(styles))
 
 print_rate_limit_info(
-    rate_limit_conf,
+    route_rate_limit_conf,
     strategy=RATE_LIMIT_STRATEGY,
     global_rate_limit=GLOBAL_RATE_LIMIT if GLOBAL_RATE_LIMIT else 'inf',
     token_rate_limit=TOKEN_RATE_LIMIT if TOKEN_RATE_LIMIT else 'inf',

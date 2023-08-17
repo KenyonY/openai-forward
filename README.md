@@ -48,8 +48,7 @@
 
 </div>
 
-本项目用于解决一些地区无法直接访问OpenAI的问题，将该服务部署在可以正常访问OpenAI API的(云)服务器上，
-通过该服务转发OpenAI的请求。即搭建反向代理服务; 允许输入多个OpenAI API-KEY 组成轮询池; 可自定义二次分发api key.
+本项目是大模型与用户层之间的一道转发服务，可用于搭建反向代理，自定义API KEY，请求速率限制，token速率限制等.
 
 
 <a>
@@ -62,26 +61,15 @@
 > https://cloudflare.page.openai-forward.com  
 > https://vercel.openai-forward.com  
 
-## 功能
 
-**基础功能**
-
-- [x] 支持转发OpenAI所有接口
-- [x] 支持流式响应
-- [x] 支持指定转发路由前缀
-- [x] docker部署
-- [x] pip 安装部署
-- [x] Railway 一键部署
-- [x] Render 一键部署
-- [x] cloudflare 部署
-- [x] Vercel一键部署
-
-**高级功能**
-
-- [x] 允许输入多个openai api key 组成轮询池
-- [x] 自定义 转发api key (见[高级配置](#高级配置))
-- [x] 流式响应对话日志
-- [x] 多接口转发
+### 特色
+-  万能转发: 支持转发OpenAI所有接口以及SSE流式响应
+-  支持指定转发路由前缀
+-  自定义转发api key 
+-  流式响应对话日志
+-  多接口转发
+-  请求速率限制(RPM)
+-  流式返回的token速率限制(TPM)
 
 ## 部署指南
 
@@ -92,22 +80,17 @@
 
 1. [pip 安装部署](deploy.md#pip部署)
 2. [Docker部署](deploy.md#docker部署)
-   > https://api.openai-forward.com
 
 **无vps免费部署方案**
 
 1. [Railway部署](deploy.md#Railway-一键部署)
-   > https://railway.openai-forward.com
 2. [Render一键部署](deploy.md#render-一键部署)
-   > https://render.openai-forward.com
 
 ---
 下面的部署仅提供单一转发功能
 
 3. [一键Vercel部署](deploy.md#vercel-一键部署)
-   > https://vercel.openai-forward.com
 4. [cloudflare部署](deploy.md#cloudflare-部署)
-   > https://cloudflare.page.openai-forward.com
 
 ## 应用
 
@@ -117,7 +100,7 @@
 替换docker启动命令中的 `BASE_URL`为我们自己搭建的代理服务地址
 
 
-<details >
+<details open>
    <summary> details</summary>  
 
 ```bash 
@@ -182,7 +165,7 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 
 </details>
 
-## 配置选项
+## 配置
 
 配置的设置方式支持两种  
 一种为在命令行中执行`aifd run` 的运行参数(如`--port=8000`)中指定;  
@@ -207,7 +190,8 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 
 ### 环境变量配置项
 
-支持从运行目录下的`.env`文件中读取
+支持从运行目录下的`.env`文件中读取  
+配置示例见根目录下的`.env.example`  
 
 | 环境变量                | 说明                                                                                                                                |          默认值           |
 |---------------------|-----------------------------------------------------------------------------------------------------------------------------------|:----------------------:|
@@ -219,22 +203,17 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 | EXTRA_ROUTE_PREFIX  | 额外转发服务路由前缀                                                                                                                        |           无            |
 | LOG_CHAT            | 是否记录聊天内容                                                                                                                          |        `false`         |
 
-## 高级配置
 
 ### 设置openai api_key为自定义的forward key
-<details markdown="1">
+<details open>
   <summary>Click for more details</summary>
 
-需要配置 OPENAI_API_KEY 和 FORWARD_KEY, 例如
+需要配置 OPENAI_API_KEY 和 FORWARD_KEY, 如
 
 ```bash
 OPENAI_API_KEY=sk-*******
 FORWARD_KEY=fk-****** # 这里fk-token由我们自己定义
 ```
-
-这里我们配置了FORWARD_KEY为`fk-******`, 那么后面客户端在调用时只需设置OPENAI_API_KEY为我们自定义的`fk-******` 即可。  
-这样的好处是在使用一些需要输入OPENAI_API_KEY的第三方应用时，我们可以使用自定义的api-key`fk-******`,
-无需担心真正的OPENAI_API_KEY被泄露。并且可以对外分发`fk-******`。
 
 **用例:**
 
