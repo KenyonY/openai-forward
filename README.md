@@ -201,12 +201,6 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 |-----------------------|-----------------------|:----------------------:|
 | --port                | 服务端口号                 |          8000          |
 | --workers             | 工作进程数                 |           1            |
-| --openai_base_url     | 同 OPENAI_BASE_URL     | https://api.openai.com |
-| --openai_route_prefix | 同 OPENAI_ROUTE_PREFIX |         `None`         |
-| --api_key             | 同 OPENAI_API_KEY      |         `None`         |
-| --forward_key         | 同 FORWARD_KEY         |         `None`         |
-| --extra_base_url      | 同 EXTRA_BASE_URL      |         `None`         |
-| --extra_route_prefix  | 同 EXTRA_ROUTE_PREFIX  |         `None`         |
 | --log_chat            | 同 LOG_CHAT            |        `False`         |
 
 </details>
