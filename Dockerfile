@@ -10,18 +10,9 @@ RUN apk update && \
     mkdir -p /usr/share/zoneinfo/Asia/ && \
     ln -s /etc/localtime /usr/share/zoneinfo/Asia/Shanghai
 
-RUN pip install --no-cache-dir  \
-    "loguru" \
-    "fastapi" \
-    "uvicorn" \
-    "orjson" \
-    "python-dotenv" \
-    "httpx" \
-    "fire" \
-    "rich" \
-    "pytz"
-
 COPY . /home/openai-forward
 WORKDIR /home/openai-forward
+RUN pip install -e . --no-cache-dir
+
 EXPOSE 8000
 ENTRYPOINT ["python", "-m", "openai_forward.__main__", "run"]

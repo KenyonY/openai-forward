@@ -33,6 +33,20 @@ class ChatSaver:
         return content
 
     def parse_iter_bytes(self, byte_list: List[bytes]):
+        """
+        Parses a list of bytes and returns a dictionary.
+
+        Args:
+            byte_list (List[bytes]): A list of bytes to parse.
+
+        Returns:
+            Dict[str, Any]: A dictionary containing information about the target. The dictionary has the following keys:
+                - "created" (str)
+                - "id" (str)
+                - "model" (str)
+                - "role" (str)
+                - "content" (str)
+        """
         txt_lines = parse_to_lines(byte_list)
 
         start_line = txt_lines[0]

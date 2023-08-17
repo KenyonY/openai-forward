@@ -13,7 +13,12 @@ class AnyForwarding(ForwardingBase):
 
 
 def get_fwd_anything_objs():
-    """获取extra路由转发对象"""
+    """
+    Generate extra forwarding objects.
+
+    Returns:
+        list: A list of AnyForwarding objects.
+    """
     from .settings import EXTRA_BASE_URL, EXTRA_ROUTE_PREFIX, PROXY
 
     extra_fwd_objs = []
