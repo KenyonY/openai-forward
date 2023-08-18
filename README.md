@@ -193,7 +193,7 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 ### 环境变量配置项
 
 支持从运行目录下的`.env`文件中读取  
-配置示例见根目录下的`.env.example`  
+配置示例见根目录下的 [.env.example](.env.example)  
 
 
 | 环境变量                | 说明                                                                                                                                |          默认值           |
@@ -206,7 +206,7 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 | EXTRA_ROUTE_PREFIX  | 额外转发服务路由前缀                                                                                                                        |           无            |
 | LOG_CHAT            | 是否记录聊天内容                                                                                                                          |        `false`         |
 
-更多见`.env.example`中的说明。(待完善)
+更多见 [.env.example](.env.example) 中的说明。(待完善)
 
 
 ### 自定义秘钥
@@ -231,9 +231,9 @@ FORWARD_KEY=fk-****** # 这里fk-token由我们自己定义
 
 </details>
 
-### 多路由转发
+### 多目标服务转发
 
-支持转发不同地址的服务至同一端口的不同路由下，几乎可以转发任何服务。  
+支持转发不同地址的服务至同一端口的不同路由下
 用例见  `.env.example`
 
 
