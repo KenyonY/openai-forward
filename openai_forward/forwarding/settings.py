@@ -12,9 +12,8 @@ additional_start_info = {}
 TIMEOUT = int(os.environ.get("TIMEOUT", "300").strip())
 
 CHAT_COMPLETION_ROUTE = (
-    os.environ.get("CHAT_COMPLETION_ROUTE", "").strip() or "v1/chat/completion"
+    os.environ.get("CHAT_COMPLETION_ROUTE", "").strip() or "/v1/chat/completions"
 )
-
 ENV_VAR_SEP = ","
 OPENAI_BASE_URL = env2list("OPENAI_BASE_URL", sep=ENV_VAR_SEP) or [
     "https://api.openai.com"
