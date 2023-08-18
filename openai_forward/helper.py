@@ -14,7 +14,7 @@ from rich import print
 
 def get_client_ip(request: Request):
     if "x-forwarded-for" in request.headers:
-        return request.headers["x-forwarded-for"]
+        return request.headers["x-forwarded-for"].split(",")[0]
     elif not request.client or not request.client.host:
         return "127.0.0.1"
     return request.client.host

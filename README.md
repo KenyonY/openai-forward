@@ -2,12 +2,12 @@
 
 <h1 align="center">
     <br>
-    OpenAI Forward
+    AI forward
     <br>
 </h1>
 <p align="center">
     <b> OpenAI API风格接口转发服务 <br/>
-    The fastest way to deploy openai api forwarding </b>
+    The fastest way to deploy llms api forwarding </b>
 </p>
 
 <p align="center">
@@ -43,65 +43,61 @@
 [配置选项](#配置选项) |
 [对话日志](#对话日志)
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/tejCum?referralCode=U0-kXv)  
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/beidongjiedeguang/openai-forward)
 
 </div>
 
-本项目是大模型与用户层之间的一道转发服务，可用于搭建反向代理，自定义API KEY，请求速率限制，token速率限制等.
+本项目是大模型与用户层之间的一道转发服务，可用于搭建反向代理，用户速率限制，token速率限制，自定义API KEY 等.
 
 
 <a>
    <img src="https://raw.githubusercontent.com/beidongjiedeguang/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">
 </a>
 
-由本项目搭建的长期代理地址：
+### 特点
+
+AI-Forward支持以下功能:
+
+- **万能代理**: 几乎可以转发任何请求
+- **用户速率限制**: 提供请求速率限制(**RPM**)与流式返回的Token速率限制(**TPM**)
+- **自定义秘钥**: 支持用户使用自定义生成的秘钥代替原始api key使用。 
+- 流式响应的对话日志
+- 可同时转发多个目标服务至不同路由
+- 失败请求自动重试
+- 一分钟内完成安装与部署
+- ...
+
+
+由本项目搭建的代理服务地址：
 > https://api.openai-forward.com  
 > https://render.openai-forward.com  
-> https://cloudflare.page.openai-forward.com  
-> https://vercel.openai-forward.com  
 
 
-### 特色
--  万能转发: 支持转发OpenAI所有接口以及SSE流式响应
--  支持指定转发路由前缀
--  自定义转发api key 
--  流式响应对话日志
--  多接口转发
--  请求速率限制(RPM)
--  流式返回的token速率限制(TPM)
+注：这里提供的代理地址服务仅限于学生/研究人员使用，若要长期使用请参考部署文档自行搭建。
 
 ## 部署指南
 
-👉 [部署文档](deploy.md)
+见 👉 [部署文档](deploy.md)
 
-提供以下几种部署方式  
-**有海外vps方案**
 
-1. [pip 安装部署](deploy.md#pip部署)
-2. [Docker部署](deploy.md#docker部署)
 
-**无vps免费部署方案**
+<a>
+   <img src="https://raw.githubusercontent.com/beidongjiedeguang/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">
+</a>
 
-1. [Railway部署](deploy.md#Railway-一键部署)
-2. [Render一键部署](deploy.md#render-一键部署)
+## 使用方式
 
----
-下面的部署仅提供单一转发功能
+### 反向代理应用:
 
-3. [一键Vercel部署](deploy.md#vercel-一键部署)
-4. [cloudflare部署](deploy.md#cloudflare-部署)
+#### 在第三方应用中使用
 
-## 应用
-
-### [聊天应用](https://chat.beidongjiedeguang.top)
+<details >
+   <summary> 点击展开</summary>  
 
 基于开源项目[ChatGPT-Next-Web](https://github.com/Yidadaa/ChatGPT-Next-Web)搭建自己的chatgpt服务  
-替换docker启动命令中的 `BASE_URL`为我们自己搭建的代理服务地址
+替换docker启动命令中的 `BASE_URL`为自己搭建的代理服务地址
 
 
-<details open>
-   <summary> details</summary>  
 
 ```bash 
 docker run -d \
@@ -114,7 +110,10 @@ docker run -d \
 
 </details>
 
-### 在代码中使用
+#### 在代码中使用
+
+<details >
+  <summary>点击展开</summary>
 
 **Python**
 
@@ -124,8 +123,6 @@ docker run -d \
   openai.api_key = "sk-******"
 ```
 
-<details open>
-  <summary>More Examples</summary>
 
 **JS/TS**
 
@@ -165,11 +162,16 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 
 </details>
 
-## 配置
+### 与众大模型服务结合使用
 
-配置的设置方式支持两种  
-一种为在命令行中执行`aifd run` 的运行参数(如`--port=8000`)中指定;  
-另一种为读取环境变量的方式指定。
+与 [LocalAI](https://github.com/go-skynet/LocalAI)，
+[api-for-open-llm](https://github.com/xusenlinzy/api-for-open-llm)，
+[claude-to-chatgpt](https://github.com/jtsang4/claude-to-chatgpt) 等
+一起使用，赋予这些服务接口的RPM，TPM，日志等能力。  
+(待补充...)
+
+
+## 配置
 
 ### 命令行参数
 
@@ -191,7 +193,8 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 ### 环境变量配置项
 
 支持从运行目录下的`.env`文件中读取  
-配置示例见根目录下的`.env.example`  
+配置示例见根目录下的 [.env.example](.env.example)  
+
 
 | 环境变量                | 说明                                                                                                                                |          默认值           |
 |---------------------|-----------------------------------------------------------------------------------------------------------------------------------|:----------------------:|
@@ -203,8 +206,10 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 | EXTRA_ROUTE_PREFIX  | 额外转发服务路由前缀                                                                                                                        |           无            |
 | LOG_CHAT            | 是否记录聊天内容                                                                                                                          |        `false`         |
 
+更多见 [.env.example](.env.example) 中的说明。(待完善)
 
-### 设置openai api_key为自定义的forward key
+
+### 自定义秘钥
 <details open>
   <summary>Click for more details</summary>
 
@@ -217,18 +222,6 @@ FORWARD_KEY=fk-****** # 这里fk-token由我们自己定义
 
 **用例:**
 
-```bash
-curl https://api.openai-forward.com/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer fk-******" \
-  -d '{
-    "model": "gpt-3.5-turbo",
-    "messages": [{"role": "user", "content": "Hello!"}]
-  }'
-```
-
-**Python**
-
 ```diff
   import openai
 + openai.api_base = "https://api.openai-forward.com/v1"
@@ -236,26 +229,15 @@ curl https://api.openai-forward.com/v1/chat/completions \
 + openai.api_key = "fk-******"
 ```
 
-**Web application**
-
-```bash 
-docker run -d \
-    -p 3000:3000 \
-    -e OPENAI_API_KEY="fk-******" \
-    -e BASE_URL="https://api.openai-forward.com" \
-    -e CODE="<your password>" \
-    yidadaa/chatgpt-next-web 
-``` 
-
 </details>
 
-### 多路由转发
+### 多目标服务转发
 
-支持转发不同地址的服务至同一端口的不同路由下，基本可以转发任何服务。  
+支持转发不同地址的服务至同一端口的不同路由下
 用例见  `.env.example`
 
 
-## 对话日志
+### 对话日志
 
 默认不记录对话日志，若要开启需设置环境变量`LOG_CHAT=true`
 <details open>
@@ -316,4 +298,4 @@ aifd convert
 
 ## License
 
-OpenAI-Forward is licensed under the [MIT](https://opensource.org/license/mit/) license.
+AI-Forward is licensed under the [MIT](https://opensource.org/license/mit/) license.

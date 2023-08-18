@@ -10,7 +10,9 @@ from rich.panel import Panel
 from rich.table import Table
 
 
-def print_startup_info(base_url, route_prefix, api_key, fwd_key, log_chat, style):
+def print_startup_info(
+    base_url, route_prefix, api_key, fwd_key, log_chat, /, style, **kwargs
+):
     """
     Prints the startup information of the application.
     """
@@ -49,6 +51,8 @@ def print_startup_info(base_url, route_prefix, api_key, fwd_key, log_chat, style
     table.add_column("", justify='left')
     for key, value in matrcs.items():
         table.add_row(key, value['value'], style=value.get('style', style))
+    for key, value in kwargs.items():
+        table.add_row(key, str(value), style=style)
 
     print(Panel(table, title="🤗 openai-forward is ready to serve! ", expand=False))
 

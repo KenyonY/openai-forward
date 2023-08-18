@@ -5,10 +5,15 @@ import limits
 from fastapi import Request
 
 from ..config import print_rate_limit_info, print_startup_info, setting_log
-from ..helper import env2dict, env2list, format_route_prefix
+from ..helper import env2dict, env2list, format_route_prefix, get_client_ip
 
-TIMEOUT = 600
+additional_start_info = {}
 
+TIMEOUT = int(os.environ.get("TIMEOUT", "300").strip())
+
+CHAT_COMPLETION_ROUTE = (
+    os.environ.get("CHAT_COMPLETION_ROUTE", "").strip() or "/v1/chat/completions"
+)
 ENV_VAR_SEP = ","
 OPENAI_BASE_URL = env2list("OPENAI_BASE_URL", sep=ENV_VAR_SEP) or [
     "https://api.openai.com"
@@ -33,8 +38,34 @@ IP_BLACKLIST = env2list("IP_BLACKLIST", sep=ENV_VAR_SEP)
 OPENAI_API_KEY = env2list("OPENAI_API_KEY", sep=ENV_VAR_SEP)
 FWD_KEY = env2list("FORWARD_KEY", sep=ENV_VAR_SEP)
 
-PROXY = os.environ.get("PROXY", "").strip()
-PROXY = PROXY if PROXY else None
+PROXY = os.environ.get("PROXY", "").strip() or None
+
+if PROXY:
+    additional_start_info["proxy"] = PROXY
+
+styles = itertools.cycle(
+    ["#7CD9FF", "#BDADFF", "#9EFFE3", "#f1b8e4", "#F5A88E", "#BBCA89"]
+)
+for base_url, route_prefix in zip(OPENAI_BASE_URL, OPENAI_ROUTE_PREFIX):
+    print_startup_info(
+        base_url,
+        route_prefix,
+        OPENAI_API_KEY,
+        FWD_KEY,
+        LOG_CHAT,
+        style=next(styles),
+        **additional_start_info,
+    )
+for base_url, route_prefix in zip(EXTRA_BASE_URL, EXTRA_ROUTE_PREFIX):
+    print_startup_info(
+        base_url,
+        route_prefix,
+        "\\",
+        "\\",
+        LOG_CHAT,
+        style=next(styles),
+        **additional_start_info,
+    )
 
 GLOBAL_RATE_LIMIT = os.environ.get("GLOBAL_RATE_LIMIT", "fixed-window").strip() or None
 RATE_LIMIT_STRATEGY = os.environ.get("RATE_LIMIT_STRATEGY", "").strip() or None
@@ -43,7 +74,7 @@ route_rate_limit_conf = env2dict('ROUTE_RATE_LIMIT')
 
 def get_limiter_key(request: Request):
     limiter_prefix = f"{request.scope.get('root_path')}{request.scope.get('path')}"
-    key = f"{limiter_prefix}"  # -{get_client_ip(request)}"
+    key = f"{limiter_prefix}-{get_client_ip(request)}"
     return key
 
 
@@ -62,16 +93,6 @@ if TOKEN_RATE_LIMIT:
     ) / rate_limit_item.amount
 else:
     TOKEN_INTERVAL = 0
-
-styles = itertools.cycle(
-    ["#7CD9FF", "#BDADFF", "#9EFFE3", "#f1b8e4", "#F5A88E", "#BBCA89"]
-)
-for base_url, route_prefix in zip(OPENAI_BASE_URL, OPENAI_ROUTE_PREFIX):
-    print_startup_info(
-        base_url, route_prefix, OPENAI_API_KEY, FWD_KEY, LOG_CHAT, style=next(styles)
-    )
-for base_url, route_prefix in zip(EXTRA_BASE_URL, EXTRA_ROUTE_PREFIX):
-    print_startup_info(base_url, route_prefix, "\\", "\\", LOG_CHAT, style=next(styles))
 
 print_rate_limit_info(
     route_rate_limit_conf,

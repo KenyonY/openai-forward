@@ -15,6 +15,23 @@
 
 </div>
 
+本文档中提供以下几种部署方式  
+**有海外vps方案**
+
+1. [pip 安装部署](deploy.md#pip部署)
+2. [Docker部署](deploy.md#docker部署)
+
+**无vps免费部署方案**
+
+1. [Render一键部署](deploy.md#render-一键部署)
+2. [Railway部署](deploy.md#Railway-一键部署)
+
+---
+下面的部署仅包含反向代理功能
+
+3. [一键Vercel部署](deploy.md#vercel-一键部署)
+4. [cloudflare部署](deploy.md#cloudflare-部署)
+
 ## pip部署
 
 **安装**
