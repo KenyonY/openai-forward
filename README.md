@@ -7,7 +7,7 @@
 </h1>
 <p align="center">
     <b> OpenAI API风格接口转发服务 <br/>
-    The fastest way to deploy openai api forwarding </b>
+    The fastest way to deploy llms api forwarding </b>
 </p>
 
 <p align="center">
@@ -47,7 +47,7 @@
 
 </div>
 
-本项目是大模型与用户层之间的一道转发服务，可用于搭建反向代理，自定义API KEY，请求速率限制，token速率限制等.
+本项目是大模型与用户层之间的一道转发服务，可用于搭建反向代理，用户速率限制，token速率限制，自定义API KEY 等.
 
 
 <a>
@@ -55,44 +55,30 @@
 </a>
 
 ### 特点
--  万能代理: 几乎可以转发任何接口请求
--  请求速率限制(RPM)
--  流式返回的token速率限制(TPM)
--  自定义转发api key 
--  可同时多目标服务至不同路由
--  流式响应的对话日志
--  几乎可在一分钟内完成安装与部署
+
+AI-Forward支持以下功能:
+
+- **万能代理**: 几乎可以转发任何请求
+- **用户速率限制**: 提供请求速率限制(**RPM**)与流式返回的Token速率限制(**TPM**)
+- **自定义秘钥**: 支持用户使用自定义生成的秘钥代替原始api key使用。 
+- 流式响应的对话日志
+- 可同时转发多个目标服务至不同路由
+- 失败请求自动重试
+- 一分钟内完成安装与部署
+- ...
 
 
-由本项目搭建的长期代理地址：
+由本项目搭建的代理服务地址：
 > https://api.openai-forward.com  
 > https://render.openai-forward.com  
-> https://cloudflare.page.openai-forward.com  
-> https://vercel.openai-forward.com
 
 
-注：这里提供的代理地址服务仅限于学生/个人研究者使用，若要长期使用请参考部署文档自行搭建。
+注：这里提供的代理地址服务仅限于学生/研究人员使用，若要长期使用请参考部署文档自行搭建。
 
 ## 部署指南
 
-👉 [部署文档](deploy.md)
+见 👉 [部署文档](deploy.md)
 
-提供以下几种部署方式  
-**有海外vps方案**
-
-1. [pip 安装部署](deploy.md#pip部署)
-2. [Docker部署](deploy.md#docker部署)
-
-**无vps免费部署方案**
-
-1. [Railway部署](deploy.md#Railway-一键部署)
-2. [Render一键部署](deploy.md#render-一键部署)
-
----
-下面的部署仅包含反向代理功能
-
-3. [一键Vercel部署](deploy.md#vercel-一键部署)
-4. [cloudflare部署](deploy.md#cloudflare-部署)
 
 
 <a>
@@ -176,15 +162,13 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 
 </details>
 
-### 与大模型服务结合使用
+### 与众大模型服务结合使用
 
-
-#### 与 [LocalAI](https://github.com/go-skynet/LocalAI) 一起使用
-
-#### 与 [api-for-open-llm](https://github.com/xusenlinzy/api-for-open-llm) 一起使用
-
-#### 与 claude 一起使用
-https://github.com/jtsang4/claude-to-chatgpt
+与 [LocalAI](https://github.com/go-skynet/LocalAI)，
+[api-for-open-llm](https://github.com/xusenlinzy/api-for-open-llm)，
+[claude-to-chatgpt](https://github.com/jtsang4/claude-to-chatgpt) 等
+一起使用，赋予这些服务接口的RPM，TPM，日志等能力。  
+(待补充...)
 
 
 ## 配置
@@ -211,6 +195,7 @@ https://github.com/jtsang4/claude-to-chatgpt
 支持从运行目录下的`.env`文件中读取  
 配置示例见根目录下的`.env.example`  
 
+
 | 环境变量                | 说明                                                                                                                                |          默认值           |
 |---------------------|-----------------------------------------------------------------------------------------------------------------------------------|:----------------------:|
 | OPENAI_BASE_URL     | 默认 openai官方 api 地址                                                                                                                | https://api.openai.com |
@@ -221,8 +206,10 @@ https://github.com/jtsang4/claude-to-chatgpt
 | EXTRA_ROUTE_PREFIX  | 额外转发服务路由前缀                                                                                                                        |           无            |
 | LOG_CHAT            | 是否记录聊天内容                                                                                                                          |        `false`         |
 
+更多见`.env.example`中的说明。(待完善)
 
-### 设置自定义的api key
+
+### 自定义秘钥
 <details open>
   <summary>Click for more details</summary>
 
@@ -311,4 +298,4 @@ aifd convert
 
 ## License
 
-OpenAI-Forward is licensed under the [MIT](https://opensource.org/license/mit/) license.
+AI-Forward is licensed under the [MIT](https://opensource.org/license/mit/) license.
