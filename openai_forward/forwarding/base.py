@@ -40,14 +40,16 @@ class ForwardingBase:
             HTTPException: If the IP address is not in the whitelist or if it is in the blacklist.
         """
         if IP_WHITELIST and ip not in IP_WHITELIST:
+            logger.warning(f"IP {ip} is not in the whitelist")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Forbidden, ip={ip} not in whitelist!",
+                detail=f"Forbidden Error",
             )
         if IP_BLACKLIST and ip in IP_BLACKLIST:
+            logger.warning(f"IP {ip} is in the blacklist")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Forbidden, ip={ip} in blacklist!",
+                detail=f"Forbidden Error",
             )
 
     @staticmethod
@@ -134,7 +136,13 @@ class ForwardingBase:
         assert self.BASE_URL is not None
         assert self.ROUTE_PREFIX is not None
         if self.validate_host:
-            ip = request.headers.get("x-forwarded-for") or ""
+            x_forwarded_for = request.headers.get("x-forwarded-for") or ""
+            # logger.info(f"x-forwarded-for ({x_forwarded_for}) is requesting.")
+            ip = x_forwarded_for.split(",")[0]
+            print(f"{ip=}")
+            logger.info(
+                f"x-real-ip ({request.headers.get('x-real-ip')}) is requesting."
+            )
             self.validate_request_host(ip)
 
         _url_path = request.url.path
@@ -202,7 +210,7 @@ class OpenaiBase(ForwardingBase):
         """
         try:
             if LOG_CHAT and request_method == "POST":
-                if route_path == "/v1/chat/completions":
+                if route_path == CHAT_COMPLETION_ROUTE:
                     target_info = self.chatsaver.parse_iter_bytes(byte_list)
                     self.chatsaver.log_chat(
                         {target_info["role"]: target_info["content"], "uid": uid}
@@ -232,13 +240,11 @@ class OpenaiBase(ForwardingBase):
 
         Notes:
             - If `LOG_CHAT` is True and the request method is "POST", the chat payload will be logged.
-            - If the `url_path` is "/v1/chat/completions", the chat payload will be parsed and logged.
-            - If the `url_path` starts with "/v1/audio/", a new UID will be generated.
         """
         uid = None
         if LOG_CHAT and request.method == "POST":
             try:
-                if url_path == "/v1/chat/completions":
+                if url_path == CHAT_COMPLETION_ROUTE:
                     chat_info = await self.chatsaver.parse_payload(request)
                     uid = chat_info.get("uid")
                     if chat_info:
@@ -273,9 +279,7 @@ class OpenaiBase(ForwardingBase):
         """
         byte_list = []
         start_time = time.perf_counter()
-        idx = 0
         async for chunk in r.aiter_bytes():
-            idx += 1
             byte_list.append(chunk)
             if TOKEN_INTERVAL > 0:
                 current_time = time.perf_counter()

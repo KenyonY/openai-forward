@@ -25,7 +25,6 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 )
 @limiter.limit(dynamic_rate_limit)
 def healthz(request: Request):
-    print(request.scope.get("client"))
     return "OK"
 
 
