@@ -136,13 +136,8 @@ class ForwardingBase:
         assert self.BASE_URL is not None
         assert self.ROUTE_PREFIX is not None
         if self.validate_host:
-            x_forwarded_for = request.headers.get("x-forwarded-for") or ""
-            # logger.info(f"x-forwarded-for ({x_forwarded_for}) is requesting.")
-            ip = x_forwarded_for.split(",")[0]
-            print(f"{ip=}")
-            logger.info(
-                f"x-real-ip ({request.headers.get('x-real-ip')}) is requesting."
-            )
+            ip = get_client_ip(request)
+            # print(f"{ip=}")
             self.validate_request_host(ip)
 
         _url_path = request.url.path
