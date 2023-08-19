@@ -103,6 +103,7 @@ def setting_log(
     openai_route_prefix=None,
     log_name="openai_forward",
     multi_process=True,
+    **kwargs,
 ):
     """
     Configures the logging settings for the application.
@@ -118,8 +119,9 @@ def setting_log(
         logging.getLogger(name).handlers = []
         logging.getLogger(name).propagate = True
 
+    print_chat = kwargs.get('print_chat')
     config_handlers = [
-        {"sink": sys.stdout, "level": "DEBUG"},
+        {"sink": sys.stdout, "level": "INFO" if print_chat else "DEBUG"},
     ]
 
     def filter_func(_prefix, _postfix, record):

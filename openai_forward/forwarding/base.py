@@ -204,12 +204,17 @@ class OpenaiBase(ForwardingBase):
             None
         """
         try:
-            if LOG_CHAT and request_method == "POST":
+            if (LOG_CHAT or print_chat) and request_method == "POST":
                 if route_path == CHAT_COMPLETION_ROUTE:
                     target_info = self.chatsaver.parse_iter_bytes(byte_list)
-                    self.chatsaver.log_chat(
-                        {target_info["role"]: target_info["content"], "uid": uid}
-                    )
+                    if LOG_CHAT:
+                        self.chatsaver.log_chat(
+                            {target_info["role"]: target_info["content"], "uid": uid}
+                        )
+                    if print_chat:
+                        self.chatsaver.print_chat_info(
+                            {target_info["role"]: target_info["content"], "uid": uid}
+                        )
 
                 elif route_path.startswith("/v1/audio/"):
                     self.whispersaver.add_log(b"".join([_ for _ in byte_list]))
@@ -237,13 +242,16 @@ class OpenaiBase(ForwardingBase):
             - If `LOG_CHAT` is True and the request method is "POST", the chat payload will be logged.
         """
         uid = None
-        if LOG_CHAT and request.method == "POST":
+        if (LOG_CHAT or print_chat) and request.method == "POST":
             try:
                 if url_path == CHAT_COMPLETION_ROUTE:
                     chat_info = await self.chatsaver.parse_payload(request)
                     uid = chat_info.get("uid")
                     if chat_info:
-                        self.chatsaver.log_chat(chat_info)
+                        if LOG_CHAT:
+                            self.chatsaver.log_chat(chat_info)
+                        if print_chat:
+                            self.chatsaver.print_chat_info(chat_info)
 
                 elif url_path.startswith("/v1/audio/"):
                     uid = uuid.uuid4().__str__()

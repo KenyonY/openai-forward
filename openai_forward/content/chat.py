@@ -8,6 +8,7 @@ from loguru import logger
 from orjson import JSONDecodeError
 
 from ..helper import get_client_ip
+from ._type import print
 from .decode import parse_to_lines
 
 
@@ -89,3 +90,20 @@ class ChatSaver:
 
     def log_chat(self, chat_info: dict):
         self.logger.debug(f"{chat_info}")
+
+    @staticmethod
+    def print_chat_info(chat_info: dict):
+        messages = chat_info.get("messages")
+        if messages:
+            for msg in messages:
+                for key, value in msg.items():
+                    print(f"{key}: {value}", role=key)
+            print(
+                f"{chat_info.get('forwarded-for')}@{chat_info.get('model')} uid: {chat_info.get('uid')}",
+                role='other',
+            )
+        else:
+            assistant = chat_info.get("assistant")
+            if assistant:
+                print(f"assistant: {assistant}", role='assistant')
+                print(f'uid: {chat_info.get("uid")}')

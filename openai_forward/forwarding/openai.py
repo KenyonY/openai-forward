@@ -1,7 +1,7 @@
 import time
 
 from .base import ChatSaver, OpenaiBase, WhisperSaver
-from .settings import LOG_CHAT
+from .settings import LOG_CHAT, print_chat
 
 
 class OpenaiForwarding(OpenaiBase):
@@ -10,7 +10,7 @@ class OpenaiForwarding(OpenaiBase):
 
         self.BASE_URL = base_url
         self.ROUTE_PREFIX = route_prefix
-        if LOG_CHAT:
+        if LOG_CHAT or print_chat:
             self.chatsaver = ChatSaver(route_prefix)
             self.whispersaver = WhisperSaver(route_prefix)
         self.client = httpx.AsyncClient(
