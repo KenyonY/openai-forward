@@ -16,13 +16,11 @@ class OpenaiForwarding(OpenaiBase):
         self.client = httpx.AsyncClient(
             base_url=self.BASE_URL, proxies=proxy, http1=True, http2=False
         )
-        self.token_counts = 0
-        self.token_limit_dict = {'time': time.time(), 'count': 0}
 
 
-def get_fwd_openai_style_objs():
+def fwd_openai_objs():
     """
-    Generate OPENAI route style forwarding objects.
+    Generate OPENAI api style forwarding objects.
 
     Returns:
         fwd_objs (list): A list of OpenaiForwarding objects.

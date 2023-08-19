@@ -12,7 +12,7 @@ class AnyForwarding(ForwardingBase):
         )
 
 
-def get_fwd_anything_objs():
+def fwd_anything_objs():
     """
     Generate extra forwarding objects.
 

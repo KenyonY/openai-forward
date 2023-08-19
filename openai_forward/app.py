@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, status
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
-from .forwarding import get_fwd_anything_objs, get_fwd_openai_style_objs
+from .forwarding import fwd_anything_objs, fwd_openai_objs
 from .forwarding.settings import (
     RATE_LIMIT_STRATEGY,
     dynamic_rate_limit,
@@ -34,5 +34,5 @@ add_route = lambda obj: app.add_route(
     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH", "TRACE"],
 )
 
-[add_route(obj) for obj in get_fwd_openai_style_objs()]
-[add_route(obj) for obj in get_fwd_anything_objs()]
+[add_route(obj) for obj in fwd_openai_objs()]
+[add_route(obj) for obj in fwd_anything_objs()]

@@ -1,5 +1,3 @@
-import time
-
 import openai
 from rich import print
 from sparrow import yaml_load
