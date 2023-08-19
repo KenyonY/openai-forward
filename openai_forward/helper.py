@@ -170,7 +170,7 @@ def get_matches(messages: List[Dict], assistants: List[Dict]):
 
     cvt = lambda msg, ass: {
         "datetime": msg.get('datetime'),
-        "forwarded-for": msg.get("forwarded-for"),
+        "ip": msg.get("ip"),
         "model": msg.get("model"),
         "messages": msg.get("messages"),
         "assistant": ass.get("assistant"),

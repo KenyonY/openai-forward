@@ -7,6 +7,7 @@ from .forwarding.settings import (
     RATE_LIMIT_STRATEGY,
     dynamic_rate_limit,
     get_limiter_key,
+    show_startup,
 )
 
 limiter = Limiter(key_func=get_limiter_key, strategy=RATE_LIMIT_STRATEGY)
@@ -36,3 +37,5 @@ add_route = lambda obj: app.add_route(
 
 [add_route(obj) for obj in fwd_openai_objs()]
 [add_route(obj) for obj in fwd_anything_objs()]
+
+show_startup()

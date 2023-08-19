@@ -44,30 +44,6 @@ PROXY = os.environ.get("PROXY", "").strip() or None
 if PROXY:
     additional_start_info["proxy"] = PROXY
 
-styles = itertools.cycle(
-    ["#7CD9FF", "#BDADFF", "#9EFFE3", "#f1b8e4", "#F5A88E", "#BBCA89"]
-)
-for base_url, route_prefix in zip(OPENAI_BASE_URL, OPENAI_ROUTE_PREFIX):
-    print_startup_info(
-        base_url,
-        route_prefix,
-        OPENAI_API_KEY,
-        FWD_KEY,
-        LOG_CHAT,
-        style=next(styles),
-        **additional_start_info,
-    )
-for base_url, route_prefix in zip(EXTRA_BASE_URL, EXTRA_ROUTE_PREFIX):
-    print_startup_info(
-        base_url,
-        route_prefix,
-        "\\",
-        "\\",
-        LOG_CHAT,
-        style=next(styles),
-        **additional_start_info,
-    )
-
 GLOBAL_RATE_LIMIT = os.environ.get("GLOBAL_RATE_LIMIT", "fixed-window").strip() or None
 RATE_LIMIT_STRATEGY = os.environ.get("RATE_LIMIT_STRATEGY", "").strip() or None
 route_rate_limit_conf = env2dict('ROUTE_RATE_LIMIT')
@@ -95,10 +71,37 @@ if TOKEN_RATE_LIMIT:
 else:
     TOKEN_INTERVAL = 0
 
-print_rate_limit_info(
-    route_rate_limit_conf,
-    strategy=RATE_LIMIT_STRATEGY,
-    global_rate_limit=GLOBAL_RATE_LIMIT if GLOBAL_RATE_LIMIT else 'inf',
-    token_rate_limit=TOKEN_RATE_LIMIT if TOKEN_RATE_LIMIT else 'inf',
-    token_interval_time=f"{TOKEN_INTERVAL:.4f}s",
+styles = itertools.cycle(
+    ["#7CD9FF", "#BDADFF", "#9EFFE3", "#f1b8e4", "#F5A88E", "#BBCA89"]
 )
+
+
+def show_startup():
+    for base_url, route_prefix in zip(OPENAI_BASE_URL, OPENAI_ROUTE_PREFIX):
+        print_startup_info(
+            base_url,
+            route_prefix,
+            OPENAI_API_KEY,
+            FWD_KEY,
+            LOG_CHAT,
+            style=next(styles),
+            **additional_start_info,
+        )
+    for base_url, route_prefix in zip(EXTRA_BASE_URL, EXTRA_ROUTE_PREFIX):
+        print_startup_info(
+            base_url,
+            route_prefix,
+            "\\",
+            "\\",
+            LOG_CHAT,
+            style=next(styles),
+            **additional_start_info,
+        )
+
+    print_rate_limit_info(
+        route_rate_limit_conf,
+        strategy=RATE_LIMIT_STRATEGY,
+        global_rate_limit=GLOBAL_RATE_LIMIT if GLOBAL_RATE_LIMIT else 'inf',
+        token_rate_limit=TOKEN_RATE_LIMIT if TOKEN_RATE_LIMIT else 'inf',
+        token_interval_time=f"{TOKEN_INTERVAL:.4f}s",
+    )
