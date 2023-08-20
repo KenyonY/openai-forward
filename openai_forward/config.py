@@ -10,9 +10,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 
-def print_startup_info(
-    base_url, route_prefix, api_key, fwd_key, log_chat, /, style, **kwargs
-):
+def print_startup_info(base_url, route_prefix, api_key, fwd_key, /, style, **kwargs):
     """
     Prints the startup information of the application.
     """
@@ -43,9 +41,6 @@ def print_startup_info(
             'value': str(fwd_key),
             'style': "#62E883" if fwd_key or not api_key else "red",
         },
-        "Log chat": {
-            'value': str(log_chat),
-        },
     }
     table.add_column("", justify='left', width=10)
     table.add_column("", justify='left')
@@ -57,13 +52,21 @@ def print_startup_info(
     print(Panel(table, title="🤗 openai-forward is ready to serve! ", expand=False))
 
 
-def print_rate_limit_info(rate_limit: dict, strategy: str, **kwargs):
+def print_rate_limit_info(
+    strategy: str,
+    global_req_rate_limit: str,
+    req_rate_limit: dict,
+    token_rate_limit: dict,
+    **kwargs,
+):
     """
     Print rate limit information.
 
     Args:
-        rate_limit (dict): A dictionary containing route rate limit.
         strategy (str): The strategy used for rate limiting.
+        global_req_rate_limit (str): The global request rate limit.
+        req_rate_limit (dict): A dictionary of request rate limit.
+        token_rate_limit (dict): A dictionary of token rate limit.
         **kwargs: Other limits info.
 
     Returns:
@@ -73,10 +76,21 @@ def print_rate_limit_info(rate_limit: dict, strategy: str, **kwargs):
     table.add_column("")
     table.add_column("", justify='left')
     table.add_row("strategy", strategy, style='#7CD9FF')
-    for key, value in rate_limit.items():
-        table.add_row(key, str(value), style='#C5FF95')
+
+    table.add_row(
+        "global rate limit", f"{global_req_rate_limit} (req)", style='#C5FF95'
+    )
+    for key, value in req_rate_limit.items():
+        table.add_row(key, f"{value} (req)", style='#C5FF95')
+
+    for key, value in token_rate_limit.items():
+        if isinstance(value, float):
+            value = f"{value:.4f} s/token"
+        table.add_row(key, f"{value} (token)", style='#C5FF95')
+
     for key, value in kwargs.items():
         table.add_row(key, str(value), style='#C5FF95')
+
     print(Panel(table, title="⏱️ Rate Limit configuration", expand=False))
 
 

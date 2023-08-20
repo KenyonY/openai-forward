@@ -15,3 +15,10 @@ console = Console()
 def print(text="", role: str = None, end="\n", **kwargs):
     style = RoleColor.get(role, None)
     console.print(text, style=style, end=end, **kwargs)
+
+
+def markdown_print(text="", role: str = None, end="\n", **kwargs):
+    from rich.markdown import Markdown
+
+    style = RoleColor.get(role, None)
+    console.print(Markdown(text), style=style, end=end, **kwargs)

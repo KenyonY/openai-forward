@@ -32,6 +32,10 @@ LOG_CHAT = os.environ.get("LOG_CHAT", "False").strip().lower() == "true"
 print_chat = os.environ.get("PRINT_CHAT", "False").strip().lower() == "true"
 if LOG_CHAT:
     setting_log(openai_route_prefix=OPENAI_ROUTE_PREFIX, print_chat=print_chat)
+    additional_start_info["log_chat"] = LOG_CHAT
+
+if print_chat:
+    additional_start_info["print_chat"] = True
 
 IP_WHITELIST = env2list("IP_WHITELIST", sep=ENV_VAR_SEP)
 IP_BLACKLIST = env2list("IP_BLACKLIST", sep=ENV_VAR_SEP)
@@ -46,7 +50,7 @@ if PROXY:
 
 GLOBAL_RATE_LIMIT = os.environ.get("GLOBAL_RATE_LIMIT", "fixed-window").strip() or None
 RATE_LIMIT_STRATEGY = os.environ.get("RATE_LIMIT_STRATEGY", "").strip() or None
-route_rate_limit_conf = env2dict('ROUTE_RATE_LIMIT')
+req_rate_limit_dict = env2dict('REQ_RATE_LIMIT')
 
 
 def get_limiter_key(request: Request):
@@ -55,21 +59,33 @@ def get_limiter_key(request: Request):
     return key
 
 
-def dynamic_rate_limit(key: str):
-    for route in route_rate_limit_conf:
+def dynamic_request_rate_limit(key: str):
+    for route in req_rate_limit_dict:
         if key.startswith(route):
-            return route_rate_limit_conf[route]
+            return req_rate_limit_dict[route]
     return GLOBAL_RATE_LIMIT
 
 
-TOKEN_RATE_LIMIT = os.environ.get("TOKEN_RATE_LIMIT", "").strip()
-if TOKEN_RATE_LIMIT:
-    rate_limit_item = limits.parse(TOKEN_RATE_LIMIT)
-    TOKEN_INTERVAL = (
-        rate_limit_item.multiples * rate_limit_item.GRANULARITY.seconds
-    ) / rate_limit_item.amount
-else:
-    TOKEN_INTERVAL = 0
+# TOKEN_RATE_LIMIT = os.environ.get("TOKEN_RATE_LIMIT", "").strip()
+
+
+def cvt_token_rate_to_interval(token_rate_limit: str):
+    if token_rate_limit:
+        rate_limit_item = limits.parse(token_rate_limit)
+        token_interval = (
+            rate_limit_item.multiples * rate_limit_item.GRANULARITY.seconds
+        ) / rate_limit_item.amount
+    else:
+        token_interval = 0
+    return token_interval
+
+
+token_rate_limit_conf = env2dict(
+    "TOKEN_RATE_LIMIT"
+)  # {"/v1/chat/completions": TOKEN_INTERVAL}
+token_interval_conf = {}
+for route, rate_limit in token_rate_limit_conf.items():
+    token_interval_conf[route] = cvt_token_rate_to_interval(rate_limit)
 
 styles = itertools.cycle(
     ["#7CD9FF", "#BDADFF", "#9EFFE3", "#f1b8e4", "#F5A88E", "#BBCA89"]
@@ -83,7 +99,6 @@ def show_startup():
             route_prefix,
             OPENAI_API_KEY,
             FWD_KEY,
-            LOG_CHAT,
             style=next(styles),
             **additional_start_info,
         )
@@ -93,15 +108,13 @@ def show_startup():
             route_prefix,
             "\\",
             "\\",
-            LOG_CHAT,
             style=next(styles),
             **additional_start_info,
         )
 
     print_rate_limit_info(
-        route_rate_limit_conf,
-        strategy=RATE_LIMIT_STRATEGY,
-        global_rate_limit=GLOBAL_RATE_LIMIT if GLOBAL_RATE_LIMIT else 'inf',
-        token_rate_limit=TOKEN_RATE_LIMIT if TOKEN_RATE_LIMIT else 'inf',
-        token_interval_time=f"{TOKEN_INTERVAL:.4f}s",
+        RATE_LIMIT_STRATEGY,
+        GLOBAL_RATE_LIMIT if GLOBAL_RATE_LIMIT else 'inf',
+        req_rate_limit_dict,
+        token_rate_limit_conf,
     )

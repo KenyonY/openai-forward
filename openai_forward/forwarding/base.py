@@ -1,5 +1,3 @@
-import asyncio
-import time
 import traceback
 import uuid
 from itertools import cycle
@@ -12,7 +10,7 @@ from fastapi.responses import StreamingResponse
 from loguru import logger
 
 from ..content import ChatSaver, WhisperSaver
-from ..helper import async_retry
+from ..decorators import async_retry, token_rate_limit_decorator
 from .settings import *
 
 
@@ -53,6 +51,7 @@ class ForwardingBase:
             )
 
     @staticmethod
+    @token_rate_limit_decorator(token_interval_conf)
     async def aiter_bytes(r: httpx.Response) -> AsyncGenerator[bytes, Any]:
         async for chunk in r.aiter_bytes():
             yield chunk
@@ -140,7 +139,7 @@ class ForwardingBase:
             # print(f"{ip=}")
             self.validate_request_host(ip)
 
-        _url_path = request.url.path
+        _url_path = f"{request.scope.get('root_path')}{request.scope.get('path')}"
         prefix_index = 0 if self.ROUTE_PREFIX == '/' else len(self.ROUTE_PREFIX)
 
         url_path = _url_path[prefix_index:]
@@ -265,7 +264,8 @@ class OpenaiBase(ForwardingBase):
                 )
         return uid
 
-    async def openai_aiter_bytes(
+    @token_rate_limit_decorator(token_interval_conf)
+    async def aiter_bytes(
         self, r: httpx.Response, request: Request, route_path: str, uid: str
     ):
         """
@@ -281,16 +281,8 @@ class OpenaiBase(ForwardingBase):
             A generator that yields each chunk of bytes from the response.
         """
         byte_list = []
-        start_time = time.perf_counter()
         async for chunk in r.aiter_bytes():
             byte_list.append(chunk)
-            if TOKEN_INTERVAL > 0:
-                current_time = time.perf_counter()
-                delta = current_time - start_time
-                delay = TOKEN_INTERVAL - delta
-                if delay > 0:
-                    await asyncio.sleep(delay)
-                start_time = time.perf_counter()
             yield chunk
 
         await r.aclose()
@@ -330,7 +322,7 @@ class OpenaiBase(ForwardingBase):
         r = await self.try_send(client_config, request)
 
         return StreamingResponse(
-            self.openai_aiter_bytes(r, request, url_path, uid),
+            self.aiter_bytes(r, request, url_path, uid),
             status_code=r.status_code,
             media_type=r.headers.get("content-type"),
         )
