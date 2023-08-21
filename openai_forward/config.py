@@ -75,7 +75,8 @@ def print_rate_limit_info(
     table = Table(title="", box=None, width=50)
     table.add_column("")
     table.add_column("", justify='left')
-    table.add_row("strategy", strategy, style='#7CD9FF')
+    if strategy:
+        table.add_row("strategy", strategy, style='#7CD9FF')
 
     table.add_row(
         "global rate limit", f"{global_req_rate_limit} (req)", style='#C5FF95'

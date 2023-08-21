@@ -66,9 +66,6 @@ def dynamic_request_rate_limit(key: str):
     return GLOBAL_RATE_LIMIT
 
 
-# TOKEN_RATE_LIMIT = os.environ.get("TOKEN_RATE_LIMIT", "").strip()
-
-
 def cvt_token_rate_to_interval(token_rate_limit: str):
     if token_rate_limit:
         rate_limit_item = limits.parse(token_rate_limit)
@@ -80,9 +77,7 @@ def cvt_token_rate_to_interval(token_rate_limit: str):
     return token_interval
 
 
-token_rate_limit_conf = env2dict(
-    "TOKEN_RATE_LIMIT"
-)  # {"/v1/chat/completions": TOKEN_INTERVAL}
+token_rate_limit_conf = env2dict("TOKEN_RATE_LIMIT")
 token_interval_conf = {}
 for route, rate_limit in token_rate_limit_conf.items():
     token_interval_conf[route] = cvt_token_rate_to_interval(rate_limit)
