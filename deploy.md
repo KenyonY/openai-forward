@@ -51,7 +51,7 @@ pip install openai-forward
 aifd run   
 ```
 服务就搭建完成了。  
-配置见[配置](README.md#配置选项)
+配置见[配置](README.md#配置)
 
 ### 服务调用
 
@@ -147,7 +147,6 @@ Render的免费计划: 每月750小时免费实例时间(意味着单个实例�
 
 注： Railway 每月提供 $5.0和500小时执行时间的免费计划。这意味着单个免费用户每个月只能使用大约21天
 
-> https://railway.openai-forward.com
 
 <a>
    <img src="https://raw.githubusercontent.com/beidongjiedeguang/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">
@@ -166,8 +165,6 @@ Render的免费计划: 每月750小时免费实例时间(意味着单个实例�
    也可先fork本仓库，再手动在vercel操作界面import项目
 2. [绑定自定义域名](https://vercel.com/docs/concepts/projects/domains/add-a-domain)：Vercel 分配的DNS在某些区域被污染了导致国内无法访问，绑定自定义域名即可直连。
 
-
-> https://vercel.openai-forward.com  
 
 
 <a>
@@ -195,6 +192,4 @@ stateDiagram-v2
 ```
 这种部署方式轻便简洁，支持流式转发. 不过目前[_worker.js](_worker.js)这个简单脚本仅提供转发服务, 不支持额外功能。
 
-> https://cloudflare.worker.openai-forward.com  
-> https://cloudflare.page.openai-forward.com  
 > https://openai-forward-9ak.pages.dev (这是cloudflare pages自动分配的域名，目前可以直接访问)

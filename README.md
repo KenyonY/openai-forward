@@ -57,7 +57,7 @@ OpenAI-Forward是大模型与用户层之间的一道转发服务，
    <img src="https://raw.githubusercontent.com/beidongjiedeguang/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">
 </a>
 
-### 特点
+## 特点
 
 OpenAI-Forward支持以下功能:
 
@@ -74,8 +74,8 @@ OpenAI-Forward支持以下功能:
 > https://api.openai-forward.com  
 > https://render.openai-forward.com
 
-<font size=3>
-注：本项目中提供的所有代理服务仅供学习使用，请勿用作其它用途。
+<font size=2 >
+注：这里提供的代理服务仅供学习使用，请勿用作其它用途。
 </font>
 
 
@@ -205,7 +205,8 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 
 以LocalAI为例：  
 假设部署的LocalAI服务运行在 `http://localhost:8080`，
-那么接下来只需修改.env配置中`OPENAI_BASE_URL=http://localhost:8080` 就可以完成对LocalAI的代理。
+那么接下来只需修改环境变量(或[.env](.env)文件)中`OPENAI_BASE_URL=http://localhost:8080` 就可以完成对LocalAI的代理，
+然后即可在`aifd`的默认服务端口`http://localhost:8000`中访问LocalAI.
 
 (待补充)
 
@@ -214,6 +215,11 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 例如可通过 [claude-to-chatgpt](https://github.com/jtsang4/claude-to-chatgpt)
 将claude的api格式对齐为openai的格式，然后使用`openai-forward`进行代理。
 (待补充)
+
+<a>
+   <img src="https://raw.githubusercontent.com/beidongjiedeguang/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">
+</a>
+
 
 ## 配置
 
