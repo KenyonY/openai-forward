@@ -1,5 +1,3 @@
-import asyncio
-import time
 import traceback
 import uuid
 from itertools import cycle
@@ -12,7 +10,7 @@ from fastapi.responses import StreamingResponse
 from loguru import logger
 
 from ..content import ChatSaver, WhisperSaver
-from ..helper import async_retry
+from ..decorators import async_retry, token_rate_limit_decorator
 from .settings import *
 
 
@@ -53,6 +51,7 @@ class ForwardingBase:
             )
 
     @staticmethod
+    @token_rate_limit_decorator(token_interval_conf)
     async def aiter_bytes(r: httpx.Response) -> AsyncGenerator[bytes, Any]:
         async for chunk in r.aiter_bytes():
             yield chunk
@@ -140,7 +139,7 @@ class ForwardingBase:
             # print(f"{ip=}")
             self.validate_request_host(ip)
 
-        _url_path = request.url.path
+        _url_path = f"{request.scope.get('root_path')}{request.scope.get('path')}"
         prefix_index = 0 if self.ROUTE_PREFIX == '/' else len(self.ROUTE_PREFIX)
 
         url_path = _url_path[prefix_index:]
@@ -204,12 +203,17 @@ class OpenaiBase(ForwardingBase):
             None
         """
         try:
-            if LOG_CHAT and request_method == "POST":
+            if (LOG_CHAT or print_chat) and request_method == "POST":
                 if route_path == CHAT_COMPLETION_ROUTE:
                     target_info = self.chatsaver.parse_iter_bytes(byte_list)
-                    self.chatsaver.log_chat(
-                        {target_info["role"]: target_info["content"], "uid": uid}
-                    )
+                    if LOG_CHAT:
+                        self.chatsaver.log_chat(
+                            {target_info["role"]: target_info["content"], "uid": uid}
+                        )
+                    if print_chat:
+                        self.chatsaver.print_chat_info(
+                            {target_info["role"]: target_info["content"], "uid": uid}
+                        )
 
                 elif route_path.startswith("/v1/audio/"):
                     self.whispersaver.add_log(b"".join([_ for _ in byte_list]))
@@ -233,17 +237,18 @@ class OpenaiBase(ForwardingBase):
         Raises:
             Suppress all errors.
 
-        Notes:
-            - If `LOG_CHAT` is True and the request method is "POST", the chat payload will be logged.
         """
         uid = None
-        if LOG_CHAT and request.method == "POST":
+        if (LOG_CHAT or print_chat) and request.method == "POST":
             try:
                 if url_path == CHAT_COMPLETION_ROUTE:
                     chat_info = await self.chatsaver.parse_payload(request)
                     uid = chat_info.get("uid")
                     if chat_info:
-                        self.chatsaver.log_chat(chat_info)
+                        if LOG_CHAT:
+                            self.chatsaver.log_chat(chat_info)
+                        if print_chat:
+                            self.chatsaver.print_chat_info(chat_info)
 
                 elif url_path.startswith("/v1/audio/"):
                     uid = uuid.uuid4().__str__()
@@ -257,7 +262,8 @@ class OpenaiBase(ForwardingBase):
                 )
         return uid
 
-    async def openai_aiter_bytes(
+    @token_rate_limit_decorator(token_interval_conf)
+    async def aiter_bytes(
         self, r: httpx.Response, request: Request, route_path: str, uid: str
     ):
         """
@@ -273,16 +279,8 @@ class OpenaiBase(ForwardingBase):
             A generator that yields each chunk of bytes from the response.
         """
         byte_list = []
-        start_time = time.perf_counter()
         async for chunk in r.aiter_bytes():
             byte_list.append(chunk)
-            if TOKEN_INTERVAL > 0:
-                current_time = time.perf_counter()
-                delta = current_time - start_time
-                delay = TOKEN_INTERVAL - delta
-                if delay > 0:
-                    await asyncio.sleep(delay)
-                start_time = time.perf_counter()
             yield chunk
 
         await r.aclose()
@@ -322,7 +320,7 @@ class OpenaiBase(ForwardingBase):
         r = await self.try_send(client_config, request)
 
         return StreamingResponse(
-            self.openai_aiter_bytes(r, request, url_path, uid),
+            self.aiter_bytes(r, request, url_path, uid),
             status_code=r.status_code,
             media_type=r.headers.get("content-type"),
         )

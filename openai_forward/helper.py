@@ -1,9 +1,6 @@
 import ast
-import asyncio
 import inspect
 import os
-import time
-from functools import wraps
 from pathlib import Path
 from typing import Dict, List, Union
 
@@ -44,70 +41,6 @@ def ls(_dir, *patterns, concat='extend', recursive=False):
         else:
             path_list.append(glob(os.path.join(_dir, pattern), recursive=recursive))
     return path_list
-
-
-def retry(max_retries=3, delay=1, backoff=2, exceptions=(Exception,)):
-    """
-    Retry decorator.
-
-    Parameters:
-    - max_retries: Maximum number of retries.
-    - delay: Initial delay in seconds.
-    - backoff: Multiplier for delay after each retry.
-    - exceptions: Exceptions to catch and retry on, as a tuple.
-
-    """
-
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            retries = 0
-            current_delay = delay
-            while retries < max_retries:
-                try:
-                    return func(*args, **kwargs)
-                except exceptions as e:
-                    retries += 1
-                    if retries >= max_retries:
-                        raise
-                    time.sleep(current_delay)
-                    current_delay *= backoff
-
-        return wrapper
-
-    return decorator
-
-
-def async_retry(max_retries=3, delay=1, backoff=2, exceptions=(Exception,)):
-    """
-    Retry decorator for asynchronous functions.
-
-    Parameters:
-    - max_retries: Maximum number of retries.
-    - delay: Initial delay in seconds.
-    - backoff: Multiplier for delay after each retry.
-    - exceptions: Exceptions to catch and retry on, as a tuple.
-
-    """
-
-    def decorator(func):
-        @wraps(func)
-        async def wrapper(*args, **kwargs):
-            retries = 0
-            current_delay = delay
-            while retries < max_retries:
-                try:
-                    return await func(*args, **kwargs)
-                except exceptions as e:
-                    retries += 1
-                    if retries >= max_retries:
-                        raise
-                    await asyncio.sleep(current_delay)
-                    current_delay *= backoff
-
-        return wrapper
-
-    return decorator
 
 
 def json_load(filepath: str, rel=False, mode="rb"):
@@ -170,7 +103,7 @@ def get_matches(messages: List[Dict], assistants: List[Dict]):
 
     cvt = lambda msg, ass: {
         "datetime": msg.get('datetime'),
-        "forwarded-for": msg.get("forwarded-for"),
+        "ip": msg.get("ip") or msg.get('forwarded-for'),
         "model": msg.get("model"),
         "messages": msg.get("messages"),
         "assistant": ass.get("assistant"),

@@ -4,7 +4,8 @@ import os
 import limits
 from fastapi import Request
 
-from ..config import print_rate_limit_info, print_startup_info, setting_log
+from ..cli import print_rate_limit_info, print_startup_info
+from ..config import setting_log
 from ..helper import env2dict, env2list, format_route_prefix, get_client_ip
 
 additional_start_info = {}
@@ -29,8 +30,13 @@ EXTRA_ROUTE_PREFIX = [
 ]
 
 LOG_CHAT = os.environ.get("LOG_CHAT", "False").strip().lower() == "true"
+print_chat = os.environ.get("PRINT_CHAT", "False").strip().lower() == "true"
 if LOG_CHAT:
-    setting_log(openai_route_prefix=OPENAI_ROUTE_PREFIX)
+    setting_log(openai_route_prefix=OPENAI_ROUTE_PREFIX, print_chat=print_chat)
+    additional_start_info["log_chat"] = LOG_CHAT
+
+if print_chat:
+    additional_start_info["print_chat"] = True
 
 IP_WHITELIST = env2list("IP_WHITELIST", sep=ENV_VAR_SEP)
 IP_BLACKLIST = env2list("IP_BLACKLIST", sep=ENV_VAR_SEP)
@@ -43,33 +49,11 @@ PROXY = os.environ.get("PROXY", "").strip() or None
 if PROXY:
     additional_start_info["proxy"] = PROXY
 
-styles = itertools.cycle(
-    ["#7CD9FF", "#BDADFF", "#9EFFE3", "#f1b8e4", "#F5A88E", "#BBCA89"]
+GLOBAL_RATE_LIMIT = os.environ.get("GLOBAL_RATE_LIMIT", "").strip() or None
+RATE_LIMIT_STRATEGY = (
+    os.environ.get("RATE_LIMIT_STRATEGY", "fixed-window").strip() or "fixed-window"
 )
-for base_url, route_prefix in zip(OPENAI_BASE_URL, OPENAI_ROUTE_PREFIX):
-    print_startup_info(
-        base_url,
-        route_prefix,
-        OPENAI_API_KEY,
-        FWD_KEY,
-        LOG_CHAT,
-        style=next(styles),
-        **additional_start_info,
-    )
-for base_url, route_prefix in zip(EXTRA_BASE_URL, EXTRA_ROUTE_PREFIX):
-    print_startup_info(
-        base_url,
-        route_prefix,
-        "\\",
-        "\\",
-        LOG_CHAT,
-        style=next(styles),
-        **additional_start_info,
-    )
-
-GLOBAL_RATE_LIMIT = os.environ.get("GLOBAL_RATE_LIMIT", "fixed-window").strip() or None
-RATE_LIMIT_STRATEGY = os.environ.get("RATE_LIMIT_STRATEGY", "").strip() or None
-route_rate_limit_conf = env2dict('ROUTE_RATE_LIMIT')
+req_rate_limit_dict = env2dict('REQ_RATE_LIMIT')
 
 
 def get_limiter_key(request: Request):
@@ -78,26 +62,57 @@ def get_limiter_key(request: Request):
     return key
 
 
-def dynamic_rate_limit(key: str):
-    for route in route_rate_limit_conf:
+def dynamic_request_rate_limit(key: str):
+    for route in req_rate_limit_dict:
         if key.startswith(route):
-            return route_rate_limit_conf[route]
+            return req_rate_limit_dict[route]
     return GLOBAL_RATE_LIMIT
 
 
-TOKEN_RATE_LIMIT = os.environ.get("TOKEN_RATE_LIMIT", "").strip()
-if TOKEN_RATE_LIMIT:
-    rate_limit_item = limits.parse(TOKEN_RATE_LIMIT)
-    TOKEN_INTERVAL = (
-        rate_limit_item.multiples * rate_limit_item.GRANULARITY.seconds
-    ) / rate_limit_item.amount
-else:
-    TOKEN_INTERVAL = 0
+def cvt_token_rate_to_interval(token_rate_limit: str):
+    if token_rate_limit:
+        rate_limit_item = limits.parse(token_rate_limit)
+        token_interval = (
+            rate_limit_item.multiples * rate_limit_item.GRANULARITY.seconds
+        ) / rate_limit_item.amount
+    else:
+        token_interval = 0
+    return token_interval
 
-print_rate_limit_info(
-    route_rate_limit_conf,
-    strategy=RATE_LIMIT_STRATEGY,
-    global_rate_limit=GLOBAL_RATE_LIMIT if GLOBAL_RATE_LIMIT else 'inf',
-    token_rate_limit=TOKEN_RATE_LIMIT if TOKEN_RATE_LIMIT else 'inf',
-    token_interval_time=f"{TOKEN_INTERVAL:.4f}s",
+
+token_rate_limit_conf = env2dict("TOKEN_RATE_LIMIT")
+token_interval_conf = {}
+for route, rate_limit in token_rate_limit_conf.items():
+    token_interval_conf[route] = cvt_token_rate_to_interval(rate_limit)
+
+styles = itertools.cycle(
+    ["#7CD9FF", "#BDADFF", "#9EFFE3", "#f1b8e4", "#F5A88E", "#BBCA89"]
 )
+
+
+def show_startup():
+    for base_url, route_prefix in zip(OPENAI_BASE_URL, OPENAI_ROUTE_PREFIX):
+        print_startup_info(
+            base_url,
+            route_prefix,
+            OPENAI_API_KEY,
+            FWD_KEY,
+            style=next(styles),
+            **additional_start_info,
+        )
+    for base_url, route_prefix in zip(EXTRA_BASE_URL, EXTRA_ROUTE_PREFIX):
+        print_startup_info(
+            base_url,
+            route_prefix,
+            "\\",
+            "\\",
+            style=next(styles),
+            **additional_start_info,
+        )
+
+    print_rate_limit_info(
+        RATE_LIMIT_STRATEGY,
+        GLOBAL_RATE_LIMIT,
+        req_rate_limit_dict,
+        token_rate_limit_conf,
+    )

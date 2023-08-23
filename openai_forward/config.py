@@ -5,79 +5,6 @@ import sys
 import time
 
 from loguru import logger
-from rich import print
-from rich.panel import Panel
-from rich.table import Table
-
-
-def print_startup_info(
-    base_url, route_prefix, api_key, fwd_key, log_chat, /, style, **kwargs
-):
-    """
-    Prints the startup information of the application.
-    """
-    try:
-        from dotenv import load_dotenv
-
-        load_dotenv(".env")
-    except Exception:
-        ...
-    route_prefix = route_prefix or "/"
-    if not isinstance(api_key, str):
-        api_key = True if len(api_key) else False
-    if not isinstance(fwd_key, str):
-        fwd_key = True if len(fwd_key) else False
-    table = Table(title="", box=None, width=50)
-
-    matrcs = {
-        "base url": {
-            'value': base_url,
-        },
-        "route prefix": {
-            'value': route_prefix,
-        },
-        "api keys": {
-            'value': str(api_key),
-        },
-        "forward keys": {
-            'value': str(fwd_key),
-            'style': "#62E883" if fwd_key or not api_key else "red",
-        },
-        "Log chat": {
-            'value': str(log_chat),
-        },
-    }
-    table.add_column("", justify='left', width=10)
-    table.add_column("", justify='left')
-    for key, value in matrcs.items():
-        table.add_row(key, value['value'], style=value.get('style', style))
-    for key, value in kwargs.items():
-        table.add_row(key, str(value), style=style)
-
-    print(Panel(table, title="🤗 openai-forward is ready to serve! ", expand=False))
-
-
-def print_rate_limit_info(rate_limit: dict, strategy: str, **kwargs):
-    """
-    Print rate limit information.
-
-    Args:
-        rate_limit (dict): A dictionary containing route rate limit.
-        strategy (str): The strategy used for rate limiting.
-        **kwargs: Other limits info.
-
-    Returns:
-        None
-    """
-    table = Table(title="", box=None, width=50)
-    table.add_column("")
-    table.add_column("", justify='left')
-    table.add_row("strategy", strategy, style='#7CD9FF')
-    for key, value in rate_limit.items():
-        table.add_row(key, str(value), style='#C5FF95')
-    for key, value in kwargs.items():
-        table.add_row(key, str(value), style='#C5FF95')
-    print(Panel(table, title="⏱️ Rate Limit configuration", expand=False))
 
 
 class InterceptHandler(logging.Handler):
@@ -103,6 +30,7 @@ def setting_log(
     openai_route_prefix=None,
     log_name="openai_forward",
     multi_process=True,
+    **kwargs,
 ):
     """
     Configures the logging settings for the application.
@@ -118,8 +46,9 @@ def setting_log(
         logging.getLogger(name).handlers = []
         logging.getLogger(name).propagate = True
 
+    print_chat = kwargs.get('print_chat')
     config_handlers = [
-        {"sink": sys.stdout, "level": "DEBUG"},
+        {"sink": sys.stdout, "level": "INFO" if print_chat else "DEBUG"},
     ]
 
     def filter_func(_prefix, _postfix, record):
