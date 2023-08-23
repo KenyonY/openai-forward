@@ -98,7 +98,6 @@ class ChatSaver:
             print(50 * "-", role='other')
             for msg in messages:
                 for key, value in msg.items():
-                    # print(f"{key}: {value}", role=key)
                     markdown_print(f"{key}: {value}", role=key)
             print(
                 f"{chat_info.get('ip')}@{chat_info.get('model')} uid: {chat_info.get('uid')}",
@@ -111,4 +110,4 @@ class ChatSaver:
                 print(77 * "=", role='assistant')
                 markdown_print(f"assistant: {assistant}", role='assistant')
                 print(f'uid: {chat_info.get("uid")}')
-                print(70 * "=", role='assistant')
+                print(77 * "=", role='assistant')

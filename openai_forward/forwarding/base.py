@@ -237,8 +237,6 @@ class OpenaiBase(ForwardingBase):
         Raises:
             Suppress all errors.
 
-        Notes:
-            - If `LOG_CHAT` is True and the request method is "POST", the chat payload will be logged.
         """
         uid = None
         if (LOG_CHAT or print_chat) and request.method == "POST":

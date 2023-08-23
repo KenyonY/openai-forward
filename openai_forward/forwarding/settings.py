@@ -4,7 +4,8 @@ import os
 import limits
 from fastapi import Request
 
-from ..config import print_rate_limit_info, print_startup_info, setting_log
+from ..cli import print_rate_limit_info, print_startup_info
+from ..config import setting_log
 from ..helper import env2dict, env2list, format_route_prefix, get_client_ip
 
 additional_start_info = {}
@@ -48,8 +49,10 @@ PROXY = os.environ.get("PROXY", "").strip() or None
 if PROXY:
     additional_start_info["proxy"] = PROXY
 
-GLOBAL_RATE_LIMIT = os.environ.get("GLOBAL_RATE_LIMIT", "fixed-window").strip() or None
-RATE_LIMIT_STRATEGY = os.environ.get("RATE_LIMIT_STRATEGY", "").strip() or None
+GLOBAL_RATE_LIMIT = os.environ.get("GLOBAL_RATE_LIMIT", "").strip() or None
+RATE_LIMIT_STRATEGY = (
+    os.environ.get("RATE_LIMIT_STRATEGY", "fixed-window").strip() or "fixed-window"
+)
 req_rate_limit_dict = env2dict('REQ_RATE_LIMIT')
 
 
@@ -109,7 +112,7 @@ def show_startup():
 
     print_rate_limit_info(
         RATE_LIMIT_STRATEGY,
-        GLOBAL_RATE_LIMIT if GLOBAL_RATE_LIMIT else 'inf',
+        GLOBAL_RATE_LIMIT,
         req_rate_limit_dict,
         token_rate_limit_conf,
     )
