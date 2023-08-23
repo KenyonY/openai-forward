@@ -2,7 +2,7 @@
 
 <h1 align="center">
     <br>
-    OpenAI forward
+    OpenAI Forward
     <br>
 </h1>
 <p align="center">
@@ -75,7 +75,7 @@ OpenAI-Forward支持以下功能:
 > https://render.openai-forward.com
 
 <font size=2 >
-注：这里提供的代理服务仅供学习使用，请勿用作其它用途。
+注：这里提供的代理服务仅供学习使用。
 </font>
 
 
@@ -97,7 +97,7 @@ pip install openai-forward
 ```bash
 aifd run
 ```
-如果一切正常将会看到下面的启动信息  
+如果读入了根路径的`.env`的配置, 将会看到以下启动信息
 
 ```bash
 ❯ aifd run
@@ -107,16 +107,13 @@ aifd run
 │  route prefix     /                                │
 │  api keys         False                            │
 │  forward keys     False                            │
-│  Log chat         False                            │
 ╰────────────────────────────────────────────────────╯
 ╭──────────── ⏱️ Rate Limit configuration ───────────╮
 │                                                    │
-│  strategy                   moving-window          │
-│  /healthz                   60/2minutes            │
-│  /v1/chat/completions       15/minute;200/hour     │
-│  global_rate_limit          30/minute              │
-│  token_rate_limit           50/second              │
-│  token_interval_time        0.0200s                │
+│  strategy               moving-window              │
+│  /healthz               100/2minutes (req)         │
+│  /v1/chat/completions   60/minute;600/hour (req)   │
+│  /v1/chat/completions   40/second (token)          │
 ╰────────────────────────────────────────────────────╯
 INFO:     Started server process [33811]
 INFO:     Waiting for application startup.
@@ -201,7 +198,7 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 
 与 [LocalAI](https://github.com/go-skynet/LocalAI)，
 [api-for-open-llm](https://github.com/xusenlinzy/api-for-open-llm)等
-一起使用，赋予这些服务接口的RPM限制，TPM限制，日志等能力。  
+一起使用，赋予这些服务接口的用户请求速率限制，token输出速率限制，对话日志输出等能力。  
 
 以LocalAI为例：  
 假设部署的LocalAI服务运行在 `http://localhost:8080`，
@@ -253,10 +250,10 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 | FORWARD_KEY         | 允许调用方使用该key代替openai api key，支持多个forward key, 以逗号分隔; 如果设置了OPENAI_API_KEY，而没有设置FORWARD_KEY, 则客户端调用时无需提供密钥, 此时出于安全考虑不建议FORWARD_KEY置空 |           无            |
 | EXTRA_BASE_URL      | 额外转发服务地址                                                                                                                          |           无            |
 | EXTRA_ROUTE_PREFIX  | 额外转发服务路由前缀                                                                                                                        |           无            |
-| ROUTE_RATE_LIMIT    | 指定路由的请求速率限制（区分用户）                                                                                                                 |           无            |
-| GLOBAL_RATE_LIMIT   | 所有`RATE_LIMIT`没有指定的路由. 不填默认无限制                                                                                                    |           无            |
+| REQ_RATE_LIMIT      | 指定路由的请求速率限制（区分用户）                                                                                                                 |           无            |
+| GLOBAL_RATE_LIMIT   | 所有`REQ_RATE_LIMIT`没有指定的路由. 不填默认无限制                                                                                                |           无            |
 | RATE_LIMIT_STRATEGY | 速率限制策略(fixed-window, fixed-window-elastic-expiry, moving-window)                                                                  |           无            |
-| TOKEN_RATE_LIMIT    | 对每一份流式返回的token速率限制 (这里的token并不严格等于gpt中定义的token，而是SSE的chunk)                                                                                                                         |           无            |
+| TOKEN_RATE_LIMIT    | 对每一份流式返回的token速率限制 (这里的token并不严格等于gpt中定义的token，而是SSE的chunk)                                                                       |           无            |
 | PROXY               | http代理                                                                                                                            |           无            |
 | LOG_CHAT            | 是否记录聊天内容                                                                                                                          |        `false`         |
 
