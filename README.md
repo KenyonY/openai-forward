@@ -39,17 +39,18 @@
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/beidongjiedeguang/openai-forward)
 
-[特点](#特点) |
+[特点](#主要特性) |
 [部署指南](deploy.md) |
-[使用](#使用) |
+[使用指南](#使用指南) |
 [配置](#配置) |
 [对话日志](#对话日志)
 
 
 </div>
 
-OpenAI-Forward是大模型与用户层之间的一道转发服务，
-用于对请求模型的速率限制，模型返回的Token速率限制，自定义API KEY 等。
+OpenAI-Forward
+是一个专为大型语言模型设计的高级转发服务，提供包括用户请求速率控制、Token速率限制和自定义API密钥等增强功能。该服务可用于代理本地模型（如 [LocalAI](https://github.com/go-skynet/LocalAI)
+）或云端模型（如 [openai](https://api.openai.com)）。
 
 
 
@@ -57,46 +58,53 @@ OpenAI-Forward是大模型与用户层之间的一道转发服务，
    <img src="https://raw.githubusercontent.com/beidongjiedeguang/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">
 </a>
 
-## 特点
+## 主要特性
 
-OpenAI-Forward支持以下功能:
+OpenAI-Forward 能提供如下一系列高级功能：
 
-- **万能代理**: 几乎可以转发任何请求
-- **用户速率限制**: 提供请求速率限制(**RPM**)与流式返回的Token速率限制(**TPM**)
-- **自定义秘钥**: 支持用户使用自定义生成的秘钥代替原始api key使用。
-- 流式响应的对话日志
-- 可同时转发多个目标服务至不同路由
-- 失败请求自动重试
-- 一分钟内完成安装与部署; 一键部署至云端
+- **全能代理**: 具备转发几乎所有类型请求的能力
+- **用户流量控制**: 实现用户请求速率限制（RPM）和流式Token速率限制（TPM）
+- **自定义秘钥**: 允许用户用自定义生成的密钥替代原始API密钥
+- **实时响应日志**: 支持流式响应的会话日志记录
+- **多目标路由**: 能够同时转发多个服务到不同的路由地址
+- **自动重试机制**：在请求失败时自动重试
+- **快速部署**: 在一分钟内完成本地安装和部署，支持一键云端部署
 - ...
 
 由本项目搭建的代理服务地址：
+
 > https://api.openai-forward.com  
 > https://render.openai-forward.com
 
 <font size=2 >
-注：这里提供的代理服务仅供学习使用。
+注：此代理服务仅供学习和研究目的使用。
 </font>
-
 
 ## 部署指南
 
- 👉 [部署文档](deploy.md)
+👉 [部署文档](deploy.md)
 
 
 <a>
    <img src="https://raw.githubusercontent.com/beidongjiedeguang/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">
 </a>
 
-## 使用
+## 使用指南
+
+### 快速入门
+
 **安装**
+
 ```bash
 pip install openai-forward
 ```
-**运行**
+
+**启动服务**
+
 ```bash
 aifd run
 ```
+
 如果读入了根路径的`.env`的配置, 将会看到以下启动信息
 
 ```bash
@@ -122,9 +130,10 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 ```
 
 ### 代理OpenAI API:
+
 这也是`aifd run`的默认选项
 
-#### 在第三方应用中使用
+#### 在三方应用中使用
 
 <details >
    <summary> 点击展开</summary>  
@@ -143,10 +152,9 @@ docker run -d \
 
 </details>
 
-#### 在代码中使用
+#### 在代码中接入
 
-<details >
-  <summary>点击展开</summary>
+
 
 **Python**
 
@@ -155,6 +163,9 @@ docker run -d \
 + openai.api_base = "https://api.openai-forward.com/v1"
   openai.api_key = "sk-******"
 ```
+
+<details >
+  <summary>更多（点击展开）</summary>
 
 **JS/TS**
 
@@ -196,38 +207,35 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 
 ### 代理本地模型
 
-与 [LocalAI](https://github.com/go-skynet/LocalAI)，
-[api-for-open-llm](https://github.com/xusenlinzy/api-for-open-llm)等
-一起使用，赋予这些服务接口的用户请求速率限制，token输出速率限制，对话日志输出等能力。  
+- **适用场景：** 与 [LocalAI](https://github.com/go-skynet/LocalAI)，
+[api-for-open-llm](https://github.com/xusenlinzy/api-for-open-llm)等项目一起使用
 
-以LocalAI为例：  
-假设部署的LocalAI服务运行在 `http://localhost:8080`，
-那么接下来只需修改环境变量(或[.env](.env)文件)中`OPENAI_BASE_URL=http://localhost:8080` 就可以完成对LocalAI的代理，
-然后即可在`aifd`的默认服务端口`http://localhost:8000`中访问LocalAI.
+- **如何操作：** 
+以LocalAI为例，如果已在 http://localhost:8080 部署了LocalAI服务，仅需在环境变量或 .env 
+文件中设置 `OPENAI_BASE_URL=http://localhost:8080`。
+然后即可通过访问 http://localhost:8000 使用LocalAI。
 
-(待补充)
+(更多)
 
 ### 代理其它云端模型
+- **适用场景：**
+例如，通过 [claude-to-chatgpt](https://github.com/jtsang4/claude-to-chatgpt) 可以将 claude 的 API 格式转换为 openai 的api格式，
+然后使用 `openai-forward` 进行代理。
 
-例如可通过 [claude-to-chatgpt](https://github.com/jtsang4/claude-to-chatgpt)
-将claude的api格式对齐为openai的格式，然后使用`openai-forward`进行代理。
-(待补充)
+(更多)
 
 <a>
    <img src="https://raw.githubusercontent.com/beidongjiedeguang/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">
 </a>
 
-
 ## 配置
 
 ### 命令行参数
 
-可通过 `aifd run --help` 查看
+执行 `aifd run --help` 获取参数详情
 
 <details open>
   <summary>Click for more details</summary>
-
-**`aifd run`参数配置项**
 
 | 配置项        | 说明         |   默认值   |
 |------------|------------|:-------:|
@@ -237,27 +245,29 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 
 </details>
 
-### 环境变量配置项
+### 环境变量详情
 
-支持从运行目录下的`.env`文件中读取  
-配置示例见根目录下的 [.env.example](.env.example)
+你可以在项目的运行目录下创建 .env 文件来定制各项配置。参考配置可见根目录下的
+[.env.example](.env.example)文件
 
-| 环境变量                | 说明                                                                                                                                |          默认值           |
-|---------------------|-----------------------------------------------------------------------------------------------------------------------------------|:----------------------:|
-| OPENAI_BASE_URL     | 默认 openai官方 api 地址                                                                                                                | https://api.openai.com |
-| OPENAI_ROUTE_PREFIX | openai(接口格式)路由前缀                                                                                                                  |           /            |
-| OPENAI_API_KEY      | 默认openai api key，支持多个默认api key, 以 `sk-` 开头， 以逗号分隔                                                                                 |           无            |
-| FORWARD_KEY         | 允许调用方使用该key代替openai api key，支持多个forward key, 以逗号分隔; 如果设置了OPENAI_API_KEY，而没有设置FORWARD_KEY, 则客户端调用时无需提供密钥, 此时出于安全考虑不建议FORWARD_KEY置空 |           无            |
-| EXTRA_BASE_URL      | 额外转发服务地址                                                                                                                          |           无            |
-| EXTRA_ROUTE_PREFIX  | 额外转发服务路由前缀                                                                                                                        |           无            |
-| REQ_RATE_LIMIT      | 指定路由的请求速率限制（区分用户）                                                                                                                 |           无            |
-| GLOBAL_RATE_LIMIT   | 所有`REQ_RATE_LIMIT`没有指定的路由. 不填默认无限制                                                                                                |           无            |
-| RATE_LIMIT_STRATEGY | 速率限制策略(fixed-window, fixed-window-elastic-expiry, moving-window)                                                                  |           无            |
-| TOKEN_RATE_LIMIT    | 对每一份流式返回的token速率限制 (这里的token并不严格等于gpt中定义的token，而是SSE的chunk)                                                                       |           无            |
-| PROXY               | http代理                                                                                                                            |           无            |
-| LOG_CHAT            | 是否记录聊天内容                                                                                                                          |        `false`         |
+| 环境变量                | 说明                                                                   |          默认值           |
+|---------------------|----------------------------------------------------------------------|:----------------------:|
+| OPENAI_BASE_URL     | 设置OpenAI API风格的基础地址                                                  | https://api.openai.com |
+| OPENAI_ROUTE_PREFIX | 为OPENAI_BASE_URL接口地址定义路由前缀                                           |           /            |
+| OPENAI_API_KEY      | 配置OpenAI 接口风格的API密钥，支持使用多个密钥，通过逗号分隔                                  |           无            |
+| FORWARD_KEY         | 设定用于代理的自定义密钥，多个密钥可用逗号分隔。如果未设置(不建议)，将直接使用 `OPENAI_API_KEY`            |           无            |
+| EXTRA_BASE_URL      | 用于配置额外代理服务的基础URL                                                     |           无            |
+| EXTRA_ROUTE_PREFIX  | 定义额外代理服务的路由前缀                                                        |           无            |
+| REQ_RATE_LIMIT      | 设置特定路由的用户请求速率限制 (区分用户)                                               |           无            |
+| GLOBAL_RATE_LIMIT   | 配置全局请求速率限制，适用于未在 `REQ_RATE_LIMIT` 中指定的路由                             |           无            |
+| RATE_LIMIT_STRATEGY | 选择速率限制策略，选项包括：fixed-window、fixed-window-elastic-expiry、moving-window |           无            |
+| TOKEN_RATE_LIMIT    | 限制流式响应中每个token（或SSE chunk）的输出速率                                      |           无            |
+| PROXY               | 设置HTTP代理地址                                                           |           无            |
+| LOG_CHAT            | 开关聊天内容的日志记录，用于调试和监控                                                  |        `false`         |
 
-更多见 [.env.example](.env.example) 中的说明。(待完善)
+详细配置说明可参见 [.env.example](.env.example) 文件。(待完善)
+
+>注意：如果你设置了 OPENAI_API_KEY 但未设置 FORWARD_KEY，客户端在调用时将不需要提供密钥。由于这可能存在安全风险，除非有明确需求，否则不推荐将 FORWARD_KEY 置空。
 
 ### 自定义秘钥
 
