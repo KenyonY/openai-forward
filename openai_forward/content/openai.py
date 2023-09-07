@@ -8,11 +8,10 @@ from loguru import logger
 from orjson import JSONDecodeError
 
 from ..helper import get_client_ip
-from ._type import markdown_print, print
-from .decode import parse_to_lines
+from .helper import markdown_print, parse_to_lines, print
 
 
-class ChatSaver:
+class ChatLogger:
     def __init__(self, route_prefix: str):
         _prefix = route_prefix.replace('/', '_')
         kwargs = {_prefix + "_chat": True}
@@ -111,3 +110,13 @@ class ChatSaver:
                 markdown_print(f"assistant: {assistant}", role='assistant')
                 print(f'uid: {chat_info.get("uid")}')
                 print(77 * "=", role='assistant')
+
+
+class WhisperLogger:
+    def __init__(self, route_prefix: str):
+        _prefix = route_prefix.replace('/', '_')
+        self.logger = logger.bind(**{f"{_prefix}_whisper": True})
+
+    def add_log(self, bytes_: bytes):
+        text_content = bytes_.decode("utf-8")
+        self.logger.debug(text_content)

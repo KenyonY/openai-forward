@@ -3,23 +3,23 @@ from itertools import cycle
 import pytest
 from fastapi import HTTPException
 
-from openai_forward.forwarding.openai import OpenaiForwarding
+from openai_forward.forward.openai import OpenaiForward
 
 
 @pytest.fixture(scope="module")
-def openai() -> OpenaiForwarding:
-    return OpenaiForwarding("https://api.openai-forward.com", "/")
+def openai() -> OpenaiForward:
+    return OpenaiForward("https://api.openai-forward.com", "/")
 
 
 class TestOpenai:
     @staticmethod
     def teardown_method():
-        OpenaiForwarding.IP_BLACKLIST = []
-        OpenaiForwarding.IP_WHITELIST = []
-        OpenaiForwarding._default_api_key_list = []
+        OpenaiForward.IP_BLACKLIST = []
+        OpenaiForward.IP_WHITELIST = []
+        OpenaiForward._default_api_key_list = []
 
-    def test_env(self, openai: OpenaiForwarding):
-        from openai_forward.forwarding.settings import (
+    def test_env(self, openai: OpenaiForward):
+        from openai_forward.forward.settings import (
             LOG_CHAT,
             OPENAI_BASE_URL,
             OPENAI_ROUTE_PREFIX,
@@ -29,7 +29,7 @@ class TestOpenai:
         assert OPENAI_BASE_URL == ["https://api.openai.com"]
         assert OPENAI_ROUTE_PREFIX == ["/"]
 
-    def test_api_keys(self, openai: OpenaiForwarding):
+    def test_api_keys(self, openai: OpenaiForward):
         assert openai._default_api_key_list == []
         openai._default_api_key_list = ["a", "b"]
         openai._cycle_api_key = cycle(openai._default_api_key_list)
@@ -39,8 +39,8 @@ class TestOpenai:
         assert next(openai._cycle_api_key) == "b"
         assert next(openai._cycle_api_key) == "a"
 
-    def test_validate_ip(self, openai: OpenaiForwarding):
-        from openai_forward.forwarding.settings import IP_BLACKLIST, IP_WHITELIST
+    def test_validate_ip(self, openai: OpenaiForward):
+        from openai_forward.forward.settings import IP_BLACKLIST, IP_WHITELIST
 
         ip1 = "1.1.1.1"
         ip2 = "2.2.2.2"

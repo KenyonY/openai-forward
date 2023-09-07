@@ -46,7 +46,7 @@ class Cli:
         Returns:
             None
         """
-        from openai_forward.forwarding.settings import OPENAI_ROUTE_PREFIX
+        from openai_forward.forward.settings import OPENAI_ROUTE_PREFIX
         from openai_forward.helper import convert_folder_to_jsonl
 
         print(60 * '-')

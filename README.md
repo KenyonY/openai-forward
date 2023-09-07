@@ -60,7 +60,7 @@ OpenAI-Forward
 
 ## 主要特性
 
-OpenAI-Forward 能提供如下一系列高级功能：
+OpenAI-Forward 提供如下功能：
 
 - **全能代理**: 具备转发几乎所有类型请求的能力
 - **用户流量控制**: 实现用户请求速率限制（RPM）和流式Token速率限制（TPM）

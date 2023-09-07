@@ -1,7 +1,7 @@
-from .base import ForwardingBase
+from .base import ForwardBase
 
 
-class AnyForwarding(ForwardingBase):
+class GenericForward(ForwardBase):
     def __init__(self, base_url: str, route_prefix: str, proxy=None):
         import httpx
 
@@ -12,16 +12,16 @@ class AnyForwarding(ForwardingBase):
         )
 
 
-def fwd_anything_objs():
+def create_generic_proxies():
     """
     Generate extra forwarding objects.
 
     Returns:
-        list: A list of AnyForwarding objects.
+        list: A list of GenericForward objects.
     """
     from .settings import EXTRA_BASE_URL, EXTRA_ROUTE_PREFIX, PROXY
 
-    extra_fwd_objs = []
+    _objs = []
     for base_url, route_prefix in zip(EXTRA_BASE_URL, EXTRA_ROUTE_PREFIX):
-        extra_fwd_objs.append(AnyForwarding(base_url, route_prefix, PROXY))
-    return extra_fwd_objs
+        _objs.append(GenericForward(base_url, route_prefix, PROXY))
+    return _objs
