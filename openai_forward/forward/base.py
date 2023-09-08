@@ -11,11 +11,14 @@ from loguru import logger
 
 from ..content.openai import ChatLogger, WhisperLogger
 from ..decorators import async_retry, token_rate_limit_decorator
-from .settings import *
+from ..settings import *
 
 
 class ForwardBase:
-    """Base class for handling request forwarding."""
+    """
+    Base class for handling request forwarding to another service.
+    Provides methods for request validation, logging, and proxying.
+    """
 
     BASE_URL = None
     ROUTE_PREFIX = None
@@ -28,7 +31,7 @@ class ForwardBase:
     @staticmethod
     def validate_request_host(ip):
         """
-        Validate incoming IP against whitelist and blacklist.
+        Validates the incoming IP address against a whitelist and blacklist.
 
         Args:
             ip (str): The IP address to validate.
@@ -52,14 +55,14 @@ class ForwardBase:
     @token_rate_limit_decorator(token_interval_conf)
     async def aiter_bytes(r: httpx.Response) -> AsyncGenerator[bytes, Any]:
         """
-        Asynchronously read bytes from the response and yield.
+        Asynchronously iterates through the bytes in the given httpx.Response object
+        and yields each chunk.
 
         Args:
-            r (httpx.Response): The response object.
+            r (httpx.Response): The httpx.Response object containing the server's response.
 
         Yields:
-            bytes: Each chunk of bytes from the response.
-
+            bytes: Each chunk of bytes from the server's response.
         """
         async for chunk in r.aiter_bytes():
             yield chunk
@@ -73,17 +76,17 @@ class ForwardBase:
     )
     async def try_send(self, client_config: dict, request: Request):
         """
-        Try to send the request with retries.
+        Asynchronously sends a request to the target service with retry logic.
 
         Args:
-            client_config (dict): Configuration for the client.
-            request (Request): The original request object.
+            client_config (dict): Configuration dictionary for creating the client request.
+            request (Request): The original FastAPI request object.
 
         Returns:
-            httpx.Response: The response from the client.
+            httpx.Response: The httpx.Response object containing the server's response.
 
         Raises:
-            HTTPException: If an exception occurs.
+            HTTPException: If the request fails after all retry attempts.
         """
         try:
             req = self.client.build_request(
@@ -147,6 +150,7 @@ class ForwardBase:
             if self.ROUTE_PREFIX != '/'
             else _url_path
         )
+        url_path = '/' + url_path.lstrip('/')
         url = httpx.URL(path=url_path, query=request.url.query.encode("utf-8"))
 
         headers = dict(request.headers)
@@ -184,6 +188,11 @@ class ForwardBase:
 
 
 class OpenaiBase(ForwardBase):
+    """
+    Derived class for handling request forwarding specifically for the OpenAI API.
+    Provides methods for logging chat and payload data.
+    """
+
     _cycle_api_key = cycle(OPENAI_API_KEY)
     _no_auth_mode = OPENAI_API_KEY != [] and FWD_KEY == set()
 
@@ -196,13 +205,13 @@ class OpenaiBase(ForwardBase):
         self, byte_list: List[bytes], uid: str, route_path: str, request_method: str
     ):
         """
-        Adds a result log for the given byte list, uid, route path, and request method.
+        Logs the result of the API call.
 
         Args:
-            byte_list (List[bytes]): The list of bytes to be processed.
-            uid (str): The unique identifier.
-            route_path (str): The route path.
-            request_method (str): The request method.
+            byte_list (List[bytes]): List of bytes, usually from the API response.
+            uid (str): Unique identifier for the request.
+            route_path (str): API route path.
+            request_method (str): HTTP method (e.g., 'GET', 'POST').
 
         Returns:
             None
@@ -230,11 +239,11 @@ class OpenaiBase(ForwardBase):
 
     async def _add_payload_log(self, request: Request, url_path: str):
         """
-        Adds a payload log for the given request.
+        Asynchronously logs the payload of the API call.
 
         Args:
-            request (Request): The request object.
-            url_path (str): The URL path of the request.
+            request (Request): The original FastAPI request object.
+            url_path (str): The API route path.
 
         Returns:
             str: The unique identifier (UID) of the payload log, which is used to match the chat result log.
@@ -272,16 +281,17 @@ class OpenaiBase(ForwardBase):
         self, r: httpx.Response, request: Request, route_path: str, uid: str
     ):
         """
-        Asynchronously iterates over the bytes of the response and yields each chunk.
+        Asynchronously iterates through the bytes in the given httpx.Response object
+        and yields each chunk while also logging the request and response data.
 
         Args:
-            r (httpx.Response): The HTTP response object.
-            request (Request): The original request object.
-            route_path (str): The route path.
-            uid (str): The unique identifier.
+            r (httpx.Response): The httpx.Response object.
+            request (Request): The original FastAPI request object.
+            route_path (str): The API route path.
+            uid (str): Unique identifier for the request.
 
         Returns:
-            A generator that yields each chunk of bytes from the response.
+             AsyncGenerator[bytes]: Each chunk of bytes from the server's response.
         """
         byte_list = []
         async for chunk in r.aiter_bytes():
@@ -299,13 +309,13 @@ class OpenaiBase(ForwardBase):
 
     async def reverse_proxy(self, request: Request):
         """
-        Reverse proxies the given requests.
+        Asynchronously handles reverse proxying the incoming request.
 
         Args:
-            request (Request): The incoming request object.
+            request (Request): The incoming FastAPI request object.
 
         Returns:
-            StreamingResponse: The response from the reverse proxied server, as a streaming response.
+            StreamingResponse: A FastAPI StreamingResponse containing the server's response.
         """
         client_config = self.prepare_client(request)
         url_path = client_config["url_path"]

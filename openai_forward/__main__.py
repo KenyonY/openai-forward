@@ -46,8 +46,8 @@ class Cli:
         Returns:
             None
         """
-        from openai_forward.forward.settings import OPENAI_ROUTE_PREFIX
         from openai_forward.helper import convert_folder_to_jsonl
+        from openai_forward.settings import OPENAI_ROUTE_PREFIX
 
         print(60 * '-')
         if log_folder is None:

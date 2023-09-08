@@ -8,14 +8,17 @@ from fastapi import Request
 
 def retry(max_retries=3, delay=1, backoff=2, exceptions=(Exception,)):
     """
-    Retry decorator.
+    A decorator for automatically retrying a function upon encountering specified exceptions.
 
-    Parameters:
-    - max_retries: Maximum number of retries.
-    - delay: Initial delay in seconds.
-    - backoff: Multiplier for delay after each retry.
-    - exceptions: Exceptions to catch and retry on, as a tuple.
+    Args:
+        max_retries (int): The maximum number of times to retry the function.
+        delay (float): The initial delay between retries in seconds.
+        backoff (float): The multiplier by which the delay should increase after each retry.
+        exceptions (tuple): A tuple of exception classes upon which to retry.
 
+    Returns:
+        The return value of the wrapped function, if it succeeds.
+        Raises the last encountered exception if the function never succeeds.
     """
 
     def decorator(func):
@@ -40,14 +43,17 @@ def retry(max_retries=3, delay=1, backoff=2, exceptions=(Exception,)):
 
 def async_retry(max_retries=3, delay=1, backoff=2, exceptions=(Exception,)):
     """
-    Retry decorator for asynchronous functions.
+    An asynchronous decorator for automatically retrying an async function upon encountering specified exceptions.
 
-    Parameters:
-    - max_retries: Maximum number of retries.
-    - delay: Initial delay in seconds.
-    - backoff: Multiplier for delay after each retry.
-    - exceptions: Exceptions to catch and retry on, as a tuple.
+    Args:
+        max_retries (int): The maximum number of times to retry the function.
+        delay (float): The initial delay between retries in seconds.
+        backoff (float): The multiplier by which the delay should increase after each retry.
+        exceptions (tuple): A tuple of exception classes upon which to retry.
 
+    Returns:
+        The return value of the wrapped function, if it succeeds.
+        Raises the last encountered exception if the function never succeeds.
     """
 
     def decorator(func):
@@ -71,8 +77,24 @@ def async_retry(max_retries=3, delay=1, backoff=2, exceptions=(Exception,)):
 
 
 def token_rate_limit_decorator(token_rate_limit: dict):
-    def outer_wrapper(async_gen_func):
-        async def inner_wrapper(*args, **kwargs):
+    """
+    A decorator for rate-limiting requests based on tokens. It limits the rate at which tokens can be consumed
+    for a particular route path.
+
+    Args:
+        token_rate_limit (dict): A dictionary mapping route paths to their respective token intervals (in seconds).
+
+    Yields:
+        value: The value from the wrapped asynchronous generator.
+
+    Note:
+        The 'request' object should be passed either as a keyword argument or as a positional argument to the
+        decorated function.
+    """
+
+    def decorator(async_gen_func):
+        @wraps(async_gen_func)
+        async def wrapper(*args, **kwargs):
             request: Request = kwargs.get('request')
             if not request:
                 # Try to find the request argument by position
@@ -96,6 +118,6 @@ def token_rate_limit_decorator(token_rate_limit: dict):
                     start_time = time.perf_counter()
                 yield value
 
-        return inner_wrapper
+        return wrapper
 
-    return outer_wrapper
+    return decorator

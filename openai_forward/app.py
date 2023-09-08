@@ -4,7 +4,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from .forward import create_generic_proxies, create_openai_proxies
-from .forward.settings import (
+from .settings import (
     RATE_LIMIT_STRATEGY,
     dynamic_request_rate_limit,
     get_limiter_key,
@@ -24,6 +24,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 @app.get(
     "/healthz",

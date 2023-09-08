@@ -54,16 +54,6 @@ def print_rate_limit_info(
 ):
     """
     Print rate limit information.
-
-    Args:
-        strategy (str): The strategy used for rate limiting.
-        global_req_rate_limit (str): The global request rate limit.
-        req_rate_limit (dict): A dictionary of request rate limit.
-        token_rate_limit (dict): A dictionary of token rate limit.
-        **kwargs: Other limits info.
-
-    Returns:
-        None
     """
     table = Table(title="", box=None, width=50)
     table.add_column("")

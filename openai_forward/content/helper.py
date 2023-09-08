@@ -10,6 +10,8 @@ RoleColor = {
     "other": "#4285f4",
 }
 
+#  ----------- console tools ------------
+
 console = Console()
 
 
@@ -23,6 +25,9 @@ def markdown_print(text="", role: str = None, end="\n", **kwargs):
 
     style = RoleColor.get(role, None)
     console.print(Markdown(text), style=style, end=end, **kwargs)
+
+
+# ------------- parse bytes -------------
 
 
 def iter_text(iter_tytes: list):

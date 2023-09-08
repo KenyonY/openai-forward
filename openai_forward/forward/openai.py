@@ -21,7 +21,7 @@ def create_openai_proxies():
     Returns:
         _objs (list): A list of OpenaiForward objects.
     """
-    from .settings import OPENAI_BASE_URL, OPENAI_ROUTE_PREFIX, PROXY
+    from ..settings import OPENAI_BASE_URL, OPENAI_ROUTE_PREFIX, PROXY
 
     _objs = []
     for base_url, route_prefix in zip(OPENAI_BASE_URL, OPENAI_ROUTE_PREFIX):
