@@ -11,6 +11,7 @@ from loguru import logger
 
 from ..content.openai import ChatLogger, WhisperLogger
 from ..decorators import async_retry, token_rate_limit_decorator
+from ..helper import normalize_route
 from ..settings import *
 
 
@@ -145,12 +146,12 @@ class ForwardBase:
             self.validate_request_host(ip)
 
         _url_path = f"{request.scope.get('root_path')}{request.scope.get('path')}"
+        _url_path = normalize_route(_url_path)
         url_path = (
             _url_path[len(self.ROUTE_PREFIX) :]
             if self.ROUTE_PREFIX != '/'
             else _url_path
         )
-        url_path = '/' + url_path.lstrip('/')
         url = httpx.URL(path=url_path, query=request.url.query.encode("utf-8"))
 
         headers = dict(request.headers)
@@ -194,7 +195,7 @@ class OpenaiBase(ForwardBase):
     """
 
     _cycle_api_key = cycle(OPENAI_API_KEY)
-    _no_auth_mode = OPENAI_API_KEY != [] and FWD_KEY == set()
+    _no_auth_mode = OPENAI_API_KEY != [] and FWD_KEY == []
 
     def __init__(self):
         if LOG_CHAT or print_chat:

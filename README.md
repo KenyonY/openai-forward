@@ -1,10 +1,10 @@
 **中文** | ~~[**English**](./README_EN.md)~~
 
-<h1 align="center">
+<h2 align="center">
     <br>
     OpenAI Forward
     <br>
-</h1>
+</h2>
 <p align="center">
     <b> OpenAI API风格接口转发服务 <br/>
     The fastest way to deploy llms api forwarding </b>
