@@ -1,4 +1,5 @@
 import os
+import platform
 
 import fire
 import uvicorn
@@ -21,6 +22,9 @@ class Cli:
 
         if log_chat:
             os.environ["LOG_CHAT"] = log_chat
+
+        if platform.system() == "Windows":
+            os.environ["TZ"] = ""
 
         ssl_keyfile = os.environ.get("ssl_keyfile", None) or None
         ssl_certfile = os.environ.get("ssl_certfile", None) or None
@@ -46,8 +50,8 @@ class Cli:
         Returns:
             None
         """
-        from openai_forward.forwarding.settings import OPENAI_ROUTE_PREFIX
         from openai_forward.helper import convert_folder_to_jsonl
+        from openai_forward.settings import OPENAI_ROUTE_PREFIX
 
         print(60 * '-')
         if log_folder is None:

@@ -3,8 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
-from .forwarding import fwd_anything_objs, fwd_openai_objs
-from .forwarding.settings import (
+from .forward import create_generic_proxies, create_openai_proxies
+from .settings import (
     RATE_LIMIT_STRATEGY,
     dynamic_request_rate_limit,
     get_limiter_key,
@@ -25,6 +25,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get(
     "/healthz",
     summary="Perform a Health Check",
@@ -42,7 +43,7 @@ add_route = lambda obj: app.add_route(
     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH", "TRACE"],
 )
 
-[add_route(obj) for obj in fwd_openai_objs()]
-[add_route(obj) for obj in fwd_anything_objs()]
+[add_route(obj) for obj in create_openai_proxies()]
+[add_route(obj) for obj in create_generic_proxies()]
 
 show_startup()

@@ -1,9 +1,12 @@
 import functools
 import logging
 import os
+import platform
 import sys
 import time
+from datetime import datetime
 
+import pytz
 from loguru import logger
 
 
@@ -35,11 +38,18 @@ def setting_log(
     """
     Configures the logging settings for the application.
     """
-    # TODO 修复时区配置
-    if os.environ.get("TZ") == "Asia/Shanghai":
-        os.environ["TZ"] = "UTC-8"
-        if hasattr(time, "tzset"):
-            time.tzset()
+
+    tz = os.environ.get("TZ", "").strip()
+    if tz and hasattr(time, "tzset"):
+
+        def get_utc_offset(timezone_str):
+            timezone = pytz.timezone(timezone_str)
+            offset_seconds = timezone.utcoffset(datetime.now()).total_seconds()
+            offset_hours = offset_seconds // 3600
+            return f"UTC{-int(offset_hours):+d}"
+
+        os.environ["TZ"] = get_utc_offset(tz)
+        time.tzset()
 
     logging.root.handlers = [InterceptHandler()]
     for name in logging.root.manager.loggerDict.keys():

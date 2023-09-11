@@ -1,8 +1,15 @@
-.PHONY: start build push run down test twine log pull
+.PHONY: monitor start build push run down test twine log pull
 
 image := "beidongjiedeguang/openai-forward:latest"
 container := "openai-forward-container"
 compose_path := "docker-compose.yaml"
+
+monitor:
+	@./scripts/ai-forward-monitor.sh
+
+#stop-monitor:
+#	@pkill -f ai-forward-monitor.sh
+#	@pkill aifd
 
 start:
 	@docker run -d \

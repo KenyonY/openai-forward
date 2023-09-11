@@ -7,7 +7,7 @@
 </h1>
 <p align="center">
     <b> OpenAI API风格接口转发服务 <br/>
-    The fastest way to deploy llms api forwarding </b>
+    The fastest way to deploy LLMs api forwarding </b>
 </p>
 
 <p align="center">
@@ -60,7 +60,7 @@ OpenAI-Forward
 
 ## 主要特性
 
-OpenAI-Forward 能提供如下一系列高级功能：
+OpenAI-Forward 提供如下功能：
 
 - **全能代理**: 具备转发几乎所有类型请求的能力
 - **用户流量控制**: 实现用户请求速率限制（RPM）和流式Token速率限制（TPM）
@@ -68,7 +68,7 @@ OpenAI-Forward 能提供如下一系列高级功能：
 - **实时响应日志**: 支持流式响应的会话日志记录
 - **多目标路由**: 能够同时转发多个服务到不同的路由地址
 - **自动重试机制**：在请求失败时自动重试
-- **快速部署**: 在一分钟内完成本地安装和部署，支持一键云端部署
+- **快速部署**: `pip` /`docker` 快速本地安装和部署，支持一键云端部署
 - ...
 
 由本项目搭建的代理服务地址：

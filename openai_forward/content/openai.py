@@ -8,18 +8,32 @@ from loguru import logger
 from orjson import JSONDecodeError
 
 from ..helper import get_client_ip
-from ._type import markdown_print, print
-from .decode import parse_to_lines
+from .helper import markdown_print, parse_to_lines, print
 
 
-class ChatSaver:
+class ChatLogger:
     def __init__(self, route_prefix: str):
+        """
+        Initialize the ChatLogger with a route prefix.
+
+        Args:
+            route_prefix (str): The prefix used for routing, e.g., '/api/v1'.
+        """
         _prefix = route_prefix.replace('/', '_')
         kwargs = {_prefix + "_chat": True}
         self.logger = logger.bind(**kwargs)
 
     @staticmethod
     async def parse_payload(request: Request):
+        """
+        Asynchronously parse the payload from a FastAPI request.
+
+        Args:
+            request (Request): A FastAPI request object.
+
+        Returns:
+            dict: A dictionary containing parsed content, model, IP address, UID, and datetime.
+        """
         uid = uuid.uuid4().__str__()
         payload = await request.json()
         msgs = payload["messages"]
@@ -35,13 +49,13 @@ class ChatSaver:
 
     def parse_iter_bytes(self, byte_list: List[bytes]):
         """
-        Parses a list of bytes and returns a dictionary.
+        Parses a list of bytes, usually from an API response, into a dictionary containing various information.
 
         Args:
             byte_list (List[bytes]): A list of bytes to parse.
 
         Returns:
-            Dict[str, Any]: A dictionary containing information about the target. The dictionary has the following keys:
+            Dict[str, Any]: A dictionary containing metadata and content. The keys include:
                 - "created" (str)
                 - "id" (str)
                 - "model" (str)
@@ -80,6 +94,15 @@ class ChatSaver:
 
     @staticmethod
     def _parse_one_line(line: str):
+        """
+        Helper method to parse a single line from the byte list.
+
+        Args:
+            line (str): The line to parse.
+
+        Returns:
+            str: The parsed content from the line.
+        """
         try:
             line_dict = orjson.loads(line)
             return line_dict["choices"][0]["delta"]["content"]
@@ -89,10 +112,22 @@ class ChatSaver:
             return ""
 
     def log_chat(self, chat_info: dict):
+        """
+        Log chat information to the logger bound to this instance.
+
+        Args:
+            chat_info (dict): A dictionary containing chat information to be logged.
+        """
         self.logger.debug(f"{chat_info}")
 
     @staticmethod
     def print_chat_info(chat_info: dict):
+        """
+        Print chat information in a formatted manner.
+
+        Args:
+            chat_info (dict): A dictionary containing chat information to be printed.
+        """
         messages = chat_info.get("messages")
         if messages:
             print(50 * "-", role='other')
@@ -111,3 +146,25 @@ class ChatSaver:
                 markdown_print(f"assistant: {assistant}", role='assistant')
                 print(f'uid: {chat_info.get("uid")}')
                 print(77 * "=", role='assistant')
+
+
+class WhisperLogger:
+    def __init__(self, route_prefix: str):
+        """
+        Initialize the WhisperLogger with a route prefix.
+
+        Args:
+            route_prefix (str): The prefix used for routing, e.g., '/api/v1'.
+        """
+        _prefix = route_prefix.replace('/', '_')
+        self.logger = logger.bind(**{f"{_prefix}_whisper": True})
+
+    def add_log(self, bytes_: bytes):
+        """
+        Add a log entry containing the decoded text from bytes.
+
+        Args:
+            bytes_ (bytes): The byte string to decode and log.
+        """
+        text_content = bytes_.decode("utf-8")
+        self.logger.debug(text_content)
