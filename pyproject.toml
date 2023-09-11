@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "openai_forward"
-description = "🚀 OpenAI API Reverse Proxy · ChatGPT API Proxy"
+description = "🚀 OpenAI-Forward 是一个专为大型语言模型设计的高级转发代理，提供包括用户请求速率控制、Token速率限制和自定义API密钥等增强功能。该服务可用于代理本地模型和云端模型。OpenAI API Reverse Proxy"
 authors = [
     { name = "kunyuan", email = "beidongjiedeguang@gmail.com" },
 ]

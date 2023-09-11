@@ -9,42 +9,44 @@ from fastapi import HTTPException, Request, status
 from fastapi.responses import StreamingResponse
 from loguru import logger
 
-from ..content import ChatSaver, WhisperSaver
+from ..content.openai import ChatLogger, WhisperLogger
 from ..decorators import async_retry, token_rate_limit_decorator
-from .settings import *
+from ..helper import normalize_route
+from ..settings import *
 
 
-class ForwardingBase:
+class ForwardBase:
+    """
+    Base class for handling request forwarding to another service.
+    Provides methods for request validation, logging, and proxying.
+    """
+
     BASE_URL = None
     ROUTE_PREFIX = None
     client: httpx.AsyncClient = None
 
-    if IP_BLACKLIST or IP_WHITELIST:
-        validate_host = True
-    else:
-        validate_host = False
+    validate_host = bool(IP_BLACKLIST or IP_WHITELIST)
 
     timeout = TIMEOUT
 
     @staticmethod
     def validate_request_host(ip):
         """
-        Validates the request host IP address against the IP whitelist and blacklist.
+        Validates the incoming IP address against a whitelist and blacklist.
 
         Args:
-            ip (str): The IP address to be validated.
+            ip (str): The IP address to validate.
 
         Raises:
-            HTTPException: If the IP address is not in the whitelist or if it is in the blacklist.
+            HTTPException: If the IP is not in the whitelist or if it is in the blacklist.
         """
-        if IP_WHITELIST and ip not in IP_WHITELIST:
-            logger.warning(f"IP {ip} is not in the whitelist")
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Forbidden Error",
-            )
-        if IP_BLACKLIST and ip in IP_BLACKLIST:
-            logger.warning(f"IP {ip} is in the blacklist")
+        if (
+            IP_WHITELIST
+            and ip not in IP_WHITELIST
+            or IP_BLACKLIST
+            and ip in IP_BLACKLIST
+        ):
+            logger.warning(f"IP {ip} is unauthorized")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Forbidden Error",
@@ -53,29 +55,39 @@ class ForwardingBase:
     @staticmethod
     @token_rate_limit_decorator(token_interval_conf)
     async def aiter_bytes(r: httpx.Response) -> AsyncGenerator[bytes, Any]:
+        """
+        Asynchronously iterates through the bytes in the given httpx.Response object
+        and yields each chunk.
+
+        Args:
+            r (httpx.Response): The httpx.Response object containing the server's response.
+
+        Yields:
+            bytes: Each chunk of bytes from the server's response.
+        """
         async for chunk in r.aiter_bytes():
             yield chunk
         await r.aclose()
 
     @async_retry(
         max_retries=3,
-        delay=0.5,
+        delay=0.2,
         backoff=2,
         exceptions=(HTTPException, anyio.EndOfStream),
     )
     async def try_send(self, client_config: dict, request: Request):
         """
-        Try to send the request.
+        Asynchronously sends a request to the target service with retry logic.
 
         Args:
-            client_config (dict): The configuration for the client.
-            request (Request): The request to be sent.
+            client_config (dict): Configuration dictionary for creating the client request.
+            request (Request): The original FastAPI request object.
 
         Returns:
-            Response: The response from the client.
+            httpx.Response: The httpx.Response object containing the server's response.
 
         Raises:
-            HTTPException: If there is a connection error or any other exception occurs.
+            HTTPException: If the request fails after all retry attempts.
         """
         try:
             req = self.client.build_request(
@@ -92,29 +104,25 @@ class ForwardingBase:
                 f"{type(e)}: {e} | "
                 f"Please check if host={request.client.host} can access [{self.BASE_URL}] successfully?"
             )
-            traceback_info = traceback.format_exc()
-            logger.error(f"{error_info} traceback={traceback_info}")
-            raise HTTPException(
-                status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail=error_info
+            self.handle_exception(
+                error_info, status_code=status.HTTP_504_GATEWAY_TIMEOUT
             )
 
         except anyio.EndOfStream:
             error_info = "EndOfStream Error: trying to read from a stream that has been closed from the other end."
-            traceback_info = traceback.format_exc()
-            logger.error(f"{error_info} traceback={traceback_info}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_info
-            )
+            self.handle_exception(error_info)
 
         except Exception as e:
             error_info = f"{type(e)}: {e}"
-            traceback_info = traceback.format_exc()
-            logger.error(f"{error_info} traceback={traceback_info}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=error_info
-            )
+            self.handle_exception(error_info)
 
-    def prepare_client(self, request: Request):
+    @staticmethod
+    def handle_exception(error_info, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR):
+        """Handle exceptions and raise HTTPException."""
+        logger.error(f"{error_info}\n{traceback.format_exc()}")
+        raise HTTPException(status_code=status_code, detail=error_info)
+
+    def prepare_client(self, request: Request) -> dict:
         """
         Prepares the client configuration based on the given request.
 
@@ -132,30 +140,30 @@ class ForwardingBase:
         Raises:
             AssertionError: If the `BASE_URL` or `ROUTE_PREFIX` is not set.
         """
-        assert self.BASE_URL is not None
-        assert self.ROUTE_PREFIX is not None
+        assert self.BASE_URL and self.ROUTE_PREFIX
         if self.validate_host:
             ip = get_client_ip(request)
-            # print(f"{ip=}")
             self.validate_request_host(ip)
 
         _url_path = f"{request.scope.get('root_path')}{request.scope.get('path')}"
-        prefix_index = 0 if self.ROUTE_PREFIX == '/' else len(self.ROUTE_PREFIX)
-
-        url_path = _url_path[prefix_index:]
+        _url_path = normalize_route(_url_path)
+        url_path = (
+            _url_path[len(self.ROUTE_PREFIX) :]
+            if self.ROUTE_PREFIX != '/'
+            else _url_path
+        )
         url = httpx.URL(path=url_path, query=request.url.query.encode("utf-8"))
+
         headers = dict(request.headers)
         auth = headers.pop("authorization", "")
         content_type = headers.pop("content-type", "application/json")
-        auth_headers_dict = {"Content-Type": content_type, "Authorization": auth}
-        client_config = {
+
+        return {
             'auth': auth,
-            'headers': auth_headers_dict,
+            'headers': {"Content-Type": content_type, "Authorization": auth},
             'url': url,
             'url_path': url_path,
         }
-
-        return client_config
 
     async def reverse_proxy(self, request: Request):
         """
@@ -167,7 +175,7 @@ class ForwardingBase:
         Returns:
             StreamingResponse: The response from the reverse proxied server, as a streaming response.
         """
-        assert self.client is not None
+        assert self.client
 
         client_config = self.prepare_client(request)
 
@@ -180,24 +188,30 @@ class ForwardingBase:
         )
 
 
-class OpenaiBase(ForwardingBase):
-    _cycle_api_key = cycle(OPENAI_API_KEY)
-    _no_auth_mode = OPENAI_API_KEY != [] and FWD_KEY == set()
+class OpenaiBase(ForwardBase):
+    """
+    Derived class for handling request forwarding specifically for the OpenAI (Style) API.
+    """
 
-    chatsaver: ChatSaver = None
-    whispersaver: WhisperSaver = None
+    _cycle_api_key = cycle(OPENAI_API_KEY)
+    _no_auth_mode = OPENAI_API_KEY != [] and FWD_KEY == []
+
+    def __init__(self):
+        if LOG_CHAT or print_chat:
+            self.chat_logger = ChatLogger(self.ROUTE_PREFIX)
+            self.whisper_logger = WhisperLogger(self.ROUTE_PREFIX)
 
     def _add_result_log(
         self, byte_list: List[bytes], uid: str, route_path: str, request_method: str
     ):
         """
-        Adds a result log for the given byte list, uid, route path, and request method.
+        Logs the result of the API call.
 
         Args:
-            byte_list (List[bytes]): The list of bytes to be processed.
-            uid (str): The unique identifier.
-            route_path (str): The route path.
-            request_method (str): The request method.
+            byte_list (List[bytes]): List of bytes, usually from the API response.
+            uid (str): Unique identifier for the request.
+            route_path (str): API route path.
+            request_method (str): HTTP method (e.g., 'GET', 'POST').
 
         Returns:
             None
@@ -205,31 +219,31 @@ class OpenaiBase(ForwardingBase):
         try:
             if (LOG_CHAT or print_chat) and request_method == "POST":
                 if route_path == CHAT_COMPLETION_ROUTE:
-                    target_info = self.chatsaver.parse_iter_bytes(byte_list)
+                    target_info = self.chat_logger.parse_iter_bytes(byte_list)
                     if LOG_CHAT:
-                        self.chatsaver.log_chat(
+                        self.chat_logger.log_chat(
                             {target_info["role"]: target_info["content"], "uid": uid}
                         )
                     if print_chat:
-                        self.chatsaver.print_chat_info(
+                        self.chat_logger.print_chat_info(
                             {target_info["role"]: target_info["content"], "uid": uid}
                         )
 
                 elif route_path.startswith("/v1/audio/"):
-                    self.whispersaver.add_log(b"".join([_ for _ in byte_list]))
+                    self.whisper_logger.add_log(b"".join([_ for _ in byte_list]))
 
                 else:
                     ...
-        except Exception as e:
+        except Exception:
             logger.warning(f"log chat (not) error:\n{traceback.format_exc()}")
 
     async def _add_payload_log(self, request: Request, url_path: str):
         """
-        Adds a payload log for the given request.
+        Asynchronously logs the payload of the API call.
 
         Args:
-            request (Request): The request object.
-            url_path (str): The URL path of the request.
+            request (Request): The original FastAPI request object.
+            url_path (str): The API route path.
 
         Returns:
             str: The unique identifier (UID) of the payload log, which is used to match the chat result log.
@@ -242,13 +256,13 @@ class OpenaiBase(ForwardingBase):
         if (LOG_CHAT or print_chat) and request.method == "POST":
             try:
                 if url_path == CHAT_COMPLETION_ROUTE:
-                    chat_info = await self.chatsaver.parse_payload(request)
+                    chat_info = await self.chat_logger.parse_payload(request)
                     uid = chat_info.get("uid")
                     if chat_info:
                         if LOG_CHAT:
-                            self.chatsaver.log_chat(chat_info)
+                            self.chat_logger.log_chat(chat_info)
                         if print_chat:
-                            self.chatsaver.print_chat_info(chat_info)
+                            self.chat_logger.print_chat_info(chat_info)
 
                 elif url_path.startswith("/v1/audio/"):
                     uid = uuid.uuid4().__str__()
@@ -267,16 +281,17 @@ class OpenaiBase(ForwardingBase):
         self, r: httpx.Response, request: Request, route_path: str, uid: str
     ):
         """
-        Asynchronously iterates over the bytes of the response and yields each chunk.
+        Asynchronously iterates through the bytes in the given httpx.Response object
+        and yields each chunk while also logging the request and response data.
 
         Args:
-            r (httpx.Response): The HTTP response object.
-            request (Request): The original request object.
-            route_path (str): The route path.
-            uid (str): The unique identifier.
+            r (httpx.Response): The httpx.Response object.
+            request (Request): The original FastAPI request object.
+            route_path (str): The API route path.
+            uid (str): Unique identifier for the request.
 
         Returns:
-            A generator that yields each chunk of bytes from the response.
+             AsyncGenerator[bytes]: Each chunk of bytes from the server's response.
         """
         byte_list = []
         async for chunk in r.aiter_bytes():
@@ -294,13 +309,13 @@ class OpenaiBase(ForwardingBase):
 
     async def reverse_proxy(self, request: Request):
         """
-        Reverse proxies the given requests.
+        Asynchronously handles reverse proxying the incoming request.
 
         Args:
-            request (Request): The incoming request object.
+            request (Request): The incoming FastAPI request object.
 
         Returns:
-            StreamingResponse: The response from the reverse proxied server, as a streaming response.
+            StreamingResponse: A FastAPI StreamingResponse containing the server's response.
         """
         client_config = self.prepare_client(request)
         url_path = client_config["url_path"]

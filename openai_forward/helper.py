@@ -1,6 +1,7 @@
 import ast
 import inspect
 import os
+import re
 from pathlib import Path
 from typing import Dict, List, Union
 
@@ -15,6 +16,16 @@ def get_client_ip(request: Request):
     elif not request.client or not request.client.host:
         return "127.0.0.1"
     return request.client.host
+
+
+def normalize_route(route):
+    # If the route is only composed of slashes, return '/'
+    if all(c == '/' for c in route):
+        return '/'
+    route = re.sub(
+        r'//+', '/', route
+    )  # Replace multiple consecutive '/' with a single '/'
+    return route.rstrip('/')  # Remove trailing '/'
 
 
 def relp(rel_path: Union[str, Path], parents=0, return_str=True, strict=False):
@@ -136,7 +147,7 @@ def parse_log_to_list(log_path: str):
 
 
 def convert_chatlog_to_jsonl(log_path: str, target_path: str):
-    """Convert single chatlog to jsonl"""
+    """Convert single chat log to jsonl"""
     message_list, assistant_list = parse_log_to_list(log_path)
     content_list = get_matches(messages=message_list, assistants=assistant_list)
     json_dump(content_list, target_path, indent_2=True)

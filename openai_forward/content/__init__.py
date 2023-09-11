@@ -1,2 +1,1 @@
-from .chat import ChatSaver
-from .whisper import WhisperSaver
+from .openai import ChatLogger, WhisperLogger
