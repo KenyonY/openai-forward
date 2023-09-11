@@ -190,8 +190,7 @@ class ForwardBase:
 
 class OpenaiBase(ForwardBase):
     """
-    Derived class for handling request forwarding specifically for the OpenAI API.
-    Provides methods for logging chat and payload data.
+    Derived class for handling request forwarding specifically for the OpenAI (Style) API.
     """
 
     _cycle_api_key = cycle(OPENAI_API_KEY)

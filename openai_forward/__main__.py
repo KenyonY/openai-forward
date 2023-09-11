@@ -1,4 +1,5 @@
 import os
+import platform
 
 import fire
 import uvicorn
@@ -21,6 +22,9 @@ class Cli:
 
         if log_chat:
             os.environ["LOG_CHAT"] = log_chat
+
+        if platform.system() == "Windows":
+            os.environ["TZ"] = ""
 
         ssl_keyfile = os.environ.get("ssl_keyfile", None) or None
         ssl_certfile = os.environ.get("ssl_certfile", None) or None

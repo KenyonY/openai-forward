@@ -1,13 +1,13 @@
 **中文** | ~~[**English**](./README_EN.md)~~
 
-<h2 align="center">
+<h1 align="center">
     <br>
     OpenAI Forward
     <br>
-</h2>
+</h1>
 <p align="center">
     <b> OpenAI API风格接口转发服务 <br/>
-    The fastest way to deploy llms api forwarding </b>
+    The fastest way to deploy LLMs api forwarding </b>
 </p>
 
 <p align="center">
@@ -68,7 +68,7 @@ OpenAI-Forward 提供如下功能：
 - **实时响应日志**: 支持流式响应的会话日志记录
 - **多目标路由**: 能够同时转发多个服务到不同的路由地址
 - **自动重试机制**：在请求失败时自动重试
-- **快速部署**: 在一分钟内完成本地安装和部署，支持一键云端部署
+- **快速部署**: `pip` /`docker` 快速本地安装和部署，支持一键云端部署
 - ...
 
 由本项目搭建的代理服务地址：
