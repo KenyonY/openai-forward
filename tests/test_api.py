@@ -19,7 +19,7 @@ class TestOpenai:
         OpenaiForward._default_api_key_list = []
 
     def test_env(self, openai: OpenaiForward):
-        from openai_forward.forward.settings import (
+        from openai_forward.settings import (
             LOG_CHAT,
             OPENAI_BASE_URL,
             OPENAI_ROUTE_PREFIX,
@@ -40,7 +40,7 @@ class TestOpenai:
         assert next(openai._cycle_api_key) == "a"
 
     def test_validate_ip(self, openai: OpenaiForward):
-        from openai_forward.forward.settings import IP_BLACKLIST, IP_WHITELIST
+        from openai_forward.settings import IP_BLACKLIST, IP_WHITELIST
 
         ip1 = "1.1.1.1"
         ip2 = "2.2.2.2"
