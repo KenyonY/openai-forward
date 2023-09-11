@@ -29,7 +29,7 @@ IP_BLACKLIST=
 
         load_dotenv(override=True)
         importlib.reload(openai_forward.forward.openai)
-        importlib.reload(openai_forward.forward.settings)
+        importlib.reload(openai_forward.settings)
         cls.aibase = openai_forward.forward.openai.OpenaiForward(
             'https://api.openai.com', '/'
         )
@@ -40,7 +40,7 @@ IP_BLACKLIST=
             f.write(cls.defualt_env)
 
     def test_env1(self):
-        from openai_forward.forward.settings import FWD_KEY, OPENAI_API_KEY
+        from openai_forward.settings import FWD_KEY, OPENAI_API_KEY
 
         assert OPENAI_API_KEY == ["key1", "key2"]
         assert FWD_KEY == ["ps1", "ps2", "ps3"]

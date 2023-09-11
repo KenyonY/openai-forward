@@ -10,8 +10,8 @@ class TestRun:
     @classmethod
     def setup_class(cls):
         kill(8000)
-        base_url = "https://api.openai.com"
-        subprocess.Popen(["nohup", "openai-forward", "run", "--base_url", base_url])
+        base_url = "https://api.openai-forward.com"
+        subprocess.Popen(["nohup", "aifd", "run", "--base_url", base_url])
         time.sleep(3)
 
     @classmethod
@@ -19,7 +19,7 @@ class TestRun:
         kill(8000)
         rm("nohup.out")
 
-    def test_get_doc(self):
+    def test_health_route(self):
         resp = httpx.get("http://localhost:8000/healthz")
         assert resp.is_success
 
