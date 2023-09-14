@@ -29,6 +29,8 @@ EXTRA_ROUTE_PREFIX = [
     format_route_prefix(i) for i in env2list("EXTRA_ROUTE_PREFIX", sep=ENV_VAR_SEP)
 ]
 
+BENCHMARK_MODE = os.environ.get("BENCHMARK_MODE", "").strip().lower() == "true"
+
 LOG_CHAT = os.environ.get("LOG_CHAT", "False").strip().lower() == "true"
 print_chat = os.environ.get("PRINT_CHAT", "False").strip().lower() == "true"
 if LOG_CHAT:
@@ -49,7 +51,7 @@ PROXY = os.environ.get("PROXY", "").strip() or None
 if PROXY:
     additional_start_info["proxy"] = PROXY
 
-GLOBAL_RATE_LIMIT = os.environ.get("GLOBAL_RATE_LIMIT", "").strip() or None
+GLOBAL_RATE_LIMIT = os.environ.get("GLOBAL_RATE_LIMIT", "").strip() or "inf"
 RATE_LIMIT_STRATEGY = (
     os.environ.get("RATE_LIMIT_STRATEGY", "fixed-window").strip() or "fixed-window"
 )

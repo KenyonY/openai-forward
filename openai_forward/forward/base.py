@@ -1,5 +1,4 @@
 import traceback
-import uuid
 from itertools import cycle
 from typing import Any, AsyncGenerator, List
 
@@ -10,8 +9,8 @@ from fastapi.responses import StreamingResponse
 from loguru import logger
 
 from ..content.openai import ChatLogger, WhisperLogger
-from ..decorators import async_retry, token_rate_limit_decorator
-from ..helper import normalize_route
+from ..decorators import async_retry, async_token_rate_limit
+from ..helper import get_unique_id, normalize_route
 from ..settings import *
 
 
@@ -53,14 +52,17 @@ class ForwardBase:
             )
 
     @staticmethod
-    @token_rate_limit_decorator(token_interval_conf)
-    async def aiter_bytes(r: httpx.Response) -> AsyncGenerator[bytes, Any]:
+    @async_token_rate_limit(token_interval_conf)
+    async def aiter_bytes(
+        r: httpx.Response, request: Request
+    ) -> AsyncGenerator[bytes, Any]:
         """
         Asynchronously iterates through the bytes in the given httpx.Response object
         and yields each chunk.
 
         Args:
             r (httpx.Response): The httpx.Response object containing the server's response.
+            request (Request): The original FastAPI request object.
 
         Yields:
             bytes: Each chunk of bytes from the server's response.
@@ -182,7 +184,7 @@ class ForwardBase:
         r = await self.try_send(client_config, request)
 
         return StreamingResponse(
-            self.aiter_bytes(r),
+            self.aiter_bytes(r, request),
             status_code=r.status_code,
             media_type=r.headers.get("content-type"),
         )
@@ -265,7 +267,7 @@ class OpenaiBase(ForwardBase):
                             self.chat_logger.print_chat_info(chat_info)
 
                 elif url_path.startswith("/v1/audio/"):
-                    uid = uuid.uuid4().__str__()
+                    uid = get_unique_id()
 
                 else:
                     ...
@@ -276,7 +278,7 @@ class OpenaiBase(ForwardBase):
                 )
         return uid
 
-    @token_rate_limit_decorator(token_interval_conf)
+    @async_token_rate_limit(token_interval_conf)
     async def aiter_bytes(
         self, r: httpx.Response, request: Request, route_path: str, uid: str
     ):
@@ -294,11 +296,21 @@ class OpenaiBase(ForwardBase):
              AsyncGenerator[bytes]: Each chunk of bytes from the server's response.
         """
         byte_list = []
-        async for chunk in r.aiter_bytes():
-            byte_list.append(chunk)
-            yield chunk
+        try:
+            async for chunk in r.aiter_bytes():
+                byte_list.append(chunk)
+                yield chunk
 
-        await r.aclose()
+        except httpx.RemoteProtocolError:
+            logger.warning(f"RemoteProtocolError:\n{traceback.format_exc()}")
+
+        except Exception:
+            logger.warning(
+                f"aiter_bytes error:\nhost:{request.client.host} method:{request.method}: {traceback.format_exc()}"
+            )
+
+        finally:
+            await r.aclose()
 
         if uid:
             if r.is_success:

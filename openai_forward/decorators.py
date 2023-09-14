@@ -1,5 +1,6 @@
 import asyncio
 import inspect
+import random
 import time
 from functools import wraps
 
@@ -76,7 +77,7 @@ def async_retry(max_retries=3, delay=1, backoff=2, exceptions=(Exception,)):
     return decorator
 
 
-def token_rate_limit_decorator(token_rate_limit: dict):
+def async_token_rate_limit(token_rate_limit: dict):
     """
     A decorator for rate-limiting requests based on tokens. It limits the rate at which tokens can be consumed
     for a particular route path.
@@ -117,6 +118,19 @@ def token_rate_limit_decorator(token_rate_limit: dict):
                         await asyncio.sleep(delay)
                     start_time = time.perf_counter()
                 yield value
+
+        return wrapper
+
+    return decorator
+
+
+def async_random_sleep(min_time=0.001, max_time=3):
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            sleep_time = random.uniform(min_time, max_time)
+            await asyncio.sleep(sleep_time)
+            return await func(*args, **kwargs)
 
         return wrapper
 

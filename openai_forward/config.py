@@ -1,7 +1,6 @@
 import functools
 import logging
 import os
-import platform
 import sys
 import time
 from datetime import datetime
