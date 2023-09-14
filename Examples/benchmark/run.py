@@ -9,8 +9,8 @@ print(f"{config=}")
 openai.api_base = config["api_base"]
 openai.api_key = config["api_key"]
 
-# stream = True
-stream = False
+stream = True
+# stream = False
 
 is_print = False
 
@@ -22,7 +22,7 @@ async def run(n):
             {"role": "user", "content": '.'},
         ],
         stream=stream,
-        request_timeout=10,
+        request_timeout=60,
     )
 
     if stream:
@@ -49,16 +49,19 @@ async def run(n):
 
 async def main():
     mt = MeasureTime().start()
-    for epoch in range(3):
-
+    mean = 0
+    epochs = 5
+    for epoch in range(epochs):
         tasks = []
-        for i in range(1000):  # 创建 x个并发任务
+        for i in range(10):  # 创建 x个并发任务
             task = asyncio.create_task(run(i))
             tasks.append(task)
 
         mt.start()
         await asyncio.gather(*tasks)
-        mt.show_interval(f"{epoch=}")
+        cost = mt.show_interval(f"{epoch=}")
+        mean += cost
+    print(f"mean: {mean / epochs} s")
 
 
 asyncio.run(main())

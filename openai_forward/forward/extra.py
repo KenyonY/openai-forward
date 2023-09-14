@@ -3,13 +3,7 @@ from .base import ForwardBase
 
 class GenericForward(ForwardBase):
     def __init__(self, base_url: str, route_prefix: str, proxy=None):
-        import httpx
-
-        self.BASE_URL = base_url
-        self.ROUTE_PREFIX = route_prefix
-        self.client = httpx.AsyncClient(
-            base_url=self.BASE_URL, proxies=proxy, http1=True, http2=False
-        )
+        super().__init__(base_url, route_prefix, proxy)
 
 
 def create_generic_proxies():

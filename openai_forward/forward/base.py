@@ -4,9 +4,12 @@ from typing import Any, AsyncGenerator, List
 
 import anyio
 import httpx
+from asgiref.sync import AsyncToSync, SyncToAsync
+from asyncer import asyncify, syncify
 from fastapi import HTTPException, Request, status
-from fastapi.responses import StreamingResponse
 from loguru import logger
+from starlette.background import BackgroundTask
+from starlette.responses import StreamingResponse
 
 from ..content.openai import ChatLogger, WhisperLogger
 from ..decorators import async_retry, async_token_rate_limit
@@ -20,13 +23,32 @@ class ForwardBase:
     Provides methods for request validation, logging, and proxying.
     """
 
-    BASE_URL = None
-    ROUTE_PREFIX = None
-    client: httpx.AsyncClient = None
+    # BASE_URL = None
+    # ROUTE_PREFIX = None
+    # PROXY = None
+    # client: httpx.AsyncClient = None
 
     validate_host = bool(IP_BLACKLIST or IP_WHITELIST)
 
     timeout = TIMEOUT
+
+    def __init__(self, base_url: str, route_prefix: str, proxy=None):
+        self.BASE_URL = base_url
+        self.ROUTE_PREFIX = route_prefix
+        self.PROXY = proxy
+        self.client: httpx.AsyncClient | None = None
+        self.build_client()
+
+    def build_client(self):
+        """
+        Builds the httpx.AsyncClient object.
+
+        Returns:
+            httpx.AsyncClient: The httpx.AsyncClient object.
+        """
+        self.client = httpx.AsyncClient(
+            base_url=self.BASE_URL, proxies=self.PROXY, http1=True, http2=False
+        )
 
     @staticmethod
     def validate_request_host(ip):
@@ -75,7 +97,14 @@ class ForwardBase:
         max_retries=3,
         delay=0.2,
         backoff=2,
-        exceptions=(HTTPException, anyio.EndOfStream),
+        exceptions=(
+            httpx.NetworkError,
+            httpx.TimeoutException,
+            anyio.EndOfStream,
+            Exception,
+        ),
+        raise_callback_name="build_client",
+        raise_handler_name="handle_exception",
     )
     async def try_send(self, client_config: dict, request: Request):
         """
@@ -91,36 +120,32 @@ class ForwardBase:
         Raises:
             HTTPException: If the request fails after all retry attempts.
         """
-        try:
-            req = self.client.build_request(
-                method=request.method,
-                url=client_config['url'],
-                headers=client_config["headers"],
-                content=request.stream(),
-                timeout=self.timeout,
-            )
-            return await self.client.send(req, stream=True)
+        req = self.client.build_request(
+            method=request.method,
+            url=client_config['url'],
+            headers=client_config["headers"],
+            content=request.stream(),
+            timeout=self.timeout,
+        )
+        return await self.client.send(req, stream=False)
 
-        except (httpx.ConnectError, httpx.ConnectTimeout) as e:
+    def handle_exception(self, e):
+        """Handle exceptions and raise HTTPException."""
+        if isinstance(e, (httpx.NetworkError, httpx.ConnectTimeout)):
             error_info = (
                 f"{type(e)}: {e} | "
-                f"Please check if host={request.client.host} can access [{self.BASE_URL}] successfully?"
+                f"Please check if your host can access [{self.BASE_URL}] successfully?"
             )
-            self.handle_exception(
-                error_info, status_code=status.HTTP_504_GATEWAY_TIMEOUT
-            )
+            status_code = status.HTTP_504_GATEWAY_TIMEOUT
 
-        except anyio.EndOfStream:
+        elif isinstance(e, anyio.EndOfStream):
             error_info = "EndOfStream Error: trying to read from a stream that has been closed from the other end."
-            self.handle_exception(error_info)
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 
-        except Exception as e:
+        else:
             error_info = f"{type(e)}: {e}"
-            self.handle_exception(error_info)
+            status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 
-    @staticmethod
-    def handle_exception(error_info, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR):
-        """Handle exceptions and raise HTTPException."""
         logger.error(f"{error_info}\n{traceback.format_exc()}")
         raise HTTPException(status_code=status_code, detail=error_info)
 
@@ -148,7 +173,7 @@ class ForwardBase:
             self.validate_request_host(ip)
 
         _url_path = f"{request.scope.get('root_path')}{request.scope.get('path')}"
-        _url_path = normalize_route(_url_path)
+        # _url_path = normalize_route(_url_path) # already use middleware instead
         url_path = (
             _url_path[len(self.ROUTE_PREFIX) :]
             if self.ROUTE_PREFIX != '/'
@@ -187,6 +212,7 @@ class ForwardBase:
             self.aiter_bytes(r, request),
             status_code=r.status_code,
             media_type=r.headers.get("content-type"),
+            # background=BackgroundTask(r.aclose),
         )
 
 
@@ -198,7 +224,8 @@ class OpenaiBase(ForwardBase):
     _cycle_api_key = cycle(OPENAI_API_KEY)
     _no_auth_mode = OPENAI_API_KEY != [] and FWD_KEY == []
 
-    def __init__(self):
+    def __init__(self, base_url: str, route_prefix: str, proxy=None):
+        super().__init__(base_url, route_prefix, proxy)
         if LOG_CHAT or print_chat:
             self.chat_logger = ChatLogger(self.ROUTE_PREFIX)
             self.whisper_logger = WhisperLogger(self.ROUTE_PREFIX)
@@ -215,8 +242,8 @@ class OpenaiBase(ForwardBase):
             route_path (str): API route path.
             request_method (str): HTTP method (e.g., 'GET', 'POST').
 
-        Returns:
-            None
+        Raises:
+            Suppress all errors.
         """
         try:
             if (LOG_CHAT or print_chat) and request_method == "POST":
@@ -332,15 +359,12 @@ class OpenaiBase(ForwardBase):
         client_config = self.prepare_client(request)
         url_path = client_config["url_path"]
 
-        def set_apikey_from_preset():
-            nonlocal client_config
-            auth_prefix = "Bearer "
-            auth = client_config["auth"]
-            if self._no_auth_mode or auth and auth[len(auth_prefix) :] in FWD_KEY:
-                auth = auth_prefix + next(self._cycle_api_key)
-                client_config["headers"]["Authorization"] = auth
-
-        set_apikey_from_preset()
+        # set apikey from preset
+        auth, auth_prefix = client_config["auth"], "Bearer "
+        if self._no_auth_mode or auth and auth[len(auth_prefix) :] in FWD_KEY:
+            client_config["headers"]["Authorization"] = auth_prefix + next(
+                self._cycle_api_key
+            )
 
         uid = await self._add_payload_log(request, url_path)
 
@@ -350,4 +374,5 @@ class OpenaiBase(ForwardBase):
             self.aiter_bytes(r, request, url_path, uid),
             status_code=r.status_code,
             media_type=r.headers.get("content-type"),
+            # background=BackgroundTask(r.aclose),
         )

@@ -24,7 +24,7 @@ def __iter__(self):
     else:
         limit_raw = self._LimitGroup__limit_provider
     if limit_raw.lower().startswith("inf"):
-        # limit_items = [RateLimitItem(1, 1, "second")]
+        # limit_items = [RateLimitItem(0, 0, "second")]
         limit_items = ['-.-']
         self.exempt_when = lambda: True
     else:

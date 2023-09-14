@@ -6,6 +6,7 @@ from slowapi.errors import RateLimitExceeded
 from . import custom_slowapi
 from .cache.chat import chat_completions_benchmark
 from .forward import create_generic_proxies, create_openai_proxies
+from .helper import normalize_route as normalize_route_path
 from .settings import (
     BENCHMARK_MODE,
     RATE_LIMIT_STRATEGY,
@@ -27,6 +28,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def normalize_route(request: Request, call_next):
+    path = request.url.path
+    request.scope["path"] = normalize_route_path(path)
+    response = await call_next(request)
+    return response
 
 
 @app.get(

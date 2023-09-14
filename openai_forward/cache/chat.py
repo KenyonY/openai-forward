@@ -10,12 +10,7 @@ from pydantic import BaseModel, Field
 from ..decorators import async_random_sleep, async_token_rate_limit
 from ..helper import get_unique_id
 from ..settings import token_interval_conf
-from .tokenizer import encode_as_pieces
-
-try:
-    import tiktoken
-except ImportError:
-    tiktoken = None
+from .tokenizer import TIKTOKEN_VALID, count_tokens, encode_as_pieces
 
 
 class ChatMessage(BaseModel):
@@ -119,16 +114,17 @@ async def stream_generate(model: str, texts, request: Request):
     yield b'data: [DONE]\n\n'
 
 
-def generate(model: str, sentence, request: Request):
+def generate(model: str, sentence, messages):
     created = int(time.time())
     id = f"chatcmpl-{get_unique_id()}"
+
     choice_data = ChatCompletionResponseChoice(
         index=0,
         message=ChatMessage(role="assistant", content=sentence),
         finish_reason="stop",
     )
-    if tiktoken:
-        usage = tiktoken
+    if TIKTOKEN_VALID:
+        usage = count_tokens(messages, sentence, 'gpt-3.5-turbo')
     else:
         usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": -1}
     data = ChatCompletionsResponse(
@@ -143,13 +139,14 @@ def generate(model: str, sentence, request: Request):
     return orjson.dumps(data.dict(exclude_unset=True))
 
 
-@async_random_sleep(min_time=0.001, max_time=10)
+@async_random_sleep(min_time=5, max_time=6)
 async def chat_completions_benchmark(request: Request):
     sentence = next(sentences)
 
     payload = await request.json()
     model = payload.get("model", 'robot')
     stream = payload.get("stream", False)
+    messages = payload.get("messages", [])
 
     if stream:
         texts = encode_as_pieces(sentence)
@@ -158,5 +155,5 @@ async def chat_completions_benchmark(request: Request):
         )
     else:
         return Response(
-            content=generate(model, sentence, request), media_type="application/json"
+            content=generate(model, sentence, messages), media_type="application/json"
         )

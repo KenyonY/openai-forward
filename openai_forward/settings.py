@@ -30,6 +30,8 @@ EXTRA_ROUTE_PREFIX = [
 ]
 
 BENCHMARK_MODE = os.environ.get("BENCHMARK_MODE", "").strip().lower() == "true"
+if BENCHMARK_MODE:
+    additional_start_info["benchmark_mode"] = BENCHMARK_MODE
 
 LOG_CHAT = os.environ.get("LOG_CHAT", "False").strip().lower() == "true"
 print_chat = os.environ.get("PRINT_CHAT", "False").strip().lower() == "true"

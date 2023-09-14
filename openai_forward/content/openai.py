@@ -31,7 +31,7 @@ class ChatLogger:
             request (Request): A FastAPI request object.
 
         Returns:
-            dict: A dictionary containing parsed content, model, IP address, UID, and datetime.
+            dict: A dictionary containing parsed messages, model, IP address, UID, and datetime.
         """
         uid = get_unique_id()
         payload = await request.json()
