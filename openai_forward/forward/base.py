@@ -4,16 +4,13 @@ from typing import Any, AsyncGenerator, List
 
 import anyio
 import httpx
-from asgiref.sync import AsyncToSync, SyncToAsync
-from asyncer import asyncify, syncify
 from fastapi import HTTPException, Request, status
 from loguru import logger
-from starlette.background import BackgroundTask
 from starlette.responses import StreamingResponse
 
 from ..content.openai import ChatLogger, WhisperLogger
 from ..decorators import async_retry, async_token_rate_limit
-from ..helper import get_unique_id, normalize_route
+from ..helper import get_unique_id
 from ..settings import *
 
 
@@ -212,7 +209,6 @@ class ForwardBase:
             self.aiter_bytes(r, request),
             status_code=r.status_code,
             media_type=r.headers.get("content-type"),
-            # background=BackgroundTask(r.aclose),
         )
 
 
@@ -374,5 +370,4 @@ class OpenaiBase(ForwardBase):
             self.aiter_bytes(r, request, url_path, uid),
             status_code=r.status_code,
             media_type=r.headers.get("content-type"),
-            # background=BackgroundTask(r.aclose),
         )

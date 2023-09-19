@@ -1,9 +1,4 @@
-from .base import ForwardBase
-
-
-class GenericForward(ForwardBase):
-    def __init__(self, base_url: str, route_prefix: str, proxy=None):
-        super().__init__(base_url, route_prefix, proxy)
+from .base import ForwardBase as GenericForward
 
 
 def create_generic_proxies():

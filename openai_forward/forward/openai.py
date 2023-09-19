@@ -1,9 +1,4 @@
-from .base import OpenaiBase
-
-
-class OpenaiForward(OpenaiBase):
-    def __init__(self, base_url: str, route_prefix: str, proxy=None):
-        super().__init__(base_url, route_prefix, proxy)
+from .base import OpenaiBase as OpenaiForward
 
 
 def create_openai_proxies():
