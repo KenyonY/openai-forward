@@ -1,7 +1,9 @@
 import ast
+import hashlib
 import inspect
 import os
 import re
+import time
 from pathlib import Path
 from typing import Dict, List, Union
 
@@ -16,6 +18,10 @@ def get_client_ip(request: Request):
     elif not request.client or not request.client.host:
         return "127.0.0.1"
     return request.client.host
+
+
+def get_unique_id():
+    return hashlib.md5(str(time.time()).encode()).hexdigest()
 
 
 def normalize_route(route):

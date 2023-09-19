@@ -46,6 +46,11 @@ test = [
     "sparrow-python",
 ]
 
+benchmark = [
+    "openai>=0.27.8",
+    "tiktoken",
+]
+
 dev = [
     "openai>=0.27.8",
     "sparrow-python",

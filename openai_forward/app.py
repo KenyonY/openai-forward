@@ -3,8 +3,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
+from . import custom_slowapi
+from .cache.chat import chat_completions_benchmark
 from .forward import create_generic_proxies, create_openai_proxies
+from .helper import normalize_route as normalize_route_path
 from .settings import (
+    BENCHMARK_MODE,
     RATE_LIMIT_STRATEGY,
     dynamic_request_rate_limit,
     get_limiter_key,
@@ -26,20 +30,35 @@ app.add_middleware(
 )
 
 
+@app.middleware("http")
+async def normalize_route(request: Request, call_next):
+    path = request.url.path
+    request.scope["path"] = normalize_route_path(path)
+    response = await call_next(request)
+    return response
+
+
 @app.get(
     "/healthz",
     summary="Perform a Health Check",
     response_description="Return HTTP Status Code 200 (OK)",
     status_code=status.HTTP_200_OK,
 )
-@limiter.limit(dynamic_request_rate_limit)
+@limiter.limit(dynamic_request_rate_limit, exempt_when=lambda: True)
 def healthz(request: Request):
     return "OK"
 
 
+if BENCHMARK_MODE:
+    app.add_route(
+        "/benchmark/v1/chat/completions",
+        route=limiter.limit(dynamic_request_rate_limit)(chat_completions_benchmark),
+        methods=["POST"],
+    )
+
 add_route = lambda obj: app.add_route(
     obj.ROUTE_PREFIX + "{api_path:path}",
-    limiter.limit(dynamic_request_rate_limit)(obj.reverse_proxy),
+    route=limiter.limit(dynamic_request_rate_limit)(obj.reverse_proxy),
     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH", "TRACE"],
 )
 

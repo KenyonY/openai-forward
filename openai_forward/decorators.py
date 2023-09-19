@@ -1,9 +1,12 @@
 import asyncio
 import inspect
+import random
 import time
 from functools import wraps
+from typing import Callable
 
 from fastapi import Request
+from loguru import logger
 
 
 def retry(max_retries=3, delay=1, backoff=2, exceptions=(Exception,)):
@@ -26,12 +29,12 @@ def retry(max_retries=3, delay=1, backoff=2, exceptions=(Exception,)):
         def wrapper(*args, **kwargs):
             retries = 0
             current_delay = delay
-            while retries < max_retries:
+            while retries <= max_retries:
                 try:
                     return func(*args, **kwargs)
                 except exceptions as e:
                     retries += 1
-                    if retries >= max_retries:
+                    if retries == max_retries:
                         raise
                     time.sleep(current_delay)
                     current_delay *= backoff
@@ -41,7 +44,14 @@ def retry(max_retries=3, delay=1, backoff=2, exceptions=(Exception,)):
     return decorator
 
 
-def async_retry(max_retries=3, delay=1, backoff=2, exceptions=(Exception,)):
+def async_retry(
+    max_retries=3,
+    delay=1,
+    backoff=2,
+    exceptions=(Exception,),
+    raise_callback_name=None,
+    raise_handler_name=None,
+):
     """
     An asynchronous decorator for automatically retrying an async function upon encountering specified exceptions.
 
@@ -50,6 +60,8 @@ def async_retry(max_retries=3, delay=1, backoff=2, exceptions=(Exception,)):
         delay (float): The initial delay between retries in seconds.
         backoff (float): The multiplier by which the delay should increase after each retry.
         exceptions (tuple): A tuple of exception classes upon which to retry.
+        raise_callback_name (str): A callback function to call when the maximum number of retries is reached.
+        raise_handler_name (str): A error handler function to call when the maximum number of retries is reached.
 
     Returns:
         The return value of the wrapped function, if it succeeds.
@@ -61,22 +73,48 @@ def async_retry(max_retries=3, delay=1, backoff=2, exceptions=(Exception,)):
         async def wrapper(*args, **kwargs):
             retries = 0
             current_delay = delay
-            while retries < max_retries:
+            while retries <= max_retries:
                 try:
-                    return await func(*args, **kwargs)
+                    result = await func(*args, **kwargs)
+                    return result
                 except exceptions as e:
-                    retries += 1
-                    if retries >= max_retries:
+                    logger.info(f"retry: {retries}")
+                    if retries == max_retries:
+                        # Experimental
+                        if raise_callback_name:
+                            self = args[0]
+                            callback: Callable = getattr(
+                                self, raise_callback_name, None
+                            )
+                            if callback:
+                                logger.warning(
+                                    f"Calling raise callback {raise_callback_name}"
+                                )
+                                callback()
+                        if raise_handler_name:
+                            self = args[0]
+                            raise_handler: Callable = getattr(
+                                self, raise_handler_name, None
+                            )
+                            if raise_handler:
+                                logger.warning(
+                                    f"Calling raise handler {raise_handler_name}"
+                                )
+                                raise_handler(e)
                         raise
+                    logger.warning(
+                        f"Retrying {func.__name__} after {current_delay} seconds"
+                    )
                     await asyncio.sleep(current_delay)
                     current_delay *= backoff
+                    retries += 1
 
         return wrapper
 
     return decorator
 
 
-def token_rate_limit_decorator(token_rate_limit: dict):
+def async_token_rate_limit(token_rate_limit: dict):
     """
     A decorator for rate-limiting requests based on tokens. It limits the rate at which tokens can be consumed
     for a particular route path.
@@ -117,6 +155,21 @@ def token_rate_limit_decorator(token_rate_limit: dict):
                         await asyncio.sleep(delay)
                     start_time = time.perf_counter()
                 yield value
+
+        return wrapper
+
+    return decorator
+
+
+def async_random_sleep(min_time=0.001, max_time=3):
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            if max_time == 0:
+                return await func(*args, **kwargs)
+            sleep_time = random.uniform(min_time, max_time)
+            await asyncio.sleep(sleep_time)
+            return await func(*args, **kwargs)
 
         return wrapper
 

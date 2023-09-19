@@ -1,5 +1,4 @@
 import time
-import uuid
 from typing import List
 
 import orjson
@@ -7,7 +6,7 @@ from fastapi import Request
 from loguru import logger
 from orjson import JSONDecodeError
 
-from ..helper import get_client_ip
+from ..helper import get_client_ip, get_unique_id
 from .helper import markdown_print, parse_to_lines, print
 
 
@@ -32,9 +31,9 @@ class ChatLogger:
             request (Request): A FastAPI request object.
 
         Returns:
-            dict: A dictionary containing parsed content, model, IP address, UID, and datetime.
+            dict: A dictionary containing parsed messages, model, IP address, UID, and datetime.
         """
-        uid = uuid.uuid4().__str__()
+        uid = get_unique_id()
         payload = await request.json()
         msgs = payload["messages"]
         model = payload["model"]

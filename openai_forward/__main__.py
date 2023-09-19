@@ -7,21 +7,17 @@ import uvicorn
 
 class Cli:
     @staticmethod
-    def run(port=8000, workers=1, log_chat=None):
+    def run(port=8000, workers=1):
         """
         Runs the application using the Uvicorn server.
 
         Args:
             port (int): The port number on which to run the server. Default is 8000.
             workers (int): The number of worker processes to run. Default is 1.
-            log_chat (str): whether to log llm chat. Default is None.
 
         Returns:
             None
         """
-
-        if log_chat:
-            os.environ["LOG_CHAT"] = log_chat
 
         if platform.system() == "Windows":
             os.environ["TZ"] = ""

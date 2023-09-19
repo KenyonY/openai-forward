@@ -1,0 +1,67 @@
+import asyncio
+
+import openai
+from rich import print
+from sparrow import MeasureTime, yaml_load  # pip install sparrow-python
+
+config = yaml_load("config.yaml", rel_path=True)
+print(f"{config=}")
+openai.api_base = config["api_base"]
+openai.api_key = config["api_key"]
+
+stream = True
+# stream = False
+
+is_print = False
+
+
+async def run(n):
+    resp = await openai.ChatCompletion.acreate(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "user", "content": '.'},
+        ],
+        stream=stream,
+        request_timeout=60,
+    )
+
+    if stream:
+        first_chunk = await anext(resp)
+        if first_chunk is not None:
+            if is_print:
+                chunk_message = first_chunk['choices'][0]['delta']
+                print(f"{chunk_message['role']}: ")
+            async for chunk in resp:
+                if is_print:
+                    chunk_message = chunk['choices'][0]['delta']
+                    content = chunk_message.get("content", "")
+                    print(content, end="")
+            if is_print:
+                print()
+    else:
+        if is_print:
+            assistant_content = resp.choices[0].message.content
+            print(assistant_content)
+            print(resp.usage)
+
+    print(f"Task {n} completed")
+
+
+async def main():
+    mt = MeasureTime().start()
+    mean = 0
+    epochs = 5
+    for epoch in range(epochs):
+        tasks = []
+        for i in range(10):  # 创建 x个并发任务
+            task = asyncio.create_task(run(i))
+            tasks.append(task)
+
+        mt.start()
+        await asyncio.gather(*tasks)
+        cost = mt.show_interval(f"{epoch=}")
+        mean += cost
+    print(f"mean: {mean / epochs} s")
+
+
+asyncio.run(main())
