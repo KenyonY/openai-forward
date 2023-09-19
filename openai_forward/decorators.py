@@ -165,6 +165,8 @@ def async_random_sleep(min_time=0.001, max_time=3):
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
+            if max_time == 0:
+                return await func(*args, **kwargs)
             sleep_time = random.uniform(min_time, max_time)
             await asyncio.sleep(sleep_time)
             return await func(*args, **kwargs)

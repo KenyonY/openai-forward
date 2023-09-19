@@ -59,9 +59,6 @@ corpus = [
     """他还太年轻，尚不知道回忆总是会抹去坏的，夸大好的，也正是由于这种玄妙，我们才得以承担过去的重负。
 "He was still too young to know that the heart's memory eliminates the bad and magnifies the good, and that thanks to this artifice we manage to endure the burden of the past."
 """,
-    """任何人死去，都是因为没有人愿意为他死。
-The only regret I will have in dying is if it is not for love, for anyone who dies does so because no one wanted to die for them.
-""",
     """当他年轻的时候，他认为时间是个不会耗尽的海洋。现在他已经成了一个老人，而他每天都更加清楚，时间是个窄窄的峡谷。
 "When he was young, he thought time was a boundless ocean; now as an old man, he knew more each day that time was a narrow strait."
 """,
@@ -71,7 +68,7 @@ The only regret I will have in dying is if it is not for love, for anyone who di
     """多少人爱你青春欢畅的时辰，爱慕你的美丽，假意或者真心，只有一个人爱你那朝圣者的灵魂，爱你衰老了的脸上痛苦的皱纹　　
 "Many people love you during your youthful and cheerful moments, admiring your beauty, either pretentiously or sincerely. Only one person loves the soul of a pilgrim within you, and the painful wrinkles on your aged face."
 """,
-    """他离她那么近，甚至能听到她每一次的呼吸声，闻到她身上散发的馨香，在此生余下的岁月中，他正是靠着这种馨香来辨认她。
+    """他离她那么近，甚至能听到她每一次的呼吸，闻到她身上散发的馨香，在此生余下的岁月中，他正是靠着这种馨香来辨认她。
 "He is so close to her that he can even hear each of her breaths and smell the fragrance that emanates from her. For the remaining years of his life, it is this fragrance by which he identifies her."
  """,
 ]
@@ -139,7 +136,7 @@ def generate(model: str, sentence, messages):
     return orjson.dumps(data.dict(exclude_unset=True))
 
 
-@async_random_sleep(min_time=5, max_time=6)
+@async_random_sleep(min_time=0, max_time=0)
 async def chat_completions_benchmark(request: Request):
     sentence = next(sentences)
 

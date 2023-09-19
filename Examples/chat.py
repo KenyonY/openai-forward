@@ -20,10 +20,10 @@ resp = openai.ChatCompletion.create(
     model="gpt-3.5-turbo",
     # model="gpt-4",
     messages=[
-        {"role": "user", "content": user_content},
+        {"role": "user", "content": 'hi'},
     ],
     stream=stream,
-    request_timeout=6,
+    request_timeout=30,
 )
 
 if stream:
