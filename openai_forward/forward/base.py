@@ -124,7 +124,7 @@ class ForwardBase:
             content=request.stream(),
             timeout=self.timeout,
         )
-        return await self.client.send(req, stream=False)
+        return await self.client.send(req, stream=True)
 
     def handle_exception(self, e):
         """Handle exceptions and raise HTTPException."""
@@ -199,8 +199,6 @@ class ForwardBase:
         Returns:
             StreamingResponse: The response from the reverse proxied server, as a streaming response.
         """
-        assert self.client
-
         client_config = self.prepare_client(request)
 
         r = await self.try_send(client_config, request)
