@@ -4,7 +4,6 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from . import custom_slowapi
-from .cache.chat import chat_completions_benchmark
 from .forward import create_generic_proxies, create_openai_proxies
 from .helper import normalize_route as normalize_route_path
 from .settings import (
@@ -21,6 +20,7 @@ app = FastAPI(title="openai_forward", version="0.5")
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -44,25 +44,37 @@ async def normalize_route(request: Request, call_next):
     response_description="Return HTTP Status Code 200 (OK)",
     status_code=status.HTTP_200_OK,
 )
-@limiter.limit(dynamic_request_rate_limit, exempt_when=lambda: True)
 def healthz(request: Request):
     return "OK"
 
 
 if BENCHMARK_MODE:
+    from .cache.chat_completions import chat_completions_benchmark
+
     app.add_route(
         "/benchmark/v1/chat/completions",
         route=limiter.limit(dynamic_request_rate_limit)(chat_completions_benchmark),
         methods=["POST"],
     )
 
+openai_objs = create_openai_proxies()
+generic_objs = create_generic_proxies()
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    for obj in openai_objs:
+        await obj.client.close()
+    for obj in generic_objs:
+        await obj.client.aclose()
+
+
 add_route = lambda obj: app.add_route(
     obj.ROUTE_PREFIX + "{api_path:path}",
     route=limiter.limit(dynamic_request_rate_limit)(obj.reverse_proxy),
     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH", "TRACE"],
 )
-
-[add_route(obj) for obj in create_openai_proxies()]
-[add_route(obj) for obj in create_generic_proxies()]
+[add_route(obj) for obj in openai_objs]
+[add_route(obj) for obj in generic_objs]
 
 show_startup()

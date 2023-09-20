@@ -4,7 +4,7 @@
 > http://localhost:8080  
 > 该部分测试是为评估`fastapi`本身流式与非流式返回的性能,不涉及转发
 
-启动参数: `BENCHMARK_MODE=true aifd run --workers=n --port 8080` (n=1 or 4)
+启动参数: `BENCHMARK_MODE=true aifd run --workers=n --port 8080` (n=1 or 16)
 
 
 
@@ -14,13 +14,14 @@ wrk -t8 -c400 -d10s -s post.lua http://localhost:8080/benchmark/v1/chat/completi
 ```
 单核:
 
-![img_7.png](img_7.png)
+![img_7.png](images/img_7.png)
 
 
-4核:
-
-![img_8.png](img_8.png)
-
+16核:
+```bash
+wrk -t15 -c500 -d10s -s post.lua http://localhost:8080/benchmark/v1/chat/completions
+```
+![img_11.png](images/img_11.png)
 
 ### stream == true:
 ```bash
@@ -31,11 +32,13 @@ wrk -t8 -c100 -d10s -s post.lua http://localhost:8080/benchmark/v1/chat/completi
 
 单核:
 
-![img_10.png](img_10.png)
+![img_13.png](images/img_13.png)
 
-4核:
 
-![img.png](img.png)
+16核:  
+![img_12.png](images/img_12.png)
+
+
 
 ## 转发benchmark接口
 > http://localhost:8000  
@@ -51,21 +54,39 @@ wrk -t8 -c100 -d10s -s post.lua http://localhost:8000/benchmark/v1/chat/completi
 
 **单核**
 
-![img_5.png](img_5.png)
+(httpx)  
+![img_5.png](images/img_5.png)
 
-**4核**:(原始与转发两边均4核)  
+(aiohttp)  
+![img_14.png](images/img_14.png)
 
-![img_2.png](img_2.png)
+**4核**:
+
+(httpx)  
+![img_2.png](images/img_2.png)
+
+(aiohttp)  
+![img_15.png](images/img_15.png)
 
 ### stream == true:
 
-**单核**: (是的，转发时的结果比原始的还要好,比较迷~)
+**单核**: 
 
-![img_4.png](img_4.png)
+(httpx)  
+![img_4.png](images/img_4.png)
 
-**4核**:(原始与转发两边均4核)
+(aiohttp)  
+![img_17.png](images/img_17.png)
 
-![img_3.png](img_3.png)
+**4核**:
+
+(httpx)  
+![img_3.png](images/img_3.png)
+
+(aiohttp)  
+![img_16.png](images/img_16.png)
 
 
+注: 虽然结果显示在流式转发的性能上 aiohttp 要比 httpx 的性能要高很多，
+但这主要是代码中aiohttp版本中做了一些优化，而不是这两个库的性能差异。
 

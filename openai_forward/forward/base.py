@@ -1,12 +1,15 @@
+import asyncio
 import traceback
+from asyncio import Queue
 from itertools import cycle
 from typing import Any, AsyncGenerator, List
 
+import aiohttp
 import anyio
-import httpx
+from aiohttp import TCPConnector
 from fastapi import HTTPException, Request, status
 from loguru import logger
-from starlette.responses import StreamingResponse
+from starlette.responses import BackgroundTask, StreamingResponse
 
 from ..content.openai import ChatLogger, WhisperLogger
 from ..decorators import async_retry, async_token_rate_limit
@@ -20,32 +23,19 @@ class ForwardBase:
     Provides methods for request validation, logging, and proxying.
     """
 
-    # BASE_URL = None
-    # ROUTE_PREFIX = None
-    # PROXY = None
-    # client: httpx.AsyncClient = None
-
     validate_host = bool(IP_BLACKLIST or IP_WHITELIST)
-
     timeout = TIMEOUT
 
     def __init__(self, base_url: str, route_prefix: str, proxy=None):
         self.BASE_URL = base_url
-        self.ROUTE_PREFIX = route_prefix
         self.PROXY = proxy
-        self.client: httpx.AsyncClient | None = None
+        self.ROUTE_PREFIX = route_prefix
+        self.client: aiohttp.ClientSession | None = None
         self.build_client()
 
     def build_client(self):
-        """
-        Builds the httpx.AsyncClient object.
-
-        Returns:
-            httpx.AsyncClient: The httpx.AsyncClient object.
-        """
-        self.client = httpx.AsyncClient(
-            base_url=self.BASE_URL, proxies=self.PROXY, http1=True, http2=False
-        )
+        connector = TCPConnector(limit=1000, limit_per_host=1000, force_close=False)
+        self.client = aiohttp.ClientSession(connector=connector)
 
     @staticmethod
     def validate_request_host(ip):
@@ -73,62 +63,36 @@ class ForwardBase:
     @staticmethod
     @async_token_rate_limit(token_interval_conf)
     async def aiter_bytes(
-        r: httpx.Response, request: Request
+        r: aiohttp.ClientResponse, request: Request
     ) -> AsyncGenerator[bytes, Any]:
-        """
-        Asynchronously iterates through the bytes in the given httpx.Response object
-        and yields each chunk.
-
-        Args:
-            r (httpx.Response): The httpx.Response object containing the server's response.
-            request (Request): The original FastAPI request object.
-
-        Yields:
-            bytes: Each chunk of bytes from the server's response.
-        """
-        async for chunk in r.aiter_bytes():
+        async for chunk, _ in r.content.iter_chunks():  # yield chunk one by one.
             yield chunk
-        await r.aclose()
 
     @async_retry(
         max_retries=3,
         delay=0.2,
         backoff=2,
         exceptions=(
-            httpx.NetworkError,
-            httpx.TimeoutException,
+            aiohttp.ClientConnectionError,
+            aiohttp.ClientTimeout,
             anyio.EndOfStream,
-            Exception,
+            # Exception,
         ),
         raise_callback_name="build_client",
         raise_handler_name="handle_exception",
     )
     async def try_send(self, client_config: dict, request: Request):
-        """
-        Asynchronously sends a request to the target service with retry logic.
-
-        Args:
-            client_config (dict): Configuration dictionary for creating the client request.
-            request (Request): The original FastAPI request object.
-
-        Returns:
-            httpx.Response: The httpx.Response object containing the server's response.
-
-        Raises:
-            HTTPException: If the request fails after all retry attempts.
-        """
-        req = self.client.build_request(
+        return await self.client.request(
             method=request.method,
             url=client_config['url'],
+            data=request.stream(),
             headers=client_config["headers"],
-            content=request.stream(),
             timeout=self.timeout,
+            proxy=self.PROXY,
         )
-        return await self.client.send(req, stream=True)
 
     def handle_exception(self, e):
-        """Handle exceptions and raise HTTPException."""
-        if isinstance(e, (httpx.NetworkError, httpx.ConnectTimeout)):
+        if isinstance(e, (aiohttp.ClientConnectionError, aiohttp.ClientTimeout)):
             error_info = (
                 f"{type(e)}: {e} | "
                 f"Please check if your host can access [{self.BASE_URL}] successfully?"
@@ -147,36 +111,18 @@ class ForwardBase:
         raise HTTPException(status_code=status_code, detail=error_info)
 
     def prepare_client(self, request: Request) -> dict:
-        """
-        Prepares the client configuration based on the given request.
-
-        Args:
-            request (Request): The request object containing the necessary information.
-
-        Returns:
-            dict: The client configuration dictionary with the necessary parameters set.
-                  The dictionary has the following keys:
-                  - 'auth': The authorization header value.
-                  - 'headers': The dictionary of headers.
-                  - 'url': The URL object.
-                  - 'url_path': The URL path.
-
-        Raises:
-            AssertionError: If the `BASE_URL` or `ROUTE_PREFIX` is not set.
-        """
         assert self.BASE_URL and self.ROUTE_PREFIX
         if self.validate_host:
             ip = get_client_ip(request)
             self.validate_request_host(ip)
 
         _url_path = f"{request.scope.get('root_path')}{request.scope.get('path')}"
-        # _url_path = normalize_route(_url_path) # already use middleware instead
         url_path = (
             _url_path[len(self.ROUTE_PREFIX) :]
             if self.ROUTE_PREFIX != '/'
             else _url_path
         )
-        url = httpx.URL(path=url_path, query=request.url.query.encode("utf-8"))
+        url = f"{self.BASE_URL}{url_path}?{request.url.query}"
 
         headers = dict(request.headers)
         auth = headers.pop("authorization", "")
@@ -190,23 +136,15 @@ class ForwardBase:
         }
 
     async def reverse_proxy(self, request: Request):
-        """
-        Reverse proxies the given request.
-
-        Args:
-            request (Request): The request to be reverse proxied.
-
-        Returns:
-            StreamingResponse: The response from the reverse proxied server, as a streaming response.
-        """
         client_config = self.prepare_client(request)
 
         r = await self.try_send(client_config, request)
 
         return StreamingResponse(
             self.aiter_bytes(r, request),
-            status_code=r.status_code,
+            status_code=r.status,
             media_type=r.headers.get("content-type"),
+            background=BackgroundTask(r.release),
         )
 
 
@@ -225,13 +163,13 @@ class OpenaiBase(ForwardBase):
             self.whisper_logger = WhisperLogger(self.ROUTE_PREFIX)
 
     def _add_result_log(
-        self, byte_list: List[bytes], uid: str, route_path: str, request_method: str
+        self, buffer: bytearray, uid: str, route_path: str, request_method: str
     ):
         """
         Logs the result of the API call.
 
         Args:
-            byte_list (List[bytes]): List of bytes, usually from the API response.
+            buffer (bytearray): List of bytes, usually from the API response.
             uid (str): Unique identifier for the request.
             route_path (str): API route path.
             request_method (str): HTTP method (e.g., 'GET', 'POST').
@@ -242,7 +180,7 @@ class OpenaiBase(ForwardBase):
         try:
             if (LOG_CHAT or print_chat) and request_method == "POST":
                 if route_path == CHAT_COMPLETION_ROUTE:
-                    target_info = self.chat_logger.parse_iter_bytes(byte_list)
+                    target_info = self.chat_logger.parse_bytearray(buffer)
                     if LOG_CHAT:
                         self.chat_logger.log_chat(
                             {target_info["role"]: target_info["content"], "uid": uid}
@@ -253,7 +191,7 @@ class OpenaiBase(ForwardBase):
                         )
 
                 elif route_path.startswith("/v1/audio/"):
-                    self.whisper_logger.add_log(b"".join([_ for _ in byte_list]))
+                    self.whisper_logger.add_log(buffer)
 
                 else:
                     ...
@@ -299,16 +237,25 @@ class OpenaiBase(ForwardBase):
                 )
         return uid
 
+    @staticmethod
+    async def read_chunks(r: aiohttp.ClientResponse, queue):
+        buffer = bytearray()
+        async for chunk in r.content.iter_any():  # yield all available data as soon as it is received.
+            buffer.extend(chunk)
+            await queue.put(chunk)
+
+        await queue.put(buffer)  # add all information when the stream ends
+
     @async_token_rate_limit(token_interval_conf)
     async def aiter_bytes(
-        self, r: httpx.Response, request: Request, route_path: str, uid: str
+        self, r: aiohttp.ClientResponse, request: Request, route_path: str, uid: str
     ):
         """
-        Asynchronously iterates through the bytes in the given httpx.Response object
+        Asynchronously iterates through the bytes in the given aiohttp.ClientResponse object
         and yields each chunk while also logging the request and response data.
 
         Args:
-            r (httpx.Response): The httpx.Response object.
+            r (aiohttp.ClientResponse): The aiohttp.ClientResponse object.
             request (Request): The original FastAPI request object.
             route_path (str): The API route path.
             uid (str): Unique identifier for the request.
@@ -316,29 +263,36 @@ class OpenaiBase(ForwardBase):
         Returns:
              AsyncGenerator[bytes]: Each chunk of bytes from the server's response.
         """
-        byte_list = []
+        queue = Queue()
+        is_complete = False
+
+        # todo: this task seems to be reusable?
+        prod = asyncio.create_task(self.read_chunks(r, queue))
         try:
-            async for chunk in r.aiter_bytes():
-                byte_list.append(chunk)
+            while True:
+                chunk = await queue.get()
+                if not isinstance(chunk, bytes):
+                    queue.task_done()
+                    is_complete = True
+                    break
                 yield chunk
-
-        except httpx.RemoteProtocolError:
-            logger.warning(f"RemoteProtocolError:\n{traceback.format_exc()}")
-
         except Exception:
             logger.warning(
                 f"aiter_bytes error:\nhost:{request.client.host} method:{request.method}: {traceback.format_exc()}"
             )
-
         finally:
-            await r.aclose()
-
+            # await prod
+            prod.cancel()
+            r.release()
         if uid:
-            if r.is_success:
-                self._add_result_log(byte_list, uid, route_path, request.method)
+            if r.ok and is_complete:
+                self._add_result_log(chunk, uid, route_path, request.method)
+            elif chunk is not None:
+                logger.warning(
+                    f'uid: {uid}\n status: {r.status}\n {chunk.decode("utf-8")}'
+                )
             else:
-                response_info = b"".join([_ for _ in byte_list])
-                logger.warning(f'uid: {uid}\n' f'{response_info}')
+                logger.warning(f'uid: {uid}\n' f'{r.status}')
 
     async def reverse_proxy(self, request: Request):
         """
@@ -366,6 +320,6 @@ class OpenaiBase(ForwardBase):
 
         return StreamingResponse(
             self.aiter_bytes(r, request, url_path, uid),
-            status_code=r.status_code,
+            status_code=r.status,
             media_type=r.headers.get("content-type"),
         )

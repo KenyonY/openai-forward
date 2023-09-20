@@ -15,12 +15,14 @@ debug = False
 user_content = """
 用c实现目前已知最快平方根算法
 """
+from sparrow import MeasureTime
 
+mt = MeasureTime().start()
 resp = openai.ChatCompletion.create(
     model="gpt-3.5-turbo",
     # model="gpt-4",
     messages=[
-        {"role": "user", "content": 'hi'},
+        {"role": "user", "content": "hi"},
     ],
     stream=stream,
     request_timeout=30,
@@ -44,6 +46,7 @@ else:
     print(assistant_content)
     print(resp.usage)
 
+mt.show_interval("chat")
 """
 gpt-4:
 
