@@ -13,7 +13,7 @@ openai.api_key = config["api_key"]
 stream = True
 
 
-user_content = "使用泰勒展开推导出牛顿法迭代公式如下:  \n"
+user_content = "现在让我们使用泰勒展开推导出牛顿法迭代公式:  \n"
 from sparrow import MeasureTime
 
 mt = MeasureTime().start()

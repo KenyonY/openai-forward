@@ -66,7 +66,7 @@ async def shutdown():
     for obj in openai_objs:
         await obj.client.close()
     for obj in generic_objs:
-        await obj.client.aclose()
+        await obj.client.close()
 
 
 add_route = lambda obj: app.add_route(

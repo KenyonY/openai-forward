@@ -202,7 +202,7 @@ def generate(model: str, sentence, messages):
     )
 
 
-@async_random_sleep(min_time=0, max_time=0)
+@async_random_sleep(min_time=0, max_time=1)
 async def chat_completions_benchmark(request: Request):
     sentence = next(sentences)
 
@@ -214,8 +214,8 @@ async def chat_completions_benchmark(request: Request):
     if stream:
         texts = encode_as_pieces(sentence)
         return StreamingResponse(
-            # stream_generate_use_dict(model, texts, request), media_type="text/event-stream"
-            stream_generate(model, texts, request),
+            stream_generate_use_dict(model, texts, request),
+            # stream_generate(model, texts, request),
             media_type="text/event-stream",
         )
     else:

@@ -24,7 +24,7 @@ class ForwardBase:
     """
 
     validate_host = bool(IP_BLACKLIST or IP_WHITELIST)
-    timeout = TIMEOUT
+    timeout = aiohttp.ClientTimeout(connect=TIMEOUT)
 
     def __init__(self, base_url: str, route_prefix: str, proxy=None):
         self.BASE_URL = base_url
@@ -34,8 +34,8 @@ class ForwardBase:
         self.build_client()
 
     def build_client(self):
-        connector = TCPConnector(limit=1000, limit_per_host=1000, force_close=False)
-        self.client = aiohttp.ClientSession(connector=connector)
+        connector = TCPConnector(limit=500, limit_per_host=0, force_close=False)
+        self.client = aiohttp.ClientSession(connector=connector, timeout=self.timeout)
 
     @staticmethod
     def validate_request_host(ip):
@@ -73,26 +73,35 @@ class ForwardBase:
         delay=0.2,
         backoff=2,
         exceptions=(
-            aiohttp.ClientConnectionError,
-            aiohttp.ClientTimeout,
+            aiohttp.ServerTimeoutError,
+            aiohttp.ServerConnectionError,
+            aiohttp.ServerDisconnectedError,
+            asyncio.TimeoutError,
             anyio.EndOfStream,
-            # Exception,
+            RuntimeError,
         ),
-        raise_callback_name="build_client",
+        # raise_callback_name="build_client",
         raise_handler_name="handle_exception",
     )
     async def try_send(self, client_config: dict, request: Request):
         return await self.client.request(
             method=request.method,
             url=client_config['url'],
-            data=request.stream(),
+            data=await request.body(),
             headers=client_config["headers"],
-            timeout=self.timeout,
             proxy=self.PROXY,
         )
 
     def handle_exception(self, e):
-        if isinstance(e, (aiohttp.ClientConnectionError, aiohttp.ClientTimeout)):
+        if isinstance(
+            e,
+            (
+                asyncio.TimeoutError,
+                aiohttp.ServerConnectionError,
+                aiohttp.ServerDisconnectedError,
+                aiohttp.ServerTimeoutError,
+            ),
+        ):
             error_info = (
                 f"{type(e)}: {e} | "
                 f"Please check if your host can access [{self.BASE_URL}] successfully?"
