@@ -2,7 +2,7 @@ import asyncio
 import traceback
 from asyncio import Queue
 from itertools import cycle
-from typing import Any, AsyncGenerator, List
+from typing import Any, AsyncGenerator
 
 import aiohttp
 import anyio
@@ -275,8 +275,8 @@ class OpenaiBase(ForwardBase):
         queue = Queue()
         is_complete = False
 
-        # todo: this task seems to be reusable?
-        prod = asyncio.create_task(self.read_chunks(r, queue))
+        # todo:
+        task = asyncio.create_task(self.read_chunks(r, queue))
         try:
             while True:
                 chunk = await queue.get()
@@ -290,8 +290,8 @@ class OpenaiBase(ForwardBase):
                 f"aiter_bytes error:\nhost:{request.client.host} method:{request.method}: {traceback.format_exc()}"
             )
         finally:
-            # await prod
-            prod.cancel()
+            if not task.done():
+                task.cancel()
             r.release()
         if uid:
             if r.ok and is_complete:

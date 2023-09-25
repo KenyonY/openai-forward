@@ -132,7 +132,7 @@ async def stream_generate(model: str, texts, request: Request):
 
 
 @async_token_rate_limit(token_interval_conf)
-async def stream_generate_use_dict(model: str, texts, request: Request):
+async def stream_generate_efficient(model: str, texts, request: Request):
     """More efficient version of stream_generate"""
     created = int(time.time())
     id = f"chatcmpl-{get_unique_id()}"
@@ -198,7 +198,7 @@ def generate(model: str, sentence, messages):
 
     return orjson.dumps(
         attrs.asdict(data, filter=attrs.filters.exclude(type(None))),
-        option=orjson.OPT_APPEND_NEWLINE,
+        option=orjson.OPT_APPEND_NEWLINE,  # not necessary
     )
 
 
@@ -214,7 +214,7 @@ async def chat_completions_benchmark(request: Request):
     if stream:
         texts = encode_as_pieces(sentence)
         return StreamingResponse(
-            stream_generate_use_dict(model, texts, request),
+            stream_generate_efficient(model, texts, request),
             # stream_generate(model, texts, request),
             media_type="text/event-stream",
         )

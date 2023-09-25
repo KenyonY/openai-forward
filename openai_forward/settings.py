@@ -10,7 +10,7 @@ from .helper import env2dict, env2list, format_route_prefix, get_client_ip
 
 additional_start_info = {}
 
-TIMEOUT = float(os.environ.get("TIMEOUT", "300").strip())
+TIMEOUT = float(os.environ.get("TIMEOUT", "").strip() or "20")
 
 CHAT_COMPLETION_ROUTE = (
     os.environ.get("CHAT_COMPLETION_ROUTE", "").strip() or "/v1/chat/completions"
