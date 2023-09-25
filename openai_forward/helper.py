@@ -141,14 +141,35 @@ def get_matches(messages: List[Dict], assistants: List[Dict]):
 
 
 def parse_log_to_list(log_path: str):
+    def clean_str(original_str: str):
+        try:
+            return str(original_str).encode('utf-8', 'ignore').decode('utf-8')
+        except Exception:
+            print(f"{original_str=}")
+            return ""
+
     with open(log_path, "r", encoding="utf-8") as f:
         messages, assistant = [], []
         for line in f.readlines():
             content: dict = ast.literal_eval(line)
             if content.get("messages"):
-                messages.append(content)
+                clean_content = {}
+                for key, value in content.items():
+                    if key == "messages":
+                        clean_content[key] = [
+                            {k: clean_str(v)} for i in value for k, v in i.items()
+                        ]
+                    else:
+                        clean_content[key] = value
+                messages.append(clean_content)
             else:
-                assistant.append(content)
+                clean_content = {}
+                for key, value in content.items():
+                    if key == "assistant":
+                        clean_content[key] = clean_str(value)
+                    else:
+                        clean_content[key] = value
+                assistant.append(clean_content)
     return messages, assistant
 
 

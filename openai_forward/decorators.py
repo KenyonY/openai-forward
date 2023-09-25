@@ -36,6 +36,10 @@ def retry(max_retries=3, delay=1, backoff=2, exceptions=(Exception,)):
                     retries += 1
                     if retries == max_retries:
                         raise
+                    logger.warning(
+                        f"Error:{type(e)}\n"
+                        f"Retrying `{func.__name__}` after {current_delay} seconds, retry : {retries}\n"
+                    )
                     time.sleep(current_delay)
                     current_delay *= backoff
 
@@ -78,7 +82,7 @@ def async_retry(
                     result = await func(*args, **kwargs)
                     return result
                 except exceptions as e:
-                    logger.info(f"retry: {retries}")
+
                     if retries == max_retries:
                         # Experimental
                         if raise_callback_name:
@@ -90,6 +94,8 @@ def async_retry(
                                 logger.warning(
                                     f"Calling raise callback {raise_callback_name}"
                                 )
+                                if getattr(self, 'client', None):
+                                    await self.client.close()
                                 callback()
                         if raise_handler_name:
                             self = args[0]
@@ -102,12 +108,14 @@ def async_retry(
                                 )
                                 raise_handler(e)
                         raise
+
+                    retries += 1
                     logger.warning(
-                        f"Retrying {func.__name__} after {current_delay} seconds"
+                        f"Error:{type(e)}\n"
+                        f"Retrying `{func.__name__}` after {current_delay} seconds, retry : {retries}\n"
                     )
                     await asyncio.sleep(current_delay)
                     current_delay *= backoff
-                    retries += 1
 
         return wrapper
 
@@ -161,7 +169,7 @@ def async_token_rate_limit(token_rate_limit: dict):
     return decorator
 
 
-def async_random_sleep(min_time=0.001, max_time=3):
+def async_random_sleep(min_time=0, max_time=1):
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):

@@ -51,9 +51,10 @@ async def main():
     mt = MeasureTime().start()
     mean = 0
     epochs = 5
+    concurrency = 100
     for epoch in range(epochs):
         tasks = []
-        for i in range(10):  # 创建 x个并发任务
+        for i in range(concurrency):  # 创建 concurrency 个并发任务
             task = asyncio.create_task(run(i))
             tasks.append(task)
 
@@ -61,7 +62,9 @@ async def main():
         await asyncio.gather(*tasks)
         cost = mt.show_interval(f"{epoch=}")
         mean += cost
-    print(f"mean: {mean / epochs} s")
+    mean_cost = mean / epochs
+    print(f"mean: {mean_cost} s")
+    print(f"{concurrency/mean_cost}req/s")
 
 
 asyncio.run(main())

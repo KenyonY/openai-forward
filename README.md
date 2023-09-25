@@ -241,7 +241,6 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 |------------|------------|:-------:|
 | --port     | 服务端口号      |  8000   |
 | --workers  | 工作进程数      |    1    |
-| --log_chat | 同 LOG_CHAT | `False` |
 
 </details>
 

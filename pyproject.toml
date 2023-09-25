@@ -24,11 +24,11 @@ dependencies = [
     "uvicorn>=0.21.0",
     "orjson>=3.9",
     "python-dotenv",
-    "httpx>=0.24",
     "rich",
     "fire",
     "pytz",
     "slowapi==0.1.8",
+    "aiohttp>=3.8.5",
 ]
 
 dynamic = ["version"]
@@ -42,17 +42,17 @@ Source = "https://github.com/beidongjiedeguang/openai-forward"
 [project.optional-dependencies]
 test = [
     "pytest",
-    "openai>=0.27.8",
+    "openai>=0.28.0",
     "sparrow-python",
 ]
 
 benchmark = [
-    "openai>=0.27.8",
+    "openai>=0.28.0",
     "tiktoken",
 ]
 
 dev = [
-    "openai>=0.27.8",
+    "openai>=0.28.0",
     "sparrow-python",
     "schedule",
 ]
