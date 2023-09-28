@@ -34,10 +34,10 @@ dependencies = [
 dynamic = ["version"]
 
 [project.urls]
-Homepage = "https://github.com/beidongjiedeguang/openai-forward"
-Documentation = "https://github.com/beidongjiedeguang/openai-forward#openai-forward"
-Issues = "https://github.com/beidongjiedeguang/openai-forward/issues"
-Source = "https://github.com/beidongjiedeguang/openai-forward"
+Homepage = "https://github.com/KenyonY/openai-forward"
+Documentation = "https://github.com/KenyonY/openai-forward#openai-forward"
+Issues = "https://github.com/KenyonY/openai-forward/issues"
+Source = "https://github.com/KenyonY/openai-forward"
 
 [project.optional-dependencies]
 test = [

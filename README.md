@@ -6,32 +6,27 @@
     <br>
 </h1>
 <p align="center">
-    <b> OpenAI API风格接口转发服务 <br/>
-    The fastest way to deploy LLMs api forwarding </b>
+        一个支持多目标路由、流量控制、自动重试以及一键云端部署的高效代理工具 
 </p>
 
 <p align="center">
-    <a href="https://pypi.org/project/openai-forward/"><img src="https://img.shields.io/pypi/v/openai-forward?color=brightgreen" alt="PyPI version" ></a>
+    <a href="https://pypi.org/project/openai-forward/">
+        <img src="https://img.shields.io/pypi/v/openai-forward?color=brightgreen&style=flat-square" alt="PyPI version" >
+    </a>
     <a href="https://github.com/beidongjiedeguang/openai-forward/blob/main/LICENSE">
         <img alt="License" src="https://img.shields.io/github/license/beidongjiedeguang/openai-forward.svg?color=blue&style=flat-square">
     </a>
     <a href="https://github.com/beidongjiedeguang/openai-forward/releases">
-        <img alt="Release (latest by date)" src="https://img.shields.io/github/v/release/beidongjiedeguang/openai-forward">
-    </a>
-    <a href="https://github.com/beidongjiedeguang/openai-forward">
-        <img alt="GitHub repo size" src="https://img.shields.io/github/repo-size/beidongjiedeguang/openai-forward">
+        <img alt="Release (latest by date)" src="https://img.shields.io/github/v/release/beidongjiedeguang/openai-forward?&style=flat-square">
     </a>
     <a href="https://hub.docker.com/r/beidongjiedeguang/openai-forward">
-        <img alt="docker image size" src="https://img.shields.io/docker/image-size/beidongjiedeguang/openai-forward?style=flat&label=docker image">
+        <img alt="docker image size" src="https://img.shields.io/docker/image-size/beidongjiedeguang/openai-forward?style=flat-square&label=docker image">
     </a>
     <a href="https://github.com/beidongjiedeguang/openai-forward/actions/workflows/ci.yml">
-        <img alt="tests" src="https://img.shields.io/github/actions/workflow/status/beidongjiedeguang/openai-forward/ci.yml?label=tests">
+        <img alt="tests" src="https://img.shields.io/github/actions/workflow/status/beidongjiedeguang/openai-forward/ci.yml?style=flat-square&label=tests">
     </a>
     <a href="https://pypistats.org/packages/openai-forward">
-        <img alt="pypi downloads" src="https://img.shields.io/pypi/dm/openai_forward">
-    </a>
-    <a href="https://codecov.io/gh/beidongjiedeguang/openai-forward">
-        <img alt="codecov" src="https://codecov.io/gh/beidongjiedeguang/openai-forward/branch/dev/graph/badge.svg">
+        <img alt="pypi downloads" src="https://img.shields.io/pypi/dm/openai_forward?style=flat-square">
     </a>
 </p>
 
@@ -48,9 +43,10 @@
 
 </div>
 
-OpenAI-Forward
-是一个专为大型语言模型设计的高级转发服务，提供包括用户请求速率控制、Token速率限制和自定义API密钥等增强功能。该服务可用于代理本地模型（如 [LocalAI](https://github.com/go-skynet/LocalAI)
-）或云端模型（如 [openai](https://api.openai.com)）。
+openai-forward
+是一个专为大型语言模型设计的高级转发服务，提供包括用户请求速率控制、Token速率限制和自定义API密钥等增强功能。
+该服务可用于代理本地模型（如 [LocalAI](https://github.com/go-skynet/LocalAI)）或云端模型（如 [OpenAI](https://api.openai.com)）。
+服务由 `fastapi`,`aiohttp`,`asyncio`全异步实现，保证了其高效性。
 
 
 
@@ -68,8 +64,8 @@ OpenAI-Forward 提供如下功能：
 - **实时响应日志**: 支持流式响应的会话日志记录
 - **多目标路由**: 能够同时转发多个服务到不同的路由地址
 - **自动重试机制**：在请求失败时自动重试
-- **快速部署**: `pip` /`docker` 快速本地安装和部署，支持一键云端部署
-- ...
+- **快速部署**: `pip`/`docker` 快速本地安装和部署，支持一键云端部署
+
 
 由本项目搭建的代理服务地址：
 
@@ -77,7 +73,7 @@ OpenAI-Forward 提供如下功能：
 > https://render.openai-forward.com
 
 <font size=2 >
-注：此代理服务仅供学习和研究目的使用。
+注：此代理服务仅供个人学习和研究目的使用，勿用于任何商业用途。
 </font>
 
 ## 部署指南
@@ -129,16 +125,19 @@ INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 ```
 
-### 代理OpenAI API:
+### 代理OpenAI模型:
 
-这也是`aifd run`的默认选项
+`aifd run`的默认选项便是代理`https://api.openai.com`  
 
-#### 在三方应用中使用
+下面以搭建好的服务地址`https://api/openai-forward.com` 为例
 
 <details >
    <summary> 点击展开</summary>  
 
-基于开源项目[ChatGPT-Next-Web](https://github.com/Yidadaa/ChatGPT-Next-Web)搭建自己的chatgpt服务  
+#### 在三方应用中使用
+
+
+基于开源项目[ChatGPT-Next-Web](https://github.com/Yidadaa/ChatGPT-Next-Web)中接入:   
 替换docker启动命令中的 `BASE_URL`为自己搭建的代理服务地址
 
 ```bash 
@@ -150,7 +149,6 @@ docker run -d \
     yidadaa/chatgpt-next-web 
 ``` 
 
-</details>
 
 #### 在代码中接入
 
@@ -164,8 +162,6 @@ docker run -d \
   openai.api_key = "sk-******"
 ```
 
-<details >
-  <summary>更多（点击展开）</summary>
 
 **JS/TS**
 
@@ -220,7 +216,7 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 ### 代理其它云端模型
 - **适用场景：**
 例如，通过 [claude-to-chatgpt](https://github.com/jtsang4/claude-to-chatgpt) 可以将 claude 的 API 格式转换为 openai 的api格式，
-然后使用 `openai-forward` 进行代理。
+然后使用本服务进行代理。
 
 (更多)
 
