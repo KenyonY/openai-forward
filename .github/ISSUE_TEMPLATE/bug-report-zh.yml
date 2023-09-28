@@ -1,0 +1,70 @@
+name: 🐞 发现一个Bug!
+description: 报告一个bug或不正常的行为
+labels: [unconfirmed bug]
+
+body:
+  - type: markdown
+    attributes:
+      value:  感谢你贡献问题！
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 初始检查
+      description: |
+        请确认以下所有项均被满足
+      options:
+        - label: 我运行的`openai-forward`版本不低于v0.6.0
+          required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 问题描述
+      description: |
+        请描述你遇到的问题，以及你期望看到的结果。
+
+    validations:
+      required: true
+
+  - type: textarea
+    id: example
+    attributes:
+      label: 配置/代码示例和输出
+      description: >
+        如果可能，请添加一个最小化的、可复现该问题的代码/配置示例，以便开发者能够更好地理解你的问题。
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: 我的见解
+      description: >
+        你对于这个bug的任何想法
+        
+
+  - type: textarea
+    id: version
+    attributes:
+      label: 环境
+      description: |
+        Python版本、操作系统和`openai-forward`版本
+
+        在终端执行以下命令，以查看输出版本：
+
+        ```bash
+        python -c "import sys,platform; print('python: {}\nOS: {}'.format(sys.version, platform.system()));" 
+        python -c "import openai_forward; print('openai_forward: {}'.format(openai_forward.__version__));"
+        ```
+
+    validations:
+      required: true
+
+
+  - type: checkboxes
+    id: checklist-final
+    attributes:
+      label: 最后一步
+      description: 回顾你的回答
+      options:
+        - label: 我认为上述的描述已经足够详细，开发者能够复现该问题
+          required: true
