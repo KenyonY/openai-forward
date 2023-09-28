@@ -1,0 +1,69 @@
+name: 🐞 Bug Report
+description: Report a bug or unexpected behavior in openai-forward above (v0.6.0)
+labels: [unconfirmed bug]
+
+body:
+  - type: markdown
+    attributes:
+      value:  Thank you for contributing to openai-forward!
+
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Initial Checks
+      description: |
+        Just a few checks to make sure you need to create a bug report.
+      options:
+        - label: My `openai-forward` version is not lower than v0.6.0
+          required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Issue Description
+      description: |
+        Please describe the problem you encountered and what you expected to see.
+
+    validations:
+      required: true
+
+  - type: textarea
+    id: example
+    attributes:
+      label: Configuration/Code Example and Output
+      description: >
+        If possible, please provide a minimized, reproducible code/configuration example so developers can better understand your issue.
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: My Insight
+      description: >
+        Any thoughts you have regarding this bug
+
+  - type: textarea
+    id: version
+    attributes:
+      label: Environment
+      description: |
+        Python version, operating system, and `openai-forward` version
+
+        Run the following commands in the terminal to see the output versions:
+
+        ```bash
+        python -c "import sys,platform; print('python: {}\nOS: {}'.format(sys.version, platform.system()));" 
+        python -c "import openai_forward; print('openai_forward: {}'.format(openai_forward.__version__));"
+        ```
+
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist-final
+    attributes:
+      label: Final Step
+      description: Review your answers
+      options:
+        - label: I believe my description above is detailed enough for developers to reproduce the issue.
+          required: true

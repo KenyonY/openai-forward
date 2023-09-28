@@ -1,0 +1,20 @@
+name: ✨ 功能请求
+description: Suggest ideas, new features or enhancements
+labels: [enhancement]
+body:
+  - type: checkboxes
+    attributes:
+      label: Checklist
+      options:
+        - label: 我相信这个想法很棒并且将使框架变得更好
+          required: true
+        - label: 我已在issue中搜索了类似请求，包括已关闭的请求
+          required: true
+
+  - type: textarea
+    attributes:
+      label: 详细描述
+      description: 提供一份对该请求的详细描述
+      placeholder: 描述...
+    validations:
+      required: true
