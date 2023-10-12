@@ -11,6 +11,8 @@ openai.api_key = config["api_key"]
 
 
 stream = True
+# debug=True
+debug = False
 
 
 user_content = "现在让我们使用泰勒展开推导出牛顿法迭代公式:  \n"
@@ -27,11 +29,21 @@ resp = openai.Completion.create(
 console = Console()
 sentences = ""
 if stream:
-    for chunk in resp:
-        text = chunk['choices'][0]['text']
-        console.print(text, end="")
-        sentences += text
+    if debug:
+        for chunk in resp:
+            print(chunk)
+    else:
+        for chunk in resp:
+            text = chunk['choices'][0]['text']
+            console.print(text, end="")
+            sentences += text
     print()
+else:
+    if debug:
+        print(resp)
+    else:
+        sentences = resp['choices'][0]['text']
+        print(sentences)
 
-# print(70*"-")
+print(70 * "-")
 # console.print(Markdown(sentences))

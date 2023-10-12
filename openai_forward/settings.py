@@ -4,17 +4,24 @@ import os
 import limits
 from fastapi import Request
 
-from .config import setting_log
 from .console import print_rate_limit_info, print_startup_info
+from .content.config import setting_log
 from .helper import env2dict, env2list, format_route_prefix, get_client_ip
 
 additional_start_info = {}
 
-TIMEOUT = float(os.environ.get("TIMEOUT", "").strip() or "20")
+TIMEOUT = float(os.environ.get("TIMEOUT", "").strip() or "10")
+
+ITER_CHUNK_TYPE = (
+    os.environ.get("ITER_CHUNK_TYPE", "").strip() or "efficiency"
+)  # Options: efficiency, precision
 
 CHAT_COMPLETION_ROUTE = (
     os.environ.get("CHAT_COMPLETION_ROUTE", "").strip() or "/v1/chat/completions"
 )
+
+COMPLETION_ROUTE = os.environ.get("COMPLETION_ROUTE", "").strip() or "/v1/completions"
+
 ENV_VAR_SEP = ","
 OPENAI_BASE_URL = env2list("OPENAI_BASE_URL", sep=ENV_VAR_SEP) or [
     "https://api.openai.com"
@@ -54,6 +61,7 @@ if PROXY:
     additional_start_info["proxy"] = PROXY
 
 GLOBAL_RATE_LIMIT = os.environ.get("GLOBAL_RATE_LIMIT", "").strip() or "inf"
+RATE_LIMIT_BACKEND = os.environ.get("REQ_RATE_LIMIT_BACKEND", "").strip() or None
 RATE_LIMIT_STRATEGY = (
     os.environ.get("RATE_LIMIT_STRATEGY", "fixed-window").strip() or "fixed-window"
 )
@@ -115,6 +123,7 @@ def show_startup():
         )
 
     print_rate_limit_info(
+        RATE_LIMIT_BACKEND,
         RATE_LIMIT_STRATEGY,
         GLOBAL_RATE_LIMIT,
         req_rate_limit_dict,

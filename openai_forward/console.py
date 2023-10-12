@@ -46,6 +46,7 @@ def print_startup_info(base_url, route_prefix, api_key, fwd_key, /, style, **kwa
 
 
 def print_rate_limit_info(
+    backend: str,
     strategy: str,
     global_req_rate_limit: str,
     req_rate_limit: dict,
@@ -58,6 +59,8 @@ def print_rate_limit_info(
     table = Table(title="", box=None, width=50)
     table.add_column("")
     table.add_column("", justify='left')
+    backend = backend or "memory"
+    table.add_row("backend", backend, style='#7CD9FF')
     if strategy:
         table.add_row("strategy", strategy, style='#7CD9FF')
 

@@ -1,6 +1,6 @@
 import openai
 from rich import print
-from sparrow import yaml_load  # pip install sparrow-python
+from sparrow import MeasureTime, yaml_load  # pip install sparrow-python
 
 config = yaml_load("config.yaml", rel_path=True)
 print(f"{config=}")
@@ -9,24 +9,60 @@ openai.api_key = config["api_key"]
 
 stream = True
 # stream = False
+
 # debug = True
 debug = False
+
+# is_function_call = True
+is_function_call = False
 
 user_content = """
 用c实现目前已知最快平方根算法
 """
-from sparrow import MeasureTime
 
 mt = MeasureTime().start()
-resp = openai.ChatCompletion.create(
-    model="gpt-3.5-turbo",
-    # model="gpt-4",
-    messages=[
-        {"role": "user", "content": user_content},
-    ],
-    stream=stream,
-    request_timeout=30,
-)
+
+
+# function_call
+if is_function_call:
+    functions = [
+        {
+            "name": "get_current_weather",
+            "description": "Get the current weather in a given location",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "location": {
+                        "type": "string",
+                        "description": "The city and state, e.g. San Francisco, CA",
+                    },
+                    "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]},
+                },
+                "required": ["location"],
+            },
+        }
+    ]
+    resp = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "user", "content": "What's the weather like in Boston today?"}
+        ],
+        functions=functions,
+        function_call="auto",  # auto is default, but we'll be explicit
+        stream=stream,
+        request_timeout=30,
+    )
+
+else:
+    resp = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        # model="gpt-4",
+        messages=[
+            {"role": "user", "content": user_content},
+        ],
+        stream=stream,
+        request_timeout=30,
+    )
 
 if stream:
     if debug:
@@ -34,10 +70,22 @@ if stream:
             print(chunk)
     else:
         chunk_message = next(resp)['choices'][0]['delta']
-        print(f"{chunk_message['role']}: ")
+        if is_function_call:
+            function_call = chunk_message.get("function_call", "")
+            name = function_call["name"]
+            print(f"{chunk_message['role']}: \n{name}: ")
+        else:
+            print(f"{chunk_message['role']}: ")
         for chunk in resp:
             chunk_message = chunk['choices'][0]['delta']
-            content = chunk_message.get("content", "")
+            content = ""
+            if is_function_call:
+                function_call = chunk_message.get("function_call", "")
+                if function_call:
+                    content = function_call.get("arguments", "")
+
+            else:
+                content = chunk_message.get("content", "")
             print(content, end="")
         print()
 else:
