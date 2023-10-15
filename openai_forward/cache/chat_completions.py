@@ -172,7 +172,7 @@ async def stream_generate_efficient(model: str, texts, request: Request):
     yield b'data: [DONE]\n\n'
 
 
-def generate(model: str, sentence, messages):
+def generate(model: str, sentence, usage):
     created = int(time.time())
     id = f"chatcmpl-{get_unique_id()}"
 
@@ -181,11 +181,6 @@ def generate(model: str, sentence, messages):
         message=ChatMessage(role="assistant", content=sentence),
         finish_reason="stop",
     )
-
-    if TIKTOKEN_VALID:
-        usage = count_tokens(messages, sentence, 'gpt-3.5-turbo')
-    else:
-        usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": -1}
 
     data = ChatCompletionsResponse(
         id=id,
@@ -202,23 +197,44 @@ def generate(model: str, sentence, messages):
     )
 
 
-@async_random_sleep(min_time=0, max_time=1)
-async def chat_completions_benchmark(request: Request):
+@attrs.define(slots=True)
+class ModelInferResult:
+    texts: List[str]
+    usage: dict
+
+
+def model_inference(model: str, messages: List, stream: bool):
     sentence = next(sentences)
 
+    if TIKTOKEN_VALID:
+        usage = count_tokens(messages, sentence, 'gpt-3.5-turbo')
+    else:
+        usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": -1}
+
+    if stream:
+        texts = encode_as_pieces(sentence)
+    else:
+        texts = [sentence]
+    return ModelInferResult(texts=texts, usage=usage)
+
+
+@async_random_sleep(min_time=0, max_time=1)
+async def chat_completions_benchmark(request: Request):
     payload = await request.json()
     model = payload.get("model", 'robot')
     stream = payload.get("stream", False)
     messages = payload.get("messages", [])
 
+    model_result = model_inference(model, messages, stream)
+
     if stream:
-        texts = encode_as_pieces(sentence)
         return StreamingResponse(
-            stream_generate_efficient(model, texts, request),
+            stream_generate_efficient(model, model_result.texts, request),
             # stream_generate(model, texts, request),
             media_type="text/event-stream",
         )
     else:
         return Response(
-            content=generate(model, sentence, messages), media_type="application/json"
+            content=generate(model, model_result.texts[0], model_result.usage),
+            media_type="application/json",
         )

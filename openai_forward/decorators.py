@@ -170,6 +170,14 @@ def async_token_rate_limit(token_rate_limit: dict):
 
 
 def async_random_sleep(min_time=0, max_time=1):
+    """
+    Decorator that adds a random sleep time between min_time and max_time.
+
+    Args:
+        min_time (float, optional): The minimum sleep time in seconds.
+        max_time (float, optional): The maximum sleep time in seconds.
+    """
+
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):

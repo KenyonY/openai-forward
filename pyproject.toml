@@ -42,6 +42,8 @@ Source = "https://github.com/KenyonY/openai-forward"
 [project.optional-dependencies]
 test = [
     "pytest",
+    "pytest-aiohttp",
+    "psutil",
     "openai>=0.28.0",
     "sparrow-python",
 ]

@@ -5,9 +5,11 @@
     OpenAI Forward
     <br>
 </h1>
-<p align="center">
-        一个支持多目标路由、流量控制、自动重试以及一键云端部署的高效代理工具 
-</p>
+
+
+<div align=center><img src=.github/data/logo.png width="300px"></div>
+
+
 
 <p align="center">
     <a href="https://pypi.org/project/openai-forward/">
@@ -44,10 +46,9 @@
 </div>
 
 openai-forward
-是一个专为大型语言模型设计的高级转发服务，提供包括用户请求速率控制、Token速率限制和自定义API密钥等增强功能。
+是一个专为大型语言模型设计的高级转发服务，提供包括用户请求速率控制、Token速率限制、日志记录和自定义API密钥等功能。
 该服务可用于代理本地模型（如 [LocalAI](https://github.com/go-skynet/LocalAI)）或云端模型（如 [OpenAI](https://api.openai.com)）。
-服务由 `fastapi`,`aiohttp`,`asyncio`全异步实现，保证了其高效性。
-
+服务由 `fastapi`,`aiohttp`,`asyncio`完全异步实现。
 
 
 <a>
@@ -60,8 +61,8 @@ OpenAI-Forward 提供如下功能：
 
 - **全能代理**: 具备转发几乎所有类型请求的能力
 - **用户流量控制**: 实现用户请求速率限制（RPM）和流式Token速率限制（TPM）
+- **实时响应日志**: 支持流式响应的会话日志记录，用于调试自己的prompt合理性
 - **自定义秘钥**: 允许用户用自定义生成的密钥替代原始API密钥
-- **实时响应日志**: 支持流式响应的会话日志记录
 - **多目标路由**: 能够同时转发多个服务到不同的路由地址
 - **自动重试机制**：在请求失败时自动重试
 - **快速部署**: `pip`/`docker` 快速本地安装和部署，支持一键云端部署

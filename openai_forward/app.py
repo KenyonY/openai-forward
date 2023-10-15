@@ -3,20 +3,25 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
-from . import custom_slowapi
-from .forward import create_generic_proxies, create_openai_proxies
+from . import __version__, custom_slowapi
+from .forward.extra import generic_objs
+from .forward.openai import openai_objs
 from .helper import normalize_route as normalize_route_path
 from .settings import (
     BENCHMARK_MODE,
+    RATE_LIMIT_BACKEND,
     RATE_LIMIT_STRATEGY,
     dynamic_request_rate_limit,
     get_limiter_key,
     show_startup,
 )
 
-limiter = Limiter(key_func=get_limiter_key, strategy=RATE_LIMIT_STRATEGY)
-
-app = FastAPI(title="openai_forward", version="0.5")
+limiter = Limiter(
+    key_func=get_limiter_key,
+    strategy=RATE_LIMIT_STRATEGY,
+    storage_uri=RATE_LIMIT_BACKEND,
+)
+app = FastAPI(title="openai-forward", version=__version__)
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -56,9 +61,6 @@ if BENCHMARK_MODE:
         route=limiter.limit(dynamic_request_rate_limit)(chat_completions_benchmark),
         methods=["POST"],
     )
-
-openai_objs = create_openai_proxies()
-generic_objs = create_generic_proxies()
 
 
 @app.on_event("shutdown")

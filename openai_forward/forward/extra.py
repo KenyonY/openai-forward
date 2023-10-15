@@ -14,3 +14,6 @@ def create_generic_proxies():
     for base_url, route_prefix in zip(EXTRA_BASE_URL, EXTRA_ROUTE_PREFIX):
         _objs.append(GenericForward(base_url, route_prefix, PROXY))
     return _objs
+
+
+generic_objs = create_generic_proxies()

@@ -20,6 +20,10 @@ def get_client_ip(request: Request):
     return request.client.host
 
 
+def route_prefix_to_str(route_prefix):
+    return route_prefix.replace('/', '_').strip("_") or "openai"
+
+
 def get_unique_id():
     return hashlib.md5(str(time.time()).encode()).hexdigest()
 
@@ -122,7 +126,10 @@ def get_matches(messages: List[Dict], assistants: List[Dict]):
         "datetime": msg.get('datetime'),
         "ip": msg.get("ip") or msg.get('forwarded-for'),
         "model": msg.get("model"),
+        "temperature": msg.get("temperature", 1),
         "messages": msg.get("messages"),
+        "functions": msg.get("functions"),
+        "is_function_call": ass.get("is_function_call"),
         "assistant": ass.get("assistant"),
     }
 
@@ -157,7 +164,7 @@ def parse_log_to_list(log_path: str):
                 for key, value in content.items():
                     if key == "messages":
                         clean_content[key] = [
-                            {k: clean_str(v)} for i in value for k, v in i.items()
+                            {i['role']: clean_str(i['content'])} for i in value
                         ]
                     else:
                         clean_content[key] = value
@@ -185,7 +192,7 @@ def get_log_files_from_folder(log_path: str):
 
 
 def convert_folder_to_jsonl(folder_path: str, target_path: str):
-    """Convert chatlog folder to jsonl"""
+    """Convert chat log folder to jsonl"""
     log_files = get_log_files_from_folder(folder_path)
     messages = []
     assistants = []

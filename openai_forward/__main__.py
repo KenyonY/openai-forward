@@ -46,17 +46,17 @@ class Cli:
         Returns:
             None
         """
-        from openai_forward.helper import convert_folder_to_jsonl
+        from openai_forward.helper import convert_folder_to_jsonl, route_prefix_to_str
         from openai_forward.settings import OPENAI_ROUTE_PREFIX
 
         print(60 * '-')
         if log_folder is None:
             if target_path is not None:
                 raise ValueError("target_path must be None when log_folder is None")
-            _prefix_list = [i.replace("/", "_") for i in OPENAI_ROUTE_PREFIX]
-            for _prefix in _prefix_list:
-                log_folder = f"./Log/chat/{_prefix}"
-                target_path = f"./Log/chat{_prefix}.json"
+            _prefix_list = [route_prefix_to_str(i) for i in OPENAI_ROUTE_PREFIX]
+            for prefix in _prefix_list:
+                log_folder = f"./Log/{prefix}/chat"
+                target_path = f"./Log/chat_{prefix}.json"
                 print(f"Convert {log_folder}/*.log to {target_path}")
                 convert_folder_to_jsonl(log_folder, target_path)
                 print(60 * '-')

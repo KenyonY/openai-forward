@@ -11,7 +11,7 @@ from fastapi import HTTPException, Request, status
 from loguru import logger
 from starlette.responses import BackgroundTask, StreamingResponse
 
-from ..content.openai import ChatLogger, WhisperLogger
+from ..content.openai import ChatLogger, CompletionLogger, WhisperLogger
 from ..decorators import async_retry, async_token_rate_limit
 from ..helper import get_unique_id
 from ..settings import *
@@ -83,7 +83,7 @@ class ForwardBase:
         # raise_callback_name="build_client",
         raise_handler_name="handle_exception",
     )
-    async def try_send(self, client_config: dict, request: Request):
+    async def send(self, client_config: dict, request: Request):
         return await self.client.request(
             method=request.method,
             url=client_config['url'],
@@ -147,7 +147,7 @@ class ForwardBase:
     async def reverse_proxy(self, request: Request):
         client_config = self.prepare_client(request)
 
-        r = await self.try_send(client_config, request)
+        r = await self.send(client_config, request)
 
         return StreamingResponse(
             self.aiter_bytes(r, request),
@@ -169,6 +169,7 @@ class OpenaiBase(ForwardBase):
         super().__init__(base_url, route_prefix, proxy)
         if LOG_CHAT or print_chat:
             self.chat_logger = ChatLogger(self.ROUTE_PREFIX)
+            self.completion_logger = CompletionLogger(self.ROUTE_PREFIX)
             self.whisper_logger = WhisperLogger(self.ROUTE_PREFIX)
 
     def _add_result_log(
@@ -190,17 +191,20 @@ class OpenaiBase(ForwardBase):
             if (LOG_CHAT or print_chat) and request_method == "POST":
                 if route_path == CHAT_COMPLETION_ROUTE:
                     target_info = self.chat_logger.parse_bytearray(buffer)
+                    target_info["uid"] = uid
                     if LOG_CHAT:
-                        self.chat_logger.log_chat(
-                            {target_info["role"]: target_info["content"], "uid": uid}
-                        )
+                        self.chat_logger.log(target_info)
                     if print_chat:
-                        self.chat_logger.print_chat_info(
-                            {target_info["role"]: target_info["content"], "uid": uid}
-                        )
+                        self.chat_logger.print_chat_info(target_info)
+
+                elif route_path == COMPLETION_ROUTE:
+                    target_info = self.completion_logger.parse_bytearray(buffer)
+                    target_info["uid"] = uid
+                    if LOG_CHAT:
+                        self.completion_logger.log(target_info)
 
                 elif route_path.startswith("/v1/audio/"):
-                    self.whisper_logger.add_log(buffer)
+                    self.whisper_logger.log_buffer(buffer)
 
                 else:
                     ...
@@ -230,9 +234,15 @@ class OpenaiBase(ForwardBase):
                     uid = chat_info.get("uid")
                     if chat_info:
                         if LOG_CHAT:
-                            self.chat_logger.log_chat(chat_info)
+                            self.chat_logger.log(chat_info)
                         if print_chat:
                             self.chat_logger.print_chat_info(chat_info)
+                elif url_path == COMPLETION_ROUTE:
+                    chat_info = await self.completion_logger.parse_payload(request)
+                    uid = chat_info.get("uid")
+                    if chat_info:
+                        if LOG_CHAT:
+                            self.completion_logger.log(chat_info)
 
                 elif url_path.startswith("/v1/audio/"):
                     uid = get_unique_id()
@@ -249,9 +259,19 @@ class OpenaiBase(ForwardBase):
     @staticmethod
     async def read_chunks(r: aiohttp.ClientResponse, queue):
         buffer = bytearray()
-        async for chunk in r.content.iter_any():  # yield all available data as soon as it is received.
-            buffer.extend(chunk)
-            await queue.put(chunk)
+
+        # Efficiency Mode
+        if ITER_CHUNK_TYPE == "efficiency":
+            # yield all available data as soon as it is received.
+            async for chunk in r.content.iter_any():
+                buffer.extend(chunk)
+                await queue.put(chunk)
+
+        # Precision Mode
+        else:
+            async for chunk, _ in r.content.iter_chunks():
+                buffer.extend(chunk)
+                await queue.put(chunk)
 
         await queue.put(buffer)  # add all information when the stream ends
 
@@ -325,7 +345,7 @@ class OpenaiBase(ForwardBase):
 
         uid = await self._add_payload_log(request, url_path)
 
-        r = await self.try_send(client_config, request)
+        r = await self.send(client_config, request)
 
         return StreamingResponse(
             self.aiter_bytes(r, request, url_path, uid),
