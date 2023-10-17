@@ -15,17 +15,17 @@
     <a href="https://pypi.org/project/openai-forward/">
         <img src="https://img.shields.io/pypi/v/openai-forward?color=brightgreen&style=flat-square" alt="PyPI version" >
     </a>
-    <a href="https://github.com/beidongjiedeguang/openai-forward/blob/main/LICENSE">
-        <img alt="License" src="https://img.shields.io/github/license/beidongjiedeguang/openai-forward.svg?color=blue&style=flat-square">
+    <a href="https://github.com/KenyonY/openai-forward/blob/main/LICENSE">
+        <img alt="License" src="https://img.shields.io/github/license/KenyonY/openai-forward.svg?color=blue&style=flat-square">
     </a>
-    <a href="https://github.com/beidongjiedeguang/openai-forward/releases">
-        <img alt="Release (latest by date)" src="https://img.shields.io/github/v/release/beidongjiedeguang/openai-forward?&style=flat-square">
+    <a href="https://github.com/KenyonY/openai-forward/releases">
+        <img alt="Release (latest by date)" src="https://img.shields.io/github/v/release/KenyonY/openai-forward?&style=flat-square">
     </a>
-    <a href="https://hub.docker.com/r/beidongjiedeguang/openai-forward">
-        <img alt="docker image size" src="https://img.shields.io/docker/image-size/beidongjiedeguang/openai-forward?style=flat-square&label=docker image">
+    <a href="https://hub.docker.com/r/KenyonY/openai-forward">
+        <img alt="docker image size" src="https://img.shields.io/docker/image-size/KenyonY/openai-forward?style=flat-square&label=docker image">
     </a>
-    <a href="https://github.com/beidongjiedeguang/openai-forward/actions/workflows/ci.yml">
-        <img alt="tests" src="https://img.shields.io/github/actions/workflow/status/beidongjiedeguang/openai-forward/ci.yml?style=flat-square&label=tests">
+    <a href="https://github.com/KenyonY/openai-forward/actions/workflows/ci.yml">
+        <img alt="tests" src="https://img.shields.io/github/actions/workflow/status/KenyonY/openai-forward/ci.yml?style=flat-square&label=tests">
     </a>
     <a href="https://pypistats.org/packages/openai-forward">
         <img alt="pypi downloads" src="https://img.shields.io/pypi/dm/openai_forward?style=flat-square">
@@ -34,7 +34,7 @@
 
 <div align="center">
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/beidongjiedeguang/openai-forward)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/KenyonY/openai-forward)
 
 [特点](#主要特性) |
 [部署指南](deploy.md) |
@@ -52,7 +52,7 @@ openai-forward
 
 
 <a>
-   <img src="https://raw.githubusercontent.com/beidongjiedeguang/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">
+   <img src="https://raw.githubusercontent.com/KenyonY/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">
 </a>
 
 ## 主要特性
@@ -83,7 +83,7 @@ OpenAI-Forward 提供如下功能：
 
 
 <a>
-   <img src="https://raw.githubusercontent.com/beidongjiedeguang/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">
+   <img src="https://raw.githubusercontent.com/KenyonY/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">
 </a>
 
 ## 使用指南
@@ -222,7 +222,7 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 (更多)
 
 <a>
-   <img src="https://raw.githubusercontent.com/beidongjiedeguang/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">
+   <img src="https://raw.githubusercontent.com/KenyonY/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">
 </a>
 
 ## 配置
@@ -348,7 +348,7 @@ aifd convert
 
 ## Backer and Sponsor
 
-<a href="https://www.jetbrains.com/?from=beidongjiedeguang/openai-forward" target="_blank">
+<a href="https://www.jetbrains.com/?from=KenyonY/openai-forward" target="_blank">
 <img src=".github/images/jetbrains.svg" width="100px" height="100px">
 </a>
 
