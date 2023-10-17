@@ -36,18 +36,26 @@ EXTRA_ROUTE_PREFIX = [
     format_route_prefix(i) for i in env2list("EXTRA_ROUTE_PREFIX", sep=ENV_VAR_SEP)
 ]
 
-BENCHMARK_MODE = os.environ.get("BENCHMARK_MODE", "").strip().lower() == "true"
+BENCHMARK_MODE = os.environ.get("BENCHMARK_MODE", "false").strip().lower() == "true"
 if BENCHMARK_MODE:
     additional_start_info["benchmark_mode"] = BENCHMARK_MODE
 
 LOG_CHAT = os.environ.get("LOG_CHAT", "False").strip().lower() == "true"
-print_chat = os.environ.get("PRINT_CHAT", "False").strip().lower() == "true"
+PRINT_CHAT = os.environ.get("PRINT_CHAT", "False").strip().lower() == "true"
 if LOG_CHAT:
-    setting_log(openai_route_prefix=OPENAI_ROUTE_PREFIX, print_chat=print_chat)
+    setting_log(openai_route_prefix=OPENAI_ROUTE_PREFIX, print_chat=PRINT_CHAT)
     additional_start_info["log_chat"] = LOG_CHAT
 
-if print_chat:
+if PRINT_CHAT:
     additional_start_info["print_chat"] = True
+
+CACHE_CHAT_COMPLETION = (
+    os.environ.get("CACHE_CHAT_COMPLETION", "false").strip().lower() == "true"
+)
+
+CACHE_BACKEND = os.environ.get("CACHE_BACKEND", "MEMORY").strip()
+if CACHE_CHAT_COMPLETION:
+    additional_start_info["cache_backend"] = CACHE_BACKEND
 
 IP_WHITELIST = env2list("IP_WHITELIST", sep=ENV_VAR_SEP)
 IP_BLACKLIST = env2list("IP_BLACKLIST", sep=ENV_VAR_SEP)

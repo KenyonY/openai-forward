@@ -16,7 +16,6 @@ debug = False
 
 
 user_content = "现在让我们使用泰勒展开推导出牛顿法迭代公式:  \n"
-from sparrow import MeasureTime
 
 resp = openai.Completion.create(
     model="gpt-3.5-turbo-instruct",

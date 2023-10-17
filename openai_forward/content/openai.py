@@ -36,7 +36,7 @@ class CompletionLogger:
             "uid": uid,
             "datetime": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
         }
-        return content
+        return content, payload
 
     @staticmethod
     def parse_bytearray(buffer: bytearray):
@@ -121,25 +121,35 @@ class ChatLogger:
         """
         uid = get_unique_id()
         payload = await request.json()
-        msgs = payload["messages"]
         functions = payload.get("functions")
-        model = payload["model"]
         if functions:
-            content = {"functions": functions}
+            info = {
+                "functions": functions,
+                "function_call": payload.get("function_call", None),
+            }
         else:
-            content = {}
-        content.update(
+            info = {}
+        info.update(
             {
-                "messages": msgs,
-                "model": model,
-                "stream": payload.get("stream", True),
+                "messages": payload["messages"],
+                "model": payload["model"],
+                "stream": payload.get("stream", False),
+                "max_tokens": payload.get("max_tokens", None),
+                "n": payload.get("n", 1),
                 "temperature": payload.get("temperature", 1),
+                "top_p": payload.get("top_p", 1),
+                "logit_bias": payload.get("logit_bias", None),
+                "frequency_penalty": payload.get("frequency_penalty", 0),
+                "presence_penalty": payload.get("presence_penalty", 0),
+                "stop": payload.get("stop", None),
+                "user": payload.get("user", None),
                 "ip": get_client_ip(request) or "",
                 "uid": uid,
+                "caching": payload.pop("caching", True),  # pop caching
                 "datetime": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
             }
         )
-        return content
+        return info, orjson.dumps(payload)
 
     def parse_bytearray(self, buffer: bytearray):
         """
@@ -150,8 +160,7 @@ class ChatLogger:
 
         Returns:
             Dict[str, Any]: A dictionary containing metadata and content. The keys include:
-                - "role" (str): "assistant"
-                - "content" (str)
+                - "assistant" (str): content
                 - "is_function_call" (boolean)
         """
         start_token = "data: "
@@ -160,10 +169,12 @@ class ChatLogger:
             txt_lines = parse_sse_buffer(buffer)
             stream = True
             first_dict = orjson.loads(txt_lines[0][start_token_len:])
+            # todo: multiple choices
             msg = first_dict["choices"][0]["delta"]
         else:
             stream = False
             first_dict = orjson.loads(buffer)
+            # todo: multiple choices
             msg = first_dict["choices"][0]["message"]
 
         target_info = dict()
@@ -173,7 +184,7 @@ class ChatLogger:
             target_info["id"] = first_dict["id"]
             target_info["model"] = first_dict["model"]
             target_info["role"] = msg["role"]
-        role = msg["role"]
+        role = msg["role"]  # always be "assistant"
 
         content, function_call = msg.get("content"), msg.get("function_call")
         if function_call:

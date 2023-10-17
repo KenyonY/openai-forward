@@ -16,13 +16,15 @@ from .tokenizer import TIKTOKEN_VALID, count_tokens, encode_as_pieces
 @attrs.define(slots=True)
 class ChatMessage:
     role: Literal["user", "assistant", "system"]
-    content: str
+    content: Optional[str] = None
+    function_call: Optional[dict] = None
 
 
 @attrs.define(slots=True)
 class DeltaMessage:
     role: Optional[Literal["user", "assistant", "system"]] = None
     content: Optional[str] = None
+    function_call: Optional[dict] = None
 
 
 @attrs.define(slots=True)
@@ -39,7 +41,7 @@ class ChatCompletionRequest:
 class ChatCompletionResponseChoice:
     index: int
     message: ChatMessage
-    finish_reason: Literal["stop", "length"]
+    finish_reason: str
 
 
 @attrs.define(slots=True)
@@ -83,7 +85,9 @@ sentences = cycle(corpus)
 
 
 @async_token_rate_limit(token_interval_conf)
-async def stream_generate(model: str, texts, request: Request):
+async def stream_generate(
+    model: str, texts, function_call_name: str | None, request: Request
+):
     created = int(time.time())
     id = f"chatcmpl-{get_unique_id()}"
 
@@ -100,11 +104,15 @@ async def stream_generate(model: str, texts, request: Request):
         created=created,
     )
 
-    def serialize_delta(role=None, content=None, finish_reason=None):
+    def serialize_delta(
+        role=None, content=None, function_call=None, finish_reason=None
+    ):
         if role:
             delta.role = role
         if content:
             delta.content = content
+        if function_call:
+            delta.function_call = function_call
 
         choice_data.finish_reason = finish_reason
         choice_data.delta = delta
@@ -119,21 +127,40 @@ async def stream_generate(model: str, texts, request: Request):
             + b'\n\n'
         )
 
-    yield serialize_delta(role="assistant", content="")
+    if function_call_name:
+        yield serialize_delta(
+            role="assistant",
+            function_call={"name": function_call_name, "arguments": ""},
+        )
+    else:
+        yield serialize_delta(role="assistant", content="")
 
     delta = DeltaMessage()
     for text in texts:
-        yield serialize_delta(content=text)
+        if function_call_name:
+            yield serialize_delta(function_call={"arguments": text})
+        else:
+            yield serialize_delta(content=text)
 
     delta = DeltaMessage()
-    yield serialize_delta(finish_reason="stop")
+    yield serialize_delta(
+        finish_reason="function_call" if function_call_name else "stop"
+    )
 
     yield b'data: [DONE]\n\n'
 
 
 @async_token_rate_limit(token_interval_conf)
-async def stream_generate_efficient(model: str, texts, request: Request):
-    """More efficient version of stream_generate"""
+async def stream_generate_efficient(
+    model: str, texts, function_call_name: str | None, request: Request
+):
+    """More efficient (use dict) version of stream_generate
+    Args:
+        model (str): The model to use.
+        texts (List[str]): content or function_call['arguments'].
+        function_call_name (str | None): function_call['name'].
+        request (Request): A FastAPI request object.
+    """
     created = int(time.time())
     id = f"chatcmpl-{get_unique_id()}"
 
@@ -147,10 +174,15 @@ async def stream_generate_efficient(model: str, texts, request: Request):
         "created": created,
     }
 
-    def serialize_delta(role=None, content=None, finish_reason=None):
+    def serialize_delta(
+        role=None, content=None, function_call=None, finish_reason=None
+    ):
         if role:
             delta['role'] = role
         if content:
+            delta['content'] = content
+        if function_call:
+            delta['function_call'] = function_call
             delta['content'] = content
 
         choice_data['finish_reason'] = finish_reason
@@ -160,26 +192,39 @@ async def stream_generate_efficient(model: str, texts, request: Request):
 
         return b'data: ' + orjson.dumps(chunk) + b'\n\n'
 
-    yield serialize_delta(role="assistant", content="")
+    if function_call_name:
+        yield serialize_delta(
+            role="assistant",
+            function_call={"name": function_call_name, "arguments": ""},
+        )
+    else:
+        yield serialize_delta(role="assistant", content="")
 
     delta = {}
     for text in texts:
-        yield serialize_delta(content=text)
+        if function_call_name:
+            yield serialize_delta(function_call={"arguments": text})
+        else:
+            yield serialize_delta(content=text)
 
     delta = {}
-    yield serialize_delta(finish_reason="stop")
+    yield serialize_delta(
+        finish_reason="function_call" if function_call_name else "stop"
+    )
 
     yield b'data: [DONE]\n\n'
 
 
-def generate(model: str, sentence, usage):
+def generate(model: str, sentence: str | None, function_call: dict | None, usage: dict):
     created = int(time.time())
     id = f"chatcmpl-{get_unique_id()}"
 
     choice_data = ChatCompletionResponseChoice(
         index=0,
-        message=ChatMessage(role="assistant", content=sentence),
-        finish_reason="stop",
+        message=ChatMessage(
+            role="assistant", content=sentence, function_call=function_call
+        ),
+        finish_reason="function_call" if function_call else "stop",
     )
 
     data = ChatCompletionsResponse(
@@ -192,7 +237,7 @@ def generate(model: str, sentence, usage):
     )
 
     return orjson.dumps(
-        attrs.asdict(data, filter=attrs.filters.exclude(type(None))),
+        attrs.asdict(data),
         option=orjson.OPT_APPEND_NEWLINE,  # not necessary
     )
 
@@ -229,12 +274,12 @@ async def chat_completions_benchmark(request: Request):
 
     if stream:
         return StreamingResponse(
-            stream_generate_efficient(model, model_result.texts, request),
+            stream_generate_efficient(model, model_result.texts, None, request),
             # stream_generate(model, texts, request),
             media_type="text/event-stream",
         )
     else:
         return Response(
-            content=generate(model, model_result.texts[0], model_result.usage),
+            content=generate(model, model_result.texts[0], None, model_result.usage),
             media_type="application/json",
         )

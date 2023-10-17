@@ -34,7 +34,7 @@ def encode_as_pieces(sentence):
     return words
 
 
-def count_tokens(messages, assistant_content, model="gpt-3.5-turbo-0613"):
+def count_tokens(messages, assistant_content, model="gpt-3.5-turbo"):
     """Return the usage information of tokens in the messages list."""
     # https://github.com/openai/openai-cookbook/blob/main/examples/How_to_format_inputs_to_ChatGPT_models.ipynb
     if not TIKTOKEN_VALID:
