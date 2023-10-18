@@ -69,7 +69,7 @@ OpenAI-Forward 提供如下功能：
 
 **由本项目搭建的代理服务**
 
-与OpenAI完全一致服务地址
+与OpenAI完全一致 服务地址
 > https://api.openai-forward.com  
 > https://render.openai-forward.com
 
@@ -98,7 +98,6 @@ OpenAI-Forward 提供如下功能：
 
 ```bash
 pip install openai-forward
-# 或 pip install openai-forward[database]
 ```
 
 **启动服务**
@@ -321,14 +320,12 @@ FORWARD_KEY=fk-****** # 这里fk-token由我们自己定义
 <details open>
   <summary>Click for more details</summary>
 
-保存路径在当前目录下的`Log/chat`路径中。  
+保存路径在当前目录下的`Log/openai/chat/chat.log`路径中。  
 记录格式为
 
 ```text
-{'messages': [{'user': 'hi'}], 'model': 'gpt-3.5-turbo', 'forwarded-for': '', 'uid': '467a17ec-bf39-4b65-9ebd-e722b3bdd5c3', 'datetime': '2023-07-18 14:01:21'}
-{'assistant': 'Hello there! How can I assist you today?', 'uid': '467a17ec-bf39-4b65-9ebd-e722b3bdd5c3'}
-{'messages': [{'user': 'Hello!'}], 'model': 'gpt-3.5-turbo', 'forwarded-for': '', 'uid': 'f844d156-e747-4887-aef8-e40d977b5ee7', 'datetime': '2023-07-18 14:01:23'}
-{'assistant': 'Hi there! How can I assist you today?', 'uid': 'f844d156-e747-4887-aef8-e40d977b5ee7'}
+{'messages': [{'role': 'user', 'content': 'hi'}], 'model': 'gpt-3.5-turbo', 'stream': True, 'max_tokens': None, 'n': 1, 'temperature': 1, 'top_p': 1, 'logit_bias': None, 'frequency_penalty': 0, 'presence_penalty': 0, 'stop': None, 'user': None, 'ip': '127.0.0.1', 'uid': '2155fe1580e6aed626aa1ad74c1ce54e', 'datetime': '2023-10-17 15:27:12'}
+{'assistant': 'Hello! How can I assist you today?', 'is_function_call': False, 'uid': '2155fe1580e6aed626aa1ad74c1ce54e'}
 ```
 
 转换为`json`格式：
@@ -337,32 +334,24 @@ FORWARD_KEY=fk-****** # 这里fk-token由我们自己定义
 aifd convert
 ```
 
-得到`chat.json`：
+得到`chat_openai.json`：
 
 ```json
 [
-    {
-        "datetime": "2023-07-18 14:01:21",
-        "forwarded-for": "",
-        "model": "gpt-3.5-turbo",
-        "messages": [
-            {
-                "user": "hi"
-            }
-        ],
-        "assistant": "Hello there! How can I assist you today?"
-    },
-    {
-        "datetime": "2023-07-18 14:01:23",
-        "forwarded-for": "",
-        "model": "gpt-3.5-turbo",
-        "messages": [
-            {
-                "user": "Hello!"
-            }
-        ],
-        "assistant": "Hi there! How can I assist you today?"
-    }
+  {
+    "datetime": "2023-10-17 15:27:12",
+    "ip": "127.0.0.1",
+    "model": "gpt-3.5-turbo",
+    "temperature": 1,
+    "messages": [
+      {
+        "user": "hi"
+      }
+    ],
+    "functions": null,
+    "is_function_call": false,
+    "assistant": "Hello! How can I assist you today?"
+  }
 ]
 ```
 

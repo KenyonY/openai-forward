@@ -53,6 +53,12 @@ benchmark = [
     "tiktoken",
 ]
 
+database = [
+    "lmdb>=1.4.1",
+    "plyvel>=1.5.0",
+    "rocksdict>=0.3.13",
+]
+
 lmdb = [
     "lmdb>=1.4.1",
 ]
