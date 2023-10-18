@@ -6,9 +6,7 @@
     <br>
 </h1>
 
-
-<div align=center><img src=.github/data/logo.png width="300px"></div>
-
+<div align=center><img src=https://github.com/KenyonY/openai-forward/blob/main/.github/data/logo.png?raw=true width="240px"></div>
 
 
 <p align="center">
@@ -21,7 +19,7 @@
     <a href="https://github.com/KenyonY/openai-forward/releases">
         <img alt="Release (latest by date)" src="https://img.shields.io/github/v/release/KenyonY/openai-forward?&style=flat-square">
     </a>
-    <a href="https://hub.docker.com/r/KenyonY/openai-forward">
+    <a href="https://hub.docker.com/r/beidongjiedeguang/openai-forward">
         <img alt="docker image size" src="https://img.shields.io/docker/image-size/KenyonY/openai-forward?style=flat-square&label=docker image">
     </a>
     <a href="https://github.com/KenyonY/openai-forward/actions/workflows/ci.yml">
@@ -47,7 +45,8 @@
 
 openai-forward
 是一个专为大型语言模型设计的高级转发服务，提供包括用户请求速率控制、Token速率限制、日志记录和自定义API密钥等功能。
-该服务可用于代理本地模型（如 [LocalAI](https://github.com/go-skynet/LocalAI)）或云端模型（如 [OpenAI](https://api.openai.com)）。
+该服务可用于代理本地模型（如 [LocalAI](https://github.com/go-skynet/LocalAI)
+）或云端模型（如 [OpenAI](https://api.openai.com)）。
 服务由 `fastapi`,`aiohttp`,`asyncio`完全异步实现。
 
 
@@ -60,13 +59,13 @@ openai-forward
 OpenAI-Forward 提供如下功能：
 
 - **全能代理**: 具备转发几乎所有类型请求的能力
-- **用户流量控制**: 实现用户请求速率限制（RPM）和流式Token速率限制（TPM）
-- **实时响应日志**: 支持流式响应的会话日志记录，用于调试自己的prompt合理性
+- **缓存AI预测**: 开启对ai生成结果的缓存，显著加快服务访问时间&&节省金币
+- **用户流量控制**: 自定义用户请求速率控制（RPM）和流式Token速率控制（TPM）
+- **实时响应日志**: 支持流式响应的会话日志记录，提供了对Prompt调用链良好的可观察性
 - **自定义秘钥**: 允许用户用自定义生成的密钥替代原始API密钥
 - **多目标路由**: 能够同时转发多个服务到不同的路由地址
 - **自动重试机制**：在请求失败时自动重试
 - **快速部署**: `pip`/`docker` 快速本地安装和部署，支持一键云端部署
-
 
 由本项目搭建的代理服务地址：
 
@@ -94,6 +93,7 @@ OpenAI-Forward 提供如下功能：
 
 ```bash
 pip install openai-forward
+# 或 pip install openai-forward[database]
 ```
 
 **启动服务**
@@ -112,15 +112,19 @@ aifd run
 │  route prefix     /                                │
 │  api keys         False                            │
 │  forward keys     False                            │
+│  cache_backend    MEMORY                           │
 ╰────────────────────────────────────────────────────╯
 ╭──────────── ⏱️ Rate Limit configuration ───────────╮
 │                                                    │
+│  backend                memory                     │
 │  strategy               moving-window              │
-│  /healthz               100/2minutes (req)         │
-│  /v1/chat/completions   60/minute;600/hour (req)   │
-│  /v1/chat/completions   40/second (token)          │
+│  global rate limit      100/minute (req)           │
+│  /v1/chat/completions   100/2minutes (req)         │
+│  /v1/completions        60/minute;600/hour (req)   │
+│  /v1/chat/completions   60/second (token)          │
+│  /v1/completions        60/second (token)          │
 ╰────────────────────────────────────────────────────╯
-INFO:     Started server process [33811]
+INFO:     Started server process [191471]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
@@ -128,7 +132,7 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 
 ### 代理OpenAI模型:
 
-`aifd run`的默认选项便是代理`https://api.openai.com`  
+`aifd run`的默认选项便是代理`https://api.openai.com`
 
 下面以搭建好的服务地址`https://api/openai-forward.com` 为例
 
@@ -136,7 +140,6 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
    <summary> 点击展开</summary>  
 
 #### 在三方应用中使用
-
 
 基于开源项目[ChatGPT-Next-Web](https://github.com/Yidadaa/ChatGPT-Next-Web)中接入:   
 替换docker启动命令中的 `BASE_URL`为自己搭建的代理服务地址
@@ -150,10 +153,7 @@ docker run -d \
     yidadaa/chatgpt-next-web 
 ``` 
 
-
 #### 在代码中接入
-
-
 
 **Python**
 
@@ -162,7 +162,6 @@ docker run -d \
 + openai.api_base = "https://api.openai-forward.com/v1"
   openai.api_key = "sk-******"
 ```
-
 
 **JS/TS**
 
@@ -205,19 +204,21 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 ### 代理本地模型
 
 - **适用场景：** 与 [LocalAI](https://github.com/go-skynet/LocalAI)，
-[api-for-open-llm](https://github.com/xusenlinzy/api-for-open-llm)等项目一起使用
+  [api-for-open-llm](https://github.com/xusenlinzy/api-for-open-llm)等项目一起使用
 
-- **如何操作：** 
-以LocalAI为例，如果已在 http://localhost:8080 部署了LocalAI服务，仅需在环境变量或 .env 
-文件中设置 `OPENAI_BASE_URL=http://localhost:8080`。
-然后即可通过访问 http://localhost:8000 使用LocalAI。
+- **如何操作：**
+  以LocalAI为例，如果已在 http://localhost:8080 部署了LocalAI服务，仅需在环境变量或 .env
+  文件中设置 `OPENAI_BASE_URL=http://localhost:8080`。
+  然后即可通过访问 http://localhost:8000 使用LocalAI。
 
 (更多)
 
 ### 代理其它云端模型
+
 - **适用场景：**
-例如，通过 [claude-to-chatgpt](https://github.com/jtsang4/claude-to-chatgpt) 可以将 claude 的 API 格式转换为 openai 的api格式，
-然后使用本服务进行代理。
+  例如，通过 [claude-to-chatgpt](https://github.com/jtsang4/claude-to-chatgpt) 可以将 claude 的 API 格式转换为 openai
+  的api格式，
+  然后使用本服务进行代理。
 
 (更多)
 
@@ -234,10 +235,10 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 <details open>
   <summary>Click for more details</summary>
 
-| 配置项        | 说明         |   默认值   |
-|------------|------------|:-------:|
-| --port     | 服务端口号      |  8000   |
-| --workers  | 工作进程数      |    1    |
+| 配置项       | 说明    | 默认值  |
+|-----------|-------|:----:|
+| --port    | 服务端口号 | 8000 |
+| --workers | 工作进程数 |  1   |
 
 </details>
 
@@ -260,10 +261,22 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 | TOKEN_RATE_LIMIT    | 限制流式响应中每个token（或SSE chunk）的输出速率                                      |           无            |
 | PROXY               | 设置HTTP代理地址                                                           |           无            |
 | LOG_CHAT            | 开关聊天内容的日志记录，用于调试和监控                                                  |        `false`         |
+| CACHE_BACKEND       | cache后端，支持内存后端和数据库后端，默认为内存后端，可选lmdb, rocksdb和leveldb数据库后端            |        `MEMORY`        |
 
 详细配置说明可参见 [.env.example](.env.example) 文件。(待完善)
 
->注意：如果你设置了 OPENAI_API_KEY 但未设置 FORWARD_KEY，客户端在调用时将不需要提供密钥。由于这可能存在安全风险，除非有明确需求，否则不推荐将 FORWARD_KEY 置空。
+> 注意：如果你设置了 OPENAI_API_KEY 但未设置 FORWARD_KEY，客户端在调用时将不需要提供密钥。由于这可能存在安全风险，除非有明确需求，否则不推荐将
+> FORWARD_KEY 置空。
+
+### Caching
+缓存默认使用内存后端，可选择数据库后端，需安装相应的环境：
+```bash
+pip install openai-forward[lmdb] # lmdb后端
+pip install openai-forward[leveldb] # leveldb后端
+pip install openai-forward[rocksdb] # rocksdb后端
+```
+然后再配置环境变量中`CACHE_BACKEND`即可使用相应的数据库后端进行存储。
+
 
 ### 自定义秘钥
 
@@ -349,7 +362,7 @@ aifd convert
 ## Backer and Sponsor
 
 <a href="https://www.jetbrains.com/?from=KenyonY/openai-forward" target="_blank">
-<img src=".github/images/jetbrains.svg" width="100px" height="100px">
+<img src="https://raw.githubusercontent.com/KenyonY/openai-forward/e7da8de4a48611b84430ca3ea44d355578134b85/.github/images/jetbrains.svg" width="100px" height="100px">
 </a>
 
 ## License
