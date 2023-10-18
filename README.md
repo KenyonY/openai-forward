@@ -20,7 +20,7 @@
         <img alt="Release (latest by date)" src="https://img.shields.io/github/v/release/KenyonY/openai-forward?&style=flat-square">
     </a>
     <a href="https://hub.docker.com/r/beidongjiedeguang/openai-forward">
-        <img alt="docker image size" src="https://img.shields.io/docker/image-size/KenyonY/openai-forward?style=flat-square&label=docker image">
+        <img alt="docker image size" src="https://img.shields.io/docker/image-size/beidongjiedeguang/openai-forward?style=flat-square&label=docker image">
     </a>
     <a href="https://github.com/KenyonY/openai-forward/actions/workflows/ci.yml">
         <img alt="tests" src="https://img.shields.io/github/actions/workflow/status/KenyonY/openai-forward/ci.yml?style=flat-square&label=tests">
@@ -67,10 +67,15 @@ OpenAI-Forward 提供如下功能：
 - **自动重试机制**：在请求失败时自动重试
 - **快速部署**: `pip`/`docker` 快速本地安装和部署，支持一键云端部署
 
-由本项目搭建的代理服务地址：
+**由本项目搭建的代理服务**
 
+与OpenAI完全一致服务地址
 > https://api.openai-forward.com  
 > https://render.openai-forward.com
+
+
+开启缓存服务地址（用户请求结果将被保存一段时间）
+> https://smart.openai-forward.com
 
 <font size=2 >
 注：此代理服务仅供个人学习和研究目的使用，勿用于任何商业用途。
@@ -247,21 +252,22 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 你可以在项目的运行目录下创建 .env 文件来定制各项配置。参考配置可见根目录下的
 [.env.example](.env.example)文件
 
-| 环境变量                | 说明                                                                   |          默认值           |
-|---------------------|----------------------------------------------------------------------|:----------------------:|
-| OPENAI_BASE_URL     | 设置OpenAI API风格的基础地址                                                  | https://api.openai.com |
-| OPENAI_ROUTE_PREFIX | 为OPENAI_BASE_URL接口地址定义路由前缀                                           |           /            |
-| OPENAI_API_KEY      | 配置OpenAI 接口风格的API密钥，支持使用多个密钥，通过逗号分隔                                  |           无            |
-| FORWARD_KEY         | 设定用于代理的自定义密钥，多个密钥可用逗号分隔。如果未设置(不建议)，将直接使用 `OPENAI_API_KEY`            |           无            |
-| EXTRA_BASE_URL      | 用于配置额外代理服务的基础URL                                                     |           无            |
-| EXTRA_ROUTE_PREFIX  | 定义额外代理服务的路由前缀                                                        |           无            |
-| REQ_RATE_LIMIT      | 设置特定路由的用户请求速率限制 (区分用户)                                               |           无            |
-| GLOBAL_RATE_LIMIT   | 配置全局请求速率限制，适用于未在 `REQ_RATE_LIMIT` 中指定的路由                             |           无            |
-| RATE_LIMIT_STRATEGY | 选择速率限制策略，选项包括：fixed-window、fixed-window-elastic-expiry、moving-window |           无            |
-| TOKEN_RATE_LIMIT    | 限制流式响应中每个token（或SSE chunk）的输出速率                                      |           无            |
-| PROXY               | 设置HTTP代理地址                                                           |           无            |
-| LOG_CHAT            | 开关聊天内容的日志记录，用于调试和监控                                                  |        `false`         |
-| CACHE_BACKEND       | cache后端，支持内存后端和数据库后端，默认为内存后端，可选lmdb, rocksdb和leveldb数据库后端            |        `MEMORY`        |
+| 环境变量                  | 说明                                                                   |          默认值           |
+|-----------------------|----------------------------------------------------------------------|:----------------------:|
+| OPENAI_BASE_URL       | 设置OpenAI API风格的基础地址                                                  | https://api.openai.com |
+| OPENAI_ROUTE_PREFIX   | 为OPENAI_BASE_URL接口地址定义路由前缀                                           |           /            |
+| OPENAI_API_KEY        | 配置OpenAI 接口风格的API密钥，支持使用多个密钥，通过逗号分隔                                  |           无            |
+| FORWARD_KEY           | 设定用于代理的自定义密钥，多个密钥可用逗号分隔。如果未设置(不建议)，将直接使用 `OPENAI_API_KEY`            |           无            |
+| EXTRA_BASE_URL        | 用于配置额外代理服务的基础URL                                                     |           无            |
+| EXTRA_ROUTE_PREFIX    | 定义额外代理服务的路由前缀                                                        |           无            |
+| REQ_RATE_LIMIT        | 设置特定路由的用户请求速率限制 (区分用户)                                               |           无            |
+| GLOBAL_RATE_LIMIT     | 配置全局请求速率限制，适用于未在 `REQ_RATE_LIMIT` 中指定的路由                             |           无            |
+| RATE_LIMIT_STRATEGY   | 选择速率限制策略，选项包括：fixed-window、fixed-window-elastic-expiry、moving-window |           无            |
+| TOKEN_RATE_LIMIT      | 限制流式响应中每个token（或SSE chunk）的输出速率                                      |           无            |
+| PROXY                 | 设置HTTP代理地址                                                           |           无            |
+| LOG_CHAT              | 开关聊天内容的日志记录，用于调试和监控                                                  |        `false`         |
+| CACHE_BACKEND         | cache后端，支持内存后端和数据库后端，默认为内存后端，可选lmdb, rocksdb和leveldb数据库后端            |        `MEMORY`        |
+| CACHE_CHAT_COMPLETION | 是否缓存/v1/chat/completions 结果                                          |        `false`         |
 
 详细配置说明可参见 [.env.example](.env.example) 文件。(待完善)
 
@@ -269,14 +275,17 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 > FORWARD_KEY 置空。
 
 ### Caching
+
 缓存默认使用内存后端，可选择数据库后端，需安装相应的环境：
+
 ```bash
 pip install openai-forward[lmdb] # lmdb后端
 pip install openai-forward[leveldb] # leveldb后端
 pip install openai-forward[rocksdb] # rocksdb后端
 ```
-然后再配置环境变量中`CACHE_BACKEND`即可使用相应的数据库后端进行存储。
 
+- 配置环境变量中`CACHE_BACKEND`以使用相应的数据库后端进行存储。 可选值`MEMORY`、`LMDB`、`ROCKSDB`、`LEVELDB`
+- 配置`CACHE_CHAT_COMPLETION`为`true`以缓存/v1/chat/completions 结果。
 
 ### 自定义秘钥
 
