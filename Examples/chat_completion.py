@@ -10,15 +10,22 @@ openai.api_key = config["api_key"]
 stream = True
 # stream = False
 
+n = 1
+
 # debug = True
 debug = False
 
 # is_function_call = True
 is_function_call = False
+caching = True
+
+max_tokens = None
 
 user_content = """
 用c实现目前已知最快平方根算法
 """
+# user_content = "ni shi shei"
+user_content = "ni hao"
 
 mt = MeasureTime().start()
 
@@ -61,7 +68,10 @@ else:
             {"role": "user", "content": user_content},
         ],
         stream=stream,
+        n=n,
+        max_tokens=max_tokens,
         request_timeout=30,
+        caching=caching,
     )
 
 if stream:
@@ -71,7 +81,7 @@ if stream:
     else:
         chunk_message = next(resp)['choices'][0]['delta']
         if is_function_call:
-            function_call = chunk_message.get("function_call", "")
+            function_call = chunk_message["function_call"]
             name = function_call["name"]
             print(f"{chunk_message['role']}: \n{name}: ")
         else:

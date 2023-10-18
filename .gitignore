@@ -15,6 +15,10 @@ chat_*.yaml
 Log/
 Log-caloi-top/
 dist/
+CACHE_DB/
+CACHE_LMDB/
+CACHE_ROCKSDB/
+CACHE_LEVELDB/
 
 .run/
 

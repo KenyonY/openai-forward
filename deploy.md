@@ -116,9 +116,9 @@ Render应该算是所有部署中最简易的一种, 并且它生成的域名国
 然后等待部署完成即可。  
 Render的免费计划: 每月750小时免费实例时间(意味着单个实例可以不间断运行)、100G带宽流量、500分钟构建时长.
 
-注：默认render在15分钟内没有服务请求时会自动休眠(好处是休眠后不会占用750h的免费实例时间)，休眠后下一次请求会被阻塞 5~10s。
-如果希望服务15分钟不自动休眠，可以使用定时脚本（如每14分钟）去请求服务进行保活。保活脚本参考`scripts/keep_render_alive.py`.    
-如果希望零停机部署可以在设置中设置`Health Check Path`为`/healthz`   
+注：默认render在15分钟内没有服务请求时会自动休眠(好处是休眠后不会占用750h的免费实例时间)，休眠后下一次请求会被阻塞 ~15s。
+如果希望服务15分钟不自动休眠，可以使用定时脚本（如每14分钟）对render服务进行保活。保活脚本参考`scripts/keep_render_alive.py`.    
+如果希望零停机部署可以在render设置中配置 `Health Check Path`为`/healthz`   
 
 > https://render.openai-forward.com  
 > https://openai-forward.onrender.com 

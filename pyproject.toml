@@ -53,6 +53,18 @@ benchmark = [
     "tiktoken",
 ]
 
+lmdb = [
+    "lmdb>=1.4.1",
+]
+
+rocksdb = [
+    "rocksdict>=0.3.13",
+]
+
+leveldb = [
+    "plyvel>=1.5.0",
+]
+
 dev = [
     "openai>=0.28.0",
     "sparrow-python",
