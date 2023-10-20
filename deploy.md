@@ -17,7 +17,6 @@
 
 </div>
 
-本文档中提供以下几种部署方式  
 **本地部署**
 
 1. [pip 安装部署](deploy.md#pip部署)
@@ -55,20 +54,16 @@ https://api.openai.com/v1/chat/completions
 http://{ip}:{port}/v1/chat/completions
 ```
 
-更多使用方式见 [应用](README.md#应用)
 
 ### 开启SSL (以https访问域名)
 首先准备好一个域名, 如本项目中使用的域名为`api.openai-forward.com`
 
-常用方式是使用nginx(不习惯用命令行配置的话可以考虑用 [Nginx Proxy Manager](https://github.com/NginxProxyManager/nginx-proxy-manager), 它可方便设置Let's Encrypt证书自动申请和自动续期) 代理转发 openai-forward 服务端口(默认8000)。  
+常用方式是使用nginx(不习惯用命令行配置的话可以考虑用 [Nginx Proxy Manager](https://github.com/NginxProxyManager/nginx-proxy-manager), 它可方便设置Let's Encrypt证书自动申请和自动续期) 
+或 [Caddy](https://caddyserver.com/docs/) 进行代理转发 openai-forward 服务端口(默认8000) 至https端口。  
 需要注意的是，若要使用流式转发，在nginx配置中需要添加关闭代理缓存的配置, 即在Nginx Proxy Manager页面的 Custom Nginx Configuration中写入：
 ```bash
 proxy_buffering off;
 ```
- 
-
-**Q**: 使用Nginx 或 Nginx Proxy Manager可以直接对任何api进行转发，为什么要用这个库？  
-**A**: `openai-forward`的转发代理功能只是一项基础功能，它的日志记录、token速率限制、自定义秘钥等功能都是nginx无法直接做到的。
 
 <a>
    <img src="https://raw.githubusercontent.com/beidongjiedeguang/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">
@@ -77,15 +72,15 @@ proxy_buffering off;
 ## Docker部署
 
 ```bash
-docker run -d -p 9999:8000 beidongjiedeguang/openai-forward:latest 
+docker run -d -p 8000:8000 beidongjiedeguang/openai-forward:latest 
 ```
 
-将映射宿主机的9999端口，通过`http://{ip}:9999`访问服务。  
+将映射宿主机的8000端口，通过`http://{ip}:8000`访问服务。  
 容器内日志路径为`/home/openai-forward/Log/`, 可在启动时将其映射出来。  
 
 注：同样可以在启动命令中通过-e传入环境变量OPENAI_API_KEY=sk-xxx作为默认api key  
 启用SSL同上.
-环境变量配置见[环境变量配置](README.md#环境变量配置项)
+环境变量配置见[环境变量配置](README.md#配置)
 
 
 ## 源码部署

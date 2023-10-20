@@ -1,4 +1,4 @@
-**中文** | ~~[**English**](./README_EN.md)~~
+**简体中文** | [**English**](./README_EN.md)
 
 <h1 align="center">
     <br>
@@ -43,11 +43,10 @@
 
 </div>
 
-openai-forward
-是一个专为大型语言模型设计的高级转发服务，提供包括用户请求速率控制、Token速率限制、日志记录和自定义API密钥等功能。
-该服务可用于代理本地模型（如 [LocalAI](https://github.com/go-skynet/LocalAI)
-）或云端模型（如 [OpenAI](https://api.openai.com)）。
-服务由 `fastapi`,`aiohttp`,`asyncio`完全异步实现。
+**OpenAI-Forward** 是为大型语言模型设计的高效转发服务。其核心功能包括
+用户请求速率控制、Token速率限制、智能预测缓存、日志管理和API密钥管理等，旨在提供高效、便捷的模型转发服务。
+无论是代理本地语言模型还是云端语言模型，如 [LocalAI](https://github.com/go-skynet/LocalAI) 或 [OpenAI](https://api.openai.com)，都可以借助 OpenAI Forward 轻松实现。
+凭借 fastapi、aiohttp 和 asyncio 等库的支持，OpenAI-Forward 实现了出色的异步性能。
 
 
 <a>
@@ -56,30 +55,32 @@ openai-forward
 
 ## 主要特性
 
-OpenAI-Forward 提供如下功能：
+OpenAI-Forward 提供以下核心功能：
 
-- **全能代理**: 具备转发几乎所有类型请求的能力
-- **缓存AI预测**: 开启对ai生成结果的缓存，显著加快服务访问时间&&节省金币
-- **用户流量控制**: 自定义用户请求速率控制（RPM）和流式Token速率控制（TPM）
-- **实时响应日志**: 支持流式响应的会话日志记录，提供了对Prompt调用链良好的可观察性
-- **自定义秘钥**: 允许用户用自定义生成的密钥替代原始API密钥
-- **多目标路由**: 能够同时转发多个服务到不同的路由地址
-- **自动重试机制**：在请求失败时自动重试
-- **快速部署**: `pip`/`docker` 快速本地安装和部署，支持一键云端部署
-
-**由本项目搭建的代理服务**
-
-与OpenAI完全一致 服务地址
-> https://api.openai-forward.com  
-> https://render.openai-forward.com
+- **全能转发**：可转发几乎所有类型的请求
+- **性能优先**：拥有出色的异步性能
+- **缓存AI预测**：对AI预测进行缓存，加速服务访问并节省费用
+- **用户流量控制**：自定义请求与Token速率
+- **实时响应日志**：优化调用链的可观察性
+- **自定义秘钥**：替代原始API密钥
+- **多目标路由**：转发多个服务地址至同一服务下的不同路由
+- **自动重试**：确保服务的稳定性，请求失败时将自动重试
+- **快速部署**：支持通过pip和docker在本地或云端进行快速部署
 
 
-开启缓存服务地址（用户请求结果将被保存一段时间）
-> https://smart.openai-forward.com
 
-<font size=2 >
-注：此代理服务仅供个人学习和研究目的使用，勿用于任何商业用途。
-</font>
+**由本项目搭建的代理服务地址:**
+
+- 原始OpenAI 服务地址
+  > https://api.openai-forward.com  
+  > https://render.openai-forward.com
+
+- 开启缓存的服务地址（用户请求结果将被保存一段时间）
+  > https://smart.openai-forward.com
+
+<sub>
+注：此处部署的代理服务仅供个人学习和研究目的使用，勿用于任何商业用途。
+</sub>
 
 ## 部署指南
 
@@ -220,7 +221,7 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 ### 代理其它云端模型
 
 - **适用场景：**
-  例如，通过 [claude-to-chatgpt](https://github.com/jtsang4/claude-to-chatgpt) 可以将 claude 的 API 格式转换为 openai
+  例如可通过 [LiteLLM](https://github.com/BerriAI/litellm) 可以将 众多云模型的 API 格式转换为 openai
   的api格式，
   然后使用本服务进行代理。
 
@@ -285,6 +286,20 @@ pip install openai-forward[rocksdb] # rocksdb后端
 
 - 配置环境变量中`CACHE_BACKEND`以使用相应的数据库后端进行存储。 可选值`MEMORY`、`LMDB`、`ROCKSDB`、`LEVELDB`
 - 配置`CACHE_CHAT_COMPLETION`为`true`以缓存/v1/chat/completions 结果。
+
+```diff
+  import openai
+  openai.api_base = "https://smart.openai-forward.com/v1"
+  openai.api_key = "sk-******"
+
+  completion = openai.ChatCompletion.create(
++   caching=False, # 默认缓存，可以设置为不缓存
+    model="gpt-3.5-turbo",
+    messages=[
+      {"role": "user", "content": "Hello!"}
+    ]
+)
+```
 
 ### 自定义秘钥
 
@@ -357,12 +372,13 @@ aifd convert
 
 </details>
 
-## Backer and Sponsor
+
+## 赞助者与支持者
 
 <a href="https://www.jetbrains.com/?from=KenyonY/openai-forward" target="_blank">
 <img src="https://raw.githubusercontent.com/KenyonY/openai-forward/e7da8de4a48611b84430ca3ea44d355578134b85/.github/images/jetbrains.svg" width="100px" height="100px">
 </a>
 
-## License
+## 许可证
 
-OpenAI-Forward is licensed under the [MIT](https://opensource.org/license/mit/) license.
+OpenAI-Forward 采用 [MIT](https://opensource.org/license/mit/) 许可证。
