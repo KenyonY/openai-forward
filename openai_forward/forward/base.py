@@ -22,7 +22,7 @@ from ..decorators import async_retry, async_token_rate_limit
 from ..settings import *
 
 
-class ForwardBase:
+class GenericForward:
     """
     Base class for handling request forwarding to another service.
     Provides methods for request validation, logging, and proxying.
@@ -164,7 +164,7 @@ class ForwardBase:
         )
 
 
-class OpenaiBase(ForwardBase):
+class OpenaiForward(GenericForward):
     """
     Derived class for handling request forwarding specifically for the OpenAI (Style) API.
     """
@@ -364,9 +364,9 @@ class OpenaiBase(ForwardBase):
     def handle_authorization(self, client_config):
         auth, auth_prefix = client_config["auth"], "Bearer "
         if self._no_auth_mode or auth and auth[len(auth_prefix) :] in FWD_KEY:
-            client_config["headers"]["Authorization"] = auth_prefix + next(
-                self._cycle_api_key
-            )
+            auth = auth_prefix + next(self._cycle_api_key)
+            client_config["headers"]["Authorization"] = auth
+        return auth
 
     @staticmethod
     def _get_cached_response(payload_info, valid_payload, request):
@@ -392,7 +392,7 @@ class OpenaiBase(ForwardBase):
                 payload_info['messages'],
                 payload_info['model'],
                 payload_info["max_tokens"],
-                payload_info['temperature'],
+                # payload_info['temperature'],
             ]
             functions = payload_info.get("functions")
             if functions:
