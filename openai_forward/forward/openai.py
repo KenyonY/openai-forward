@@ -1,4 +1,4 @@
-from .base import OpenaiBase as OpenaiForward
+from .base import OpenaiForward
 
 
 def create_openai_proxies():

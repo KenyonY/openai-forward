@@ -26,6 +26,7 @@ class CompletionLogger:
     async def parse_payload(request: Request):
         uid = get_unique_id()
         payload = await request.json()
+        print(f"{payload=}")
 
         content = {
             "prompt": payload['prompt'],

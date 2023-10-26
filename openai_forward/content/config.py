@@ -62,10 +62,6 @@ def setting_log(
         {"sink": sys.stdout, "level": "INFO" if print_chat else "DEBUG"},
     ]
 
-    # def filter_func(_prefix, _postfix, record):
-    #     chat_key = f"{_prefix}{_postfix}"
-    #     return chat_key in record["extra"]
-
     for prefix in openai_route_prefix or []:
 
         _prefix = route_prefix_to_str(prefix)
@@ -76,7 +72,6 @@ def setting_log(
                     "sink": f"./Log/{_prefix}/chat/chat.log",
                     "enqueue": multi_process,
                     "rotation": "50 MB",
-                    # "filter": functools.partial(filter_func, _prefix, "_chat"),
                     "filter": lambda record: f"{_prefix}_chat" in record["extra"],
                     "format": "{message}",
                 },
@@ -84,7 +79,6 @@ def setting_log(
                     "sink": f"./Log/{_prefix}/completion/completion.log",
                     "enqueue": multi_process,
                     "rotation": "50 MB",
-                    # "filter": functools.partial(filter_func, _prefix, "_completion"),
                     "filter": lambda record: f"{_prefix}_completion" in record["extra"],
                     "format": "{message}",
                 },
@@ -92,7 +86,6 @@ def setting_log(
                     "sink": f"./Log/{_prefix}/whisper/whisper.log",
                     "enqueue": multi_process,
                     "rotation": "30 MB",
-                    # "filter": functools.partial(filter_func, _prefix, "_whisper"),
                     "filter": lambda record: f"{_prefix}_whisper" in record["extra"],
                     "format": "{message}",
                 },
