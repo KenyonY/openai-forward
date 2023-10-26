@@ -163,9 +163,18 @@ def parse_log_to_list(log_path: str):
                 clean_content = {}
                 for key, value in content.items():
                     if key == "messages":
-                        clean_content[key] = [
-                            {i['role']: clean_str(i['content'])} for i in value
-                        ]
+                        try:
+                            clean_content[key] = [
+                                {i['role']: clean_str(i['content'])} for i in value
+                            ]
+                        except Exception as e:
+                            if not isinstance(value, list):
+                                print(
+                                    f"Warning(`message` should be a list): {content=}"
+                                )
+                            else:
+                                print(f"Warning({e=}): {content=}")
+                            continue
                     else:
                         clean_content[key] = value
                 messages.append(clean_content)
