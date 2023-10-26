@@ -1,4 +1,4 @@
-**简体中文** | [**English**](./README_EN.md)
+**English** | [**简体中文**](./README_ZH.md)
 
 <h1 align="center">
     <br>
@@ -34,80 +34,88 @@
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/KenyonY/openai-forward)
 
-[特点](#主要特性) |
-[部署指南](deploy.md) |
-[使用指南](#使用指南) |
-[配置](#配置) |
-[对话日志](#对话日志)
+
+[Features](#Key-Features) |
+[Deployment Guide](deploy_en.md) |
+[User Guide](#User-Guide) |
+[Configuration](#Configuration) |
+[Conversation Logs](#Conversation-Logs)
+
 
 
 </div>
 
-**OpenAI-Forward** 是为大型语言模型设计的高效转发服务。其核心功能包括
-用户请求速率控制、Token速率限制、智能预测缓存、日志管理和API密钥管理等，旨在提供高效、便捷的模型转发服务。
-无论是代理本地语言模型还是云端语言模型，如 [LocalAI](https://github.com/go-skynet/LocalAI) 或 [OpenAI](https://api.openai.com)，都可以借助 OpenAI Forward 轻松实现。
-凭借 fastapi、aiohttp 和 asyncio 等库的支持，OpenAI-Forward 实现了出色的异步性能。
+---
 
+**OpenAI-Forward** is an efficient forwarding service designed for large language models. 
+Its core features include user request rate control, Token rate limits, intelligent prediction caching, 
+log management, and API key management, aiming to provide a fast and convenient model forwarding 
+service. Whether proxying local language models or cloud-based language models,
+such as [LocalAI](https://github.com/go-skynet/LocalAI) or [OpenAI](https://api.openai.com),
+OpenAI Forward facilitates easy implementation. 
+With the support of libraries like [uvicorn](https://github.com/encode/uvicorn), [aiohttp](https://github.com/aio-libs/aiohttp), and [asyncio](https://docs.python.org/3/library/asyncio.html), 
+OpenAI-Forward achieves impressive asynchronous performance.
 
 <a>
    <img src="https://raw.githubusercontent.com/KenyonY/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">
 </a>
 
-## 主要特性
+## Key Features
 
-OpenAI-Forward 提供以下核心功能：
+OpenAI-Forward offers the following capabilities:
 
-- **全能转发**：可转发几乎所有类型的请求
-- **性能优先**：拥有出色的异步性能
-- **缓存AI预测**：对AI预测进行缓存，加速服务访问并节省费用
-- **用户流量控制**：自定义请求与Token速率
-- **实时响应日志**：优化调用链的可观察性
-- **自定义秘钥**：替代原始API密钥
-- **多目标路由**：转发多个服务地址至同一服务下的不同路由
-- **自动重试**：确保服务的稳定性，请求失败时将自动重试
-- **快速部署**：支持通过pip和docker在本地或云端进行快速部署
+- **Universal Forwarding**: Supports forwarding of almost all types of requests.
+- **Performance First**: Boasts outstanding asynchronous performance.
+- **Cache AI Predictions**: Caches AI predictions, accelerating service access and saving costs.
+- **User Traffic Control**: Customize request and Token rates.
+- **Real-time Response Logs**: Enhances observability of the call chain.
+- **Custom Secret Keys**: Replaces the original API keys.
+- **Multi-target Routing**: Forwards to multiple service addresses under a single service to different routes.
+- **Automatic Retries**: Ensures service stability; will automatically retry on failed requests.
+- **Quick Deployment**: Supports fast deployment locally or on the cloud via pip and docker.
 
+**Proxy services set up by this project include**:
 
-
-**由本项目搭建的代理服务地址:**
-
-- 原始OpenAI 服务地址
+- Original OpenAI Service Address:
   > https://api.openai-forward.com  
   > https://render.openai-forward.com
 
-- 开启缓存的服务地址（用户请求结果将被保存一段时间）
+- Cached Service Address (User request results will be saved for some time):
   > https://smart.openai-forward.com
 
 <sub>
-注：此处部署的代理服务仅供个人学习和研究目的使用，勿用于任何商业用途。
+Note: The proxy services deployed here are for personal learning and research purposes only and should not be used for any commercial purposes.
 </sub>
 
-## 部署指南
 
-👉 [部署文档](deploy.md)
 
+---
+
+## Deployment Guide
+
+👉 [Deployment Documentation](deploy_en.md)
 
 <a>
-   <img src="https://raw.githubusercontent.com/KenyonY/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">
+<img src="https://raw.githubusercontent.com/KenyonY/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">
 </a>
 
-## 使用指南
+## User Guide
 
-### 快速入门
+### Quick Start
 
-**安装**
+**Installation**
 
 ```bash
 pip install openai-forward
 ```
 
-**启动服务**
+**Starting the Service**
 
 ```bash
 aifd run
 ```
 
-如果读入了根路径的`.env`的配置, 将会看到以下启动信息
+If the configuration from the `.env` file at the root path is read, you will see the following startup information.
 
 ```bash
 ❯ aifd run
@@ -135,19 +143,21 @@ INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 ```
 
-### 代理OpenAI模型:
+---
 
-`aifd run`的默认选项便是代理`https://api.openai.com`
+### Proxy OpenAI Model:
 
-下面以搭建好的服务地址`https://api/openai-forward.com` 为例
+The default option for `aifd run` is to proxy `https://api.openai.com`.
 
-<details >
-   <summary> 点击展开</summary>  
+The following uses the set up service address `https://api.openai-forward.com` as an example.
 
-#### 在三方应用中使用
+<details>
+   <summary>Click to expand</summary>
 
-基于开源项目[ChatGPT-Next-Web](https://github.com/Yidadaa/ChatGPT-Next-Web)中接入:   
-替换docker启动命令中的 `BASE_URL`为自己搭建的代理服务地址
+#### Use in Third-party Applications
+
+Integrate within the open-source project [ChatGPT-Next-Web](https://github.com/Yidadaa/ChatGPT-Next-Web):
+Replace the `BASE_URL` in the Docker startup command with the address of your self-hosted proxy service.
 
 ```bash 
 docker run -d \
@@ -158,7 +168,9 @@ docker run -d \
     yidadaa/chatgpt-next-web 
 ``` 
 
-#### 在代码中接入
+#### Integrate within Code
+
+---
 
 **Python**
 
@@ -206,86 +218,81 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 
 </details>
 
-### 代理本地模型
+---
+### Proxy Local Model
 
-- **适用场景：** 与 [LocalAI](https://github.com/go-skynet/LocalAI)，
-  [api-for-open-llm](https://github.com/xusenlinzy/api-for-open-llm)等项目一起使用
+- **Applicable scenarios:** To be used in conjunction with projects such as [LocalAI](https://github.com/go-skynet/LocalAI) and [api-for-open-llm](https://github.com/xusenlinzy/api-for-open-llm).
 
-- **如何操作：**
-  以LocalAI为例，如果已在 http://localhost:8080 部署了LocalAI服务，仅需在环境变量或 .env
-  文件中设置 `OPENAI_BASE_URL=http://localhost:8080`。
-  然后即可通过访问 http://localhost:8000 使用LocalAI。
+- **How to operate:** 
+  Using LocalAI as an example, if the LocalAI service has been deployed at http://localhost:8080, you only need to set `OPENAI_BASE_URL=http://localhost:8080` in the environment variable or in the .env file.
+  After that, you can access LocalAI through http://localhost:8000.
 
-(更多)
+(More)
 
-### 代理其它云端模型
+### Proxy Other Cloud Models
 
-- **适用场景：**
-  例如可通过 [LiteLLM](https://github.com/BerriAI/litellm) 可以将 众多云模型的 API 格式转换为 openai
-  的api格式，
-  然后使用本服务进行代理。
+- **Applicable scenarios:** 
+  For instance, through [LiteLLM](https://github.com/BerriAI/litellm), you can convert the API format of many cloud models to the OpenAI API format and then use this service as a proxy.
 
-(更多)
+(More)
 
 <a>
    <img src="https://raw.githubusercontent.com/KenyonY/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">
 </a>
 
-## 配置
+## Configuration
 
-### 命令行参数
+### Command Line Arguments
 
-执行 `aifd run --help` 获取参数详情
+Execute `aifd run --help` to get details on arguments.
 
 <details open>
   <summary>Click for more details</summary>
 
-| 配置项       | 说明    | 默认值  |
-|-----------|-------|:----:|
-| --port    | 服务端口号 | 8000 |
-| --workers | 工作进程数 |  1   |
+| Configuration | Description | Default Value |
+|---------------|-------------|:-------------:|
+| --port       | Service port | 8000         |
+| --workers    | Number of working processes | 1 |
 
 </details>
 
-### 环境变量详情
+### Environment Variable Details
 
-你可以在项目的运行目录下创建 .env 文件来定制各项配置。参考配置可见根目录下的
-[.env.example](.env.example)文件
+You can create a .env file in the project's run directory to customize configurations. For a reference configuration, see the [.env.example](.env.example) file in the root directory.
 
-| 环境变量                  | 说明                                                                   |          默认值           |
-|-----------------------|----------------------------------------------------------------------|:----------------------:|
-| OPENAI_BASE_URL       | 设置OpenAI API风格的基础地址                                                  | https://api.openai.com |
-| OPENAI_ROUTE_PREFIX   | 为OPENAI_BASE_URL接口地址定义路由前缀                                           |           /            |
-| OPENAI_API_KEY        | 配置OpenAI 接口风格的API密钥，支持使用多个密钥，通过逗号分隔                                  |           无            |
-| FORWARD_KEY           | 设定用于代理的自定义密钥，多个密钥可用逗号分隔。如果未设置(不建议)，将直接使用 `OPENAI_API_KEY`            |           无            |
-| EXTRA_BASE_URL        | 用于配置额外代理服务的基础URL                                                     |           无            |
-| EXTRA_ROUTE_PREFIX    | 定义额外代理服务的路由前缀                                                        |           无            |
-| REQ_RATE_LIMIT        | 设置特定路由的用户请求速率限制 (区分用户)                                               |           无            |
-| GLOBAL_RATE_LIMIT     | 配置全局请求速率限制，适用于未在 `REQ_RATE_LIMIT` 中指定的路由                             |           无            |
-| RATE_LIMIT_STRATEGY   | 选择速率限制策略，选项包括：fixed-window、fixed-window-elastic-expiry、moving-window |           无            |
-| TOKEN_RATE_LIMIT      | 限制流式响应中每个token（或SSE chunk）的输出速率                                      |           无            |
-| PROXY                 | 设置HTTP代理地址                                                           |           无            |
-| LOG_CHAT              | 开关聊天内容的日志记录，用于调试和监控                                                  |        `false`         |
-| CACHE_BACKEND         | cache后端，支持内存后端和数据库后端，默认为内存后端，可选lmdb, rocksdb和leveldb数据库后端            |        `MEMORY`        |
-| CACHE_CHAT_COMPLETION | 是否缓存/v1/chat/completions 结果                                          |        `false`         |
+| Environment Variable  | Description                                                                                      | Default Value                 |
+|-----------------------|-------------------------------------------------------------------------------------------------|:-----------------------------:|
+| OPENAI_BASE_URL       | Set base address for OpenAI-style API                                                            | https://api.openai.com        |
+| OPENAI_ROUTE_PREFIX   | Define a route prefix for the OPENAI_BASE_URL interface address                                 | /                             |
+| OPENAI_API_KEY        | Configure API key in OpenAI style, supports using multiple keys separated by commas              | None                          |
+| FORWARD_KEY           | Set a custom key for proxying, multiple keys can be separated by commas. If not set (not recommended), it will directly use `OPENAI_API_KEY` | None |
+| EXTRA_BASE_URL        | Configure the base URL for additional proxy services                                             | None                          |
+| EXTRA_ROUTE_PREFIX    | Define the route prefix for additional proxy services                                           | None                          |
+| REQ_RATE_LIMIT        | Set the user request rate limit for specific routes (user distinguished)                         | None                          |
+| GLOBAL_RATE_LIMIT     | Configure a global request rate limit applicable to routes not specified in `REQ_RATE_LIMIT`    | None                          |
+| RATE_LIMIT_STRATEGY   | Choose a rate limit strategy, options include: fixed-window, fixed-window-elastic-expiry, moving-window | None |
+| TOKEN_RATE_LIMIT      | Limit the output rate of each token (or SSE chunk) in a streaming response                      | None                          |
+| PROXY                 | Set HTTP proxy address                                                                           | None                          |
+| LOG_CHAT              | Toggle chat content logging for debugging and monitoring                                        | `false`                       |
+| CACHE_BACKEND         | Cache backend, supports memory backend and database backend. By default, it's memory backend, optional database backends are lmdb, rocksdb, and leveldb | `MEMORY` |
+| CACHE_CHAT_COMPLETION | Whether to cache /v1/chat/completions results                                                    | `false`                       |
 
-详细配置说明可参见 [.env.example](.env.example) 文件。(待完善)
+Detailed configuration descriptions can be seen in the [.env.example](.env.example) file. (To be completed)
 
-> 注意：如果你设置了 OPENAI_API_KEY 但未设置 FORWARD_KEY，客户端在调用时将不需要提供密钥。由于这可能存在安全风险，除非有明确需求，否则不推荐将
-> FORWARD_KEY 置空。
+> Note: If you set OPENAI_API_KEY but did not set FORWARD_KEY, clients will not need to provide a key when calling. As this may pose a security risk, it's not recommended to leave FORWARD_KEY unset unless there's a specific need.
 
 ### Caching
 
-缓存默认使用内存后端，可选择数据库后端，需安装相应的环境：
+By default, caching uses a memory backend. You can choose a database backend but need to install the corresponding environment:
 
 ```bash
-pip install openai-forward[lmdb] # lmdb后端
-pip install openai-forward[leveldb] # leveldb后端
-pip install openai-forward[rocksdb] # rocksdb后端
+pip install openai-forward[lmdb] # lmdb backend
+pip install openai-forward[leveldb] # leveldb backend
+pip install openai-forward[rocksdb] # rocksdb backend
 ```
 
-- 配置环境变量中`CACHE_BACKEND`以使用相应的数据库后端进行存储。 可选值`MEMORY`、`LMDB`、`ROCKSDB`、`LEVELDB`
-- 配置`CACHE_CHAT_COMPLETION`为`true`以缓存/v1/chat/completions 结果。
+- Configure `CACHE_BACKEND` in the environment variable to use the respective database backend for storage. Options are `MEMORY`, `LMDB`, `ROCKSDB`, and `LEVELDB`.
+- Set `CACHE_CHAT_COMPLETION` to `true` to cache /v1/chat/completions results.
 
 ```diff
   import openai
@@ -293,7 +300,7 @@ pip install openai-forward[rocksdb] # rocksdb后端
   openai.api_key = "sk-******"
 
   completion = openai.ChatCompletion.create(
-+   caching=False, # 默认缓存，可以设置为不缓存
++   caching=False, # Cache by default, can be set to not cache
     model="gpt-3.5-turbo",
     messages=[
       {"role": "user", "content": "Hello!"}
@@ -301,19 +308,19 @@ pip install openai-forward[rocksdb] # rocksdb后端
 )
 ```
 
-### 自定义秘钥
+### Custom Keys
 
 <details open>
   <summary>Click for more details</summary>
 
-需要配置 OPENAI_API_KEY 和 FORWARD_KEY, 如
+Configure OPENAI_API_KEY and FORWARD_KEY, for example:
 
 ```bash
 OPENAI_API_KEY=sk-*******
-FORWARD_KEY=fk-****** # 这里fk-token由我们自己定义
+FORWARD_KEY=fk-****** # Here, the fk-token is customized
 ```
 
-**用例:**
+**Use case:**
 
 ```diff
   import openai
@@ -324,33 +331,30 @@ FORWARD_KEY=fk-****** # 这里fk-token由我们自己定义
 
 </details>
 
-### 多目标服务转发
+### Multi-Target Service Forwarding
 
-支持转发不同地址的服务至同一端口的不同路由下
-用例见  `.env.example`
+Supports forwarding services from different addresses to different routes under the same port. Refer to the `.env.example` for examples.
 
-### 对话日志
+### Conversation Logs
 
-默认不记录对话日志，若要开启需设置环境变量`LOG_CHAT=true`
+Chat logs are not recorded by default. If you wish to enable it, set the `LOG_CHAT=true` environment variable.
 <details open>
   <summary>Click for more details</summary>
 
-保存路径在当前目录下的`Log/openai/chat/chat.log`路径中。  
-记录格式为
-
+Logs are saved in the current directory under `Log/openai/chat/chat.log`. The recording format is:
 ```text
 {'messages': [{'role': 'user', 'content': 'hi'}], 'model': 'gpt-3.5-turbo', 'stream': True, 'max_tokens': None, 'n': 1, 'temperature': 1, 'top_p': 1, 'logit_bias': None, 'frequency_penalty': 0, 'presence_penalty': 0, 'stop': None, 'user': None, 'ip': '127.0.0.1', 'uid': '2155fe1580e6aed626aa1ad74c1ce54e', 'datetime': '2023-10-17 15:27:12'}
 {'assistant': 'Hello! How can I assist you today?', 'is_function_call': False, 'uid': '2155fe1580e6aed626aa1ad74c1ce54e'}
 ```
 
-转换为`json`格式：
+
+To convert to `json` format:
 
 ```bash
 aifd convert
 ```
 
-得到`chat_openai.json`：
-
+You'll get `chat_openai.json`:
 ```json
 [
   {
@@ -370,15 +374,16 @@ aifd convert
 ]
 ```
 
+
 </details>
 
 
-## 赞助者与支持者
+## Backer and Sponsor
 
 <a href="https://www.jetbrains.com/?from=KenyonY/openai-forward" target="_blank">
 <img src="https://raw.githubusercontent.com/KenyonY/openai-forward/e7da8de4a48611b84430ca3ea44d355578134b85/.github/images/jetbrains.svg" width="100px" height="100px">
 </a>
 
-## 许可证
+## License
 
-OpenAI-Forward 采用 [MIT](https://opensource.org/license/mit/) 许可证。
+OpenAI-Forward is licensed under the [MIT](https://opensource.org/license/mit/) license.

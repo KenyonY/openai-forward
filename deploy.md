@@ -41,7 +41,7 @@ pip install openai-forward
 aifd run   
 ```
 服务就搭建完成了。  
-配置见[配置](README.md#配置)
+配置见[配置](README_ZH.md#配置)
 
 ### 服务调用
 
@@ -80,7 +80,7 @@ docker run -d -p 8000:8000 beidongjiedeguang/openai-forward:latest
 
 注：同样可以在启动命令中通过-e传入环境变量OPENAI_API_KEY=sk-xxx作为默认api key  
 启用SSL同上.
-环境变量配置见[环境变量配置](README.md#配置)
+环境变量配置见[环境变量配置](README_ZH.md#配置)
 
 
 ## 源码部署
