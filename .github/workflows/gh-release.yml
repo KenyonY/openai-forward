@@ -19,15 +19,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      - name: Create Release
+
+      - name: Create Release and Generate Notes
         id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        uses: softprops/action-gh-release@v1
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ github.ref }}
-          release_name: 💫 Release ${{ github.ref }}
-          body: |
-            See ChangeLog
+          name: 💫 Release ${{ github.ref }}
           draft: false
           prerelease: false
+          generate_release_notes: true

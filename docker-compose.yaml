@@ -7,8 +7,28 @@ services:
     ports:
       - "8000:8000"
     volumes:
+      - ./CACHE_LMDB:/home/openai-forward/CACHE_LMDB
+      - ./CACHE_LEVELDB:/home/openai-forward/CACHE_LEVELDB
       - ./Log:/home/openai-forward/Log
       - ./openai_forward:/home/openai-forward/openai_forward
     command:
       - --port=8000
       - --workers=1
+    restart: unless-stopped
+    depends_on:
+      - ninja
+
+  ninja:
+      image: ghcr.io/gngpp/ninja:latest
+      container_name: ninja
+      restart: unless-stopped
+      environment:
+        - TZ=Asia/Shanghai
+      command:
+        - run
+        - --arkose-gpt4-har-dir=/root/.gpt4
+#        - --level=debug
+      volumes:
+        - ./har:/root/.gpt4
+#      ports:
+#        - "7999:7999"

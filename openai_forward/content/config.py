@@ -49,8 +49,11 @@ def setting_log(
             offset_hours = offset_seconds // 3600
             return f"UTC{-int(offset_hours):+d}"
 
-        os.environ["TZ"] = get_utc_offset(tz)
-        time.tzset()
+        try:
+            os.environ["TZ"] = get_utc_offset(tz)
+            time.tzset()
+        except Exception:
+            pass
 
     logging.root.handlers = [InterceptHandler()]
     for name in logging.root.manager.loggerDict.keys():

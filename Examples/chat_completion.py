@@ -1,12 +1,15 @@
-import openai
+from openai import OpenAI
+from openai._types import Headers, Query
 from rich import print
 from sparrow import MeasureTime, yaml_load  # pip install sparrow-python
 
 config = yaml_load("config.yaml", rel_path=True)
 print(f"{config=}")
-openai.api_base = config["api_base"]
-openai.api_key = config["api_key"]
 
+client = OpenAI(
+    api_key=config['api_key'],
+    base_url=config['api_base'],
+)
 stream = True
 # stream = False
 
@@ -24,11 +27,9 @@ max_tokens = None
 user_content = """
 用c实现目前已知最快平方根算法
 """
-# user_content = "ni shi shei"
-user_content = "ni hao"
+# user_content = 'hi'
 
 mt = MeasureTime().start()
-
 
 # function_call
 if is_function_call:
@@ -49,7 +50,7 @@ if is_function_call:
             },
         }
     ]
-    resp = openai.ChatCompletion.create(
+    resp = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
             {"role": "user", "content": "What's the weather like in Boston today?"}
@@ -57,11 +58,11 @@ if is_function_call:
         functions=functions,
         function_call="auto",  # auto is default, but we'll be explicit
         stream=stream,
-        request_timeout=30,
+        timeout=30,
     )
 
 else:
-    resp = openai.ChatCompletion.create(
+    resp = client.chat.completions.create(
         model="gpt-3.5-turbo",
         # model="gpt-4",
         messages=[
@@ -70,8 +71,11 @@ else:
         stream=stream,
         n=n,
         max_tokens=max_tokens,
-        request_timeout=30,
-        caching=caching,
+        timeout=30,
+        # extra_headers=(caching, caching)
+        # extra_query={"caching": False},
+        # extra_headers = {"caching": False},
+        extra_body={"caching": False},
     )
 
 if stream:
@@ -79,23 +83,25 @@ if stream:
         for chunk in resp:
             print(chunk)
     else:
-        chunk_message = next(resp)['choices'][0]['delta']
-        if is_function_call:
-            function_call = chunk_message["function_call"]
-            name = function_call["name"]
-            print(f"{chunk_message['role']}: \n{name}: ")
-        else:
-            print(f"{chunk_message['role']}: ")
-        for chunk in resp:
-            chunk_message = chunk['choices'][0]['delta']
+        for idx, chunk in enumerate(resp):
+            chunk_message = chunk.choices[0].delta or ""
+            if idx == 0:
+                if is_function_call:
+                    function_call = chunk_message.function_call or ""
+                    name = function_call.name
+                    print(f"{chunk_message.role}: \n{name}: ")
+                else:
+                    print(f"{chunk_message.role}: ")
+                continue
+
             content = ""
             if is_function_call:
-                function_call = chunk_message.get("function_call", "")
+                function_call = chunk_message.function_call or ""
                 if function_call:
-                    content = function_call.get("arguments", "")
+                    content = function_call.arguments or ""
 
             else:
-                content = chunk_message.get("content", "")
+                content = chunk_message.content or ""
             print(content, end="")
         print()
 else:

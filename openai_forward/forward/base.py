@@ -125,7 +125,7 @@ class GenericForward:
         logger.error(f"{error_info}\n{traceback.format_exc()}")
         raise HTTPException(status_code=status_code, detail=error_info)
 
-    def prepare_client(self, request: Request) -> dict:
+    def prepare_client(self, request: Request, return_origin_header=False) -> dict:
         assert self.BASE_URL and self.ROUTE_PREFIX
         if self.validate_host:
             ip = get_client_ip(request)
@@ -140,19 +140,21 @@ class GenericForward:
         url = f"{self.BASE_URL}{url_path}?{request.url.query}"
 
         headers = dict(request.headers)
-        auth = headers.pop("authorization", "")
-        content_type = headers.pop("content-type", "application/json")
+        auth = headers.get("authorization", "")
+        content_type = headers.get("content-type", "application/json")
+        if not return_origin_header:
+            headers = {"Content-Type": content_type, "Authorization": auth}
 
         return {
             'auth': auth,
-            'headers': {"Content-Type": content_type, "Authorization": auth},
+            'headers': headers,
             "method": request.method,
             'url': url,
             'url_path': url_path,
         }
 
     async def reverse_proxy(self, request: Request):
-        client_config = self.prepare_client(request)
+        client_config = self.prepare_client(request, return_origin_header=True)
 
         r = await self.send(client_config, data=await request.body())
 
@@ -455,7 +457,7 @@ class OpenaiForward(GenericForward):
         Returns:
             StreamingResponse: A FastAPI StreamingResponse containing the server's response.
         """
-        client_config = self.prepare_client(request)
+        client_config = self.prepare_client(request, return_origin_header=False)
         url_path = client_config["url_path"]
 
         self.handle_authorization(client_config)

@@ -12,6 +12,7 @@ ssl/
 chat.yaml
 chat_*.yaml
 
+har/
 Log/
 Log-caloi-top/
 dist/
