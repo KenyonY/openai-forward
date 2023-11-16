@@ -138,11 +138,19 @@ class GenericForward:
         )
         url = f"{self.BASE_URL}{url_path}?{request.url.query}"
 
-        headers = dict(request.headers)
-        auth = headers.get("authorization", "")
-        content_type = headers.get("content-type", "application/json")
-        if not return_origin_header:
-            headers = {"Content-Type": content_type, "Authorization": auth}
+        auth = request.headers.get("Authorization", "")
+
+        if return_origin_header:
+            headers = request.headers
+        else:
+            headers = {
+                "content-type": request.headers.get("content-type", "application/json"),
+                "authorization": auth,
+            }
+            for key, value in request.headers.items():
+                if key.startswith("openai"):
+                    headers[key] = value
+            print(f"{headers=}")
 
         return {
             'auth': auth,
