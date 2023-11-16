@@ -3,7 +3,7 @@ services:
     image: beidongjiedeguang/openai-forward:latest
     container_name: openai-forward-container
     env_file:
-      .env
+      .env.chatgpt
     ports:
       - "8000:8000"
     volumes:
