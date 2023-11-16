@@ -52,7 +52,9 @@ if PRINT_CHAT:
 CACHE_CHAT_COMPLETION = (
     os.environ.get("CACHE_CHAT_COMPLETION", "false").strip().lower() == "true"
 )
-
+LOG_CACHE_DB_INFO = (
+    os.environ.get("LOG_CACHE_DB_INFO", "false").strip().lower() == "true"
+)
 CACHE_BACKEND = os.environ.get("CACHE_BACKEND", "MEMORY").strip()
 if CACHE_CHAT_COMPLETION:
     additional_start_info["cache_backend"] = CACHE_BACKEND
@@ -121,13 +123,14 @@ def show_startup():
             **additional_start_info,
         )
     for base_url, route_prefix in zip(EXTRA_BASE_URL, EXTRA_ROUTE_PREFIX):
+        extra_additional_start_info = {}
         print_startup_info(
             base_url,
             route_prefix,
-            "\\",
-            "\\",
+            "",
+            "",
             style=next(styles),
-            **additional_start_info,
+            **extra_additional_start_info,
         )
 
     print_rate_limit_info(

@@ -15,11 +15,8 @@
     <a href="https://github.com/KenyonY/openai-forward/blob/main/LICENSE">
         <img alt="License" src="https://img.shields.io/github/license/KenyonY/openai-forward.svg?color=blue&style=flat-square">
     </a>
-    <a href="https://github.com/KenyonY/openai-forward/releases">
-        <img alt="Release (latest by date)" src="https://img.shields.io/github/v/release/KenyonY/openai-forward?&style=flat-square">
-    </a>
     <a href="https://hub.docker.com/r/beidongjiedeguang/openai-forward">
-        <img alt="docker image size" src="https://img.shields.io/docker/image-size/beidongjiedeguang/openai-forward?style=flat-square&label=docker image">
+        <img alt="docker image size" src="https://img.shields.io/docker/pulls/beidongjiedeguang/openai-forward?style=flat-square&label=docker image">
     </a>
     <a href="https://github.com/KenyonY/openai-forward/actions/workflows/ci.yml">
         <img alt="tests" src="https://img.shields.io/github/actions/workflow/status/KenyonY/openai-forward/ci.yml?style=flat-square&label=tests">

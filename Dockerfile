@@ -12,7 +12,10 @@ RUN apk update && \
 
 COPY . /home/openai-forward
 WORKDIR /home/openai-forward
-RUN pip install -e . --no-cache-dir
+RUN apk add patch g++ libstdc++ leveldb-dev linux-headers --no-cache && \
+    pip install -e . --no-cache-dir && \
+    pip install "lmdb>=1.4.1" "plyvel>=1.5.0" --no-cache-dir && \
+    apk del g++ gcc && rm -rf /var/cache/apk/*
 
 EXPOSE 8000
 ENTRYPOINT ["python", "-m", "openai_forward.__main__", "run"]

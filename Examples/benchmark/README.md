@@ -88,5 +88,6 @@ wrk -t8 -c100 -d10s -s post.lua http://localhost:8000/benchmark/v1/chat/completi
 
 
 注: 虽然结果显示在流式转发的性能上 aiohttp 要比 httpx 的性能要高很多，
-但这主要是代码中aiohttp版本中做了一些优化，而不是这两个库的性能差异。
+但这主要是代码中aiohttp版本中做了一些优化，此处结果不代表这两个库的实际性能差异。
+但aiohttp目前在流式与非流式上的性能比httpx更高是无疑的。
 
