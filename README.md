@@ -39,7 +39,7 @@
 
 </div>
 
-**OpenAI-Forward** 是为大型语言模型设计的高效转发服务。其核心功能包括
+**OpenAI-Forward** 是为大型语言模型实现的高效转发服务。其核心功能包括
 用户请求速率控制、Token速率限制、智能预测缓存、日志管理和API密钥管理等，旨在提供高效、便捷的模型转发服务。
 无论是代理本地语言模型还是云端语言模型，如 [LocalAI](https://github.com/go-skynet/LocalAI) 或 [OpenAI](https://api.openai.com)，都可以由 OpenAI Forward 轻松实现。
 凭借  [uvicorn](https://github.com/encode/uvicorn), [aiohttp](https://github.com/aio-libs/aiohttp), 和 [asyncio](https://docs.python.org/3/library/asyncio.html)
@@ -155,37 +155,12 @@ docker run -d \
     yidadaa/chatgpt-next-web 
 ``` 
 
-#### 在代码中接入
-
 **Python**
 
 ```diff
   import openai
 + openai.api_base = "https://api.openai-forward.com/v1"
   openai.api_key = "sk-******"
-```
-
-**JS/TS**
-
-```diff
-  import { Configuration } from "openai";
-  
-  const configuration = new Configuration({
-+ basePath: "https://api.openai-forward.com/v1",
-  apiKey: "sk-******",
-  });
-```
-
-**gpt-3.5-turbo**
-
-```bash
-curl https://api.openai-forward.com/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-******" \
-  -d '{
-    "model": "gpt-3.5-turbo",
-    "messages": [{"role": "user", "content": "Hello!"}]
-  }'
 ```
 
 **Image Generation (DALL-E)**
@@ -223,6 +198,10 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
   然后使用本服务进行代理。
 
 (更多)
+
+### 代理ChatGPT
+参考根路径下 `docker-compose.yaml` 和 `.env.chatgpt`
+
 
 <a>
    <img src="https://raw.githubusercontent.com/KenyonY/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">

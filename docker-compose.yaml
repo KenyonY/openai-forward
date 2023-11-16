@@ -16,11 +16,12 @@ services:
       - --workers=1
     restart: unless-stopped
     depends_on:
-      - ninja
+      - chatgpt
 
-  ninja:
+  chatgpt:
+      # use project: https://github.com/gngpp/ninja
       image: ghcr.io/gngpp/ninja:latest
-      container_name: ninja
+      container_name: chatgpt
       restart: unless-stopped
       environment:
         - TZ=Asia/Shanghai
