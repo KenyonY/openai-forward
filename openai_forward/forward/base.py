@@ -36,9 +36,8 @@ class GenericForward:
         self.PROXY = proxy
         self.ROUTE_PREFIX = route_prefix
         self.client: aiohttp.ClientSession | None = None
-        self.build_client()
 
-    def build_client(self):
+    async def build_client(self):
         connector = TCPConnector(limit=500, limit_per_host=0, force_close=False)
         self.client = aiohttp.ClientSession(connector=connector, timeout=self.timeout)
 
@@ -154,6 +153,7 @@ class GenericForward:
         }
 
     async def reverse_proxy(self, request: Request):
+        assert self.client
         client_config = self.prepare_client(request, return_origin_header=True)
 
         r = await self.send(client_config, data=await request.body())

@@ -4,7 +4,6 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from . import __version__, custom_slowapi
-from .cache.database import db_dict
 from .forward.extra import generic_objs
 from .forward.openai import openai_objs
 from .helper import normalize_route as normalize_route_path
@@ -64,14 +63,16 @@ if BENCHMARK_MODE:
     )
 
 
+@app.on_event("startup")
+async def startup():
+    [await obj.build_client() for obj in openai_objs]
+    [await obj.build_client() for obj in generic_objs]
+
+
 @app.on_event("shutdown")
 async def shutdown():
-    if hasattr(db_dict, "close"):
-        db_dict.close()
-    for obj in openai_objs:
-        await obj.client.close()
-    for obj in generic_objs:
-        await obj.client.close()
+    [await obj.client.close() for obj in openai_objs]
+    [await obj.client.close() for obj in generic_objs]
 
 
 add_route = lambda obj: app.add_route(
