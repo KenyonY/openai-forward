@@ -150,7 +150,6 @@ class GenericForward:
             for key, value in request.headers.items():
                 if key.startswith("openai"):
                     headers[key] = value
-            print(f"{headers=}")
 
         return {
             'auth': auth,
