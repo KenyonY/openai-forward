@@ -64,4 +64,10 @@ jobs:
 #          python -m pip install codecov pytest-cov
       - name: Run tests
         run: |
-          pytest -v -s
+          pytest tests/ -v -s --full-trace --junitxml=pytest-report.xml
+      - name: Upload pytest report
+        uses: actions/upload-artifact@v2
+        if: failure() # Only runs if the previous step fails
+        with:
+          name: pytest-reports
+          path: pytest-report.xml
