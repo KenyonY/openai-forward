@@ -122,31 +122,35 @@ class ChatLogger:
         """
         uid = get_unique_id()
         payload = await request.json()
-        functions = payload.get("functions")
-        if functions:
-            info = {
-                "functions": functions,
-                "function_call": payload.get("function_call", None),
-            }
-        else:
-            info = {}
+
+        # functions = payload.get("functions") # deprecated
+        # if functions:
+        #     info = {
+        #         "functions": functions, # Deprecated in favor of `tools`
+        #         "function_call": payload.get("function_call", None), # Deprecated in favor of `tool_choice`
+        #     }
+        info = {}
         info.update(
             {
                 "messages": payload["messages"],
                 "model": payload["model"],
                 "stream": payload.get("stream", False),
                 "max_tokens": payload.get("max_tokens", None),
+                "response_format": payload.get("response_format", None),
                 "n": payload.get("n", 1),
                 "temperature": payload.get("temperature", 1),
                 "top_p": payload.get("top_p", 1),
                 "logit_bias": payload.get("logit_bias", None),
                 "frequency_penalty": payload.get("frequency_penalty", 0),
                 "presence_penalty": payload.get("presence_penalty", 0),
+                "seed": payload.get("seed", None),
                 "stop": payload.get("stop", None),
                 "user": payload.get("user", None),
+                "tools": payload.get("tools", None),
+                "tool_choice": payload.get("tool_choice", None),
                 "ip": get_client_ip(request) or "",
                 "uid": uid,
-                "caching": payload.pop("caching", True),  # pop caching
+                "caching": payload.pop("caching", False),  # pop caching
                 "datetime": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
             }
         )
@@ -187,14 +191,24 @@ class ChatLogger:
             target_info["role"] = msg["role"]
         role = msg["role"]  # always be "assistant"
 
-        content, function_call = msg.get("content"), msg.get("function_call")
-        if function_call:
-            target_info[role] = function_call
-            target_info["is_function_call"] = True
-            parse_content_key = "function_call"
+        content, tool_calls = msg.get("content"), msg.get("tool_calls")
+        if tool_calls:
+            """
+            tool_calls:
+                [{
+                "index": 0,
+                "id": 'xx',
+                'type": 'function',
+                'function': {'name': 'xxx', 'arguments': ''}
+                 }]
+            """
+            target_info[role] = tool_calls
+            target_info["is_tool_calls"] = True
+            parse_content_key = "tool_calls"
+
         else:
             target_info[role] = content
-            target_info["is_function_call"] = False
+            target_info["is_tool_calls"] = False
             parse_content_key = "content"
 
         if not stream:
@@ -207,8 +221,9 @@ class ChatLogger:
                 stream_content += self._parse_one_line_content(
                     line[start_token_len:], parse_content_key
                 )
-        if target_info['is_function_call']:
-            target_info[role]['arguments'] = stream_content
+        if target_info['is_tool_calls']:
+            tool_calls[0]['function']['arguments'] = stream_content
+            target_info[role] = tool_calls
         else:
             target_info[role] = stream_content
         return target_info
@@ -229,9 +244,9 @@ class ChatLogger:
             line_dict = orjson.loads(line)
             if parse_key == "content":
                 return line_dict["choices"][0]["delta"][parse_key]
-            elif parse_key == "function_call":
-                function_call = line_dict["choices"][0]["delta"][parse_key]
-                return function_call["arguments"]
+            elif parse_key == "tool_calls":
+                tool_calls = line_dict["choices"][0]["delta"]["tool_calls"]
+                return tool_calls[0]["function"]['arguments']
             else:
                 logger.error(f"Unknown parse key: {parse_key}")
                 return ""

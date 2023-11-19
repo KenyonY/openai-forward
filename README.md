@@ -1,12 +1,10 @@
 **简体中文** | [**English**](https://github.com/KenyonY/openai-forward/blob/main/README_EN.md)
 
 <h1 align="center">
-    <br>
     OpenAI Forward
+    <br>
+    <br>
 </h1>
-
-<div align=center><img src=https://github.com/KenyonY/openai-forward/blob/main/.github/data/logo.png?raw=true width="160px"></div>
-
 
 <p align="center">
     <a href="https://pypi.org/project/openai-forward/">
@@ -16,7 +14,7 @@
         <img alt="License" src="https://img.shields.io/github/license/KenyonY/openai-forward.svg?color=blue&style=flat-square">
     </a>
     <a href="https://hub.docker.com/r/beidongjiedeguang/openai-forward">
-        <img alt="docker image size" src="https://img.shields.io/docker/pulls/beidongjiedeguang/openai-forward?style=flat-square&label=docker image">
+        <img alt="docker pull" src="https://img.shields.io/docker/pulls/beidongjiedeguang/openai-forward?style=flat-square&label=docker pull">
     </a>
     <a href="https://github.com/KenyonY/openai-forward/actions/workflows/ci.yml">
         <img alt="tests" src="https://img.shields.io/github/actions/workflow/status/KenyonY/openai-forward/ci.yml?style=flat-square&label=tests">
@@ -42,7 +40,7 @@
 **OpenAI-Forward** 是为大型语言模型实现的高效转发服务。其核心功能包括
 用户请求速率控制、Token速率限制、智能预测缓存、日志管理和API密钥管理等，旨在提供高效、便捷的模型转发服务。
 无论是代理本地语言模型还是云端语言模型，如 [LocalAI](https://github.com/go-skynet/LocalAI) 或 [OpenAI](https://api.openai.com)，都可以由 OpenAI Forward 轻松实现。
-凭借  [uvicorn](https://github.com/encode/uvicorn), [aiohttp](https://github.com/aio-libs/aiohttp), 和 [asyncio](https://docs.python.org/3/library/asyncio.html)
+得益于 [uvicorn](https://github.com/encode/uvicorn), [aiohttp](https://github.com/aio-libs/aiohttp), 和 [asyncio](https://docs.python.org/3/library/asyncio.html)
 等库支持，OpenAI-Forward 实现了出色的异步性能。
 
 
@@ -138,8 +136,18 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 
 下面以搭建好的服务地址`https://api/openai-forward.com` 为例
 
+**Python**
+
+```diff
+  from openai import OpenAI  # pip install openai>=1.0.0
+  client = OpenAI(
++     base_url="https://api.openai-forward.com/v1", 
+      api_key="sk-******"
+  )
+```
+
 <details >
-   <summary> 点击展开</summary>  
+   <summary> 更多</summary>  
 
 #### 在三方应用中使用
 
@@ -154,14 +162,6 @@ docker run -d \
     -e CODE="******" \
     yidadaa/chatgpt-next-web 
 ``` 
-
-**Python**
-
-```diff
-  import openai
-+ openai.api_base = "https://api.openai-forward.com/v1"
-  openai.api_key = "sk-******"
-```
 
 **Image Generation (DALL-E)**
 
@@ -254,27 +254,35 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 
 缓存默认使用内存后端，可选择数据库后端，需安装相应的环境：
 
-```bash
-pip install openai-forward[lmdb] # lmdb后端
-pip install openai-forward[leveldb] # leveldb后端
-pip install openai-forward[rocksdb] # rocksdb后端
-```
-
-- 配置环境变量中`CACHE_BACKEND`以使用相应的数据库后端进行存储。 可选值`MEMORY`、`LMDB`、`ROCKSDB`、`LEVELDB`
+- 配置环境变量中`CACHE_BACKEND`以使用相应的数据库后端进行存储。 可选值`MEMORY`、`LMDB`、`LEVELDB`
 - 配置`CACHE_CHAT_COMPLETION`为`true`以缓存/v1/chat/completions 结果。
 
+**Python**
 ```diff
-  import openai
-  openai.api_base = "https://smart.openai-forward.com/v1"
-  openai.api_key = "sk-******"
-
-  completion = openai.ChatCompletion.create(
-+   caching=False, # 默认缓存，可以设置为不缓存
+  from openai import OpenAI 
+  client = OpenAI(
++     base_url="https://smart.openai-forward.com/v1", 
+      api_key="sk-******"
+  )
+  completion = client.chat.completions.create(
     model="gpt-3.5-turbo",
     messages=[
       {"role": "user", "content": "Hello!"}
-    ]
+    ],
++   extra_body={"caching": True}
 )
+```
+**Curl**  
+```bash
+curl https://smart.openai.com/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer sk-******" \
+  -d '{
+    "model": "gpt-3.5-turbo",
+    "messages": [{"role": "user", "content": "Hello!"}],
+    "caching": true
+  }'
+
 ```
 
 ### 自定义秘钥

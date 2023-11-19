@@ -12,6 +12,9 @@ ssl/
 chat.yaml
 chat_*.yaml
 
+config.toml
+config_parser.py
+
 har/
 Log/
 Log-caloi-top/

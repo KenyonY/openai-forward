@@ -29,8 +29,10 @@ dependencies = [
     "pytz",
     "slowapi==0.1.8",
     "aiohttp>=3.8.5",
-    "flaxkv>=0.1.3",
-    "tiktoken>=0.5.1"
+    "flaxkv>=0.1.4",
+    "tiktoken>=0.5.1",
+    "tomli",
+    "tomli-w",
 ]
 
 dynamic = ["version"]
@@ -45,6 +47,9 @@ Source = "https://github.com/KenyonY/openai-forward"
 test = [
     "pytest",
     "pytest-aiohttp",
+    "twisted",
+    "tornasync",
+    "trio",
     "psutil",
     "openai>=1.3.0",
 ]

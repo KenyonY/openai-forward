@@ -17,14 +17,47 @@ from .tokenizer import TIKTOKEN_VALID, count_tokens, encode_as_pieces
 class ChatMessage:
     role: Literal["user", "assistant", "system"]
     content: Optional[str] = None
-    function_call: Optional[dict] = None
+
+
+@attrs.define(slots=True)
+class ChatCompletionMessage:
+    role: Literal["user", "assistant", "system"]
+    content: Optional[str] = None
+    tool_calls: Optional[list] = None
+
+
+@attrs.define(slots=True)
+class Function:
+    name: str
+    arguments: dict
+
+
+@attrs.define(slots=True)
+class ChoiceToolCall:
+    id: str
+    function: Function
+    type: str = 'function'
+
+
+@attrs.define(slots=True)
+class DeltaFunction:
+    name: str
+    arguments: str
+
+
+@attrs.define(slots=True)
+class ChoiceDeltaToolCall:
+    index: int = 0
+    id: Optional[str] = None
+    type: Optional[str] = None
+    function: Optional[dict] = None
 
 
 @attrs.define(slots=True)
 class DeltaMessage:
     role: Optional[Literal["user", "assistant", "system"]] = None
     content: Optional[str] = None
-    function_call: Optional[dict] = None
+    tool_calls: Optional[ChoiceDeltaToolCall] = None
 
 
 @attrs.define(slots=True)
@@ -38,9 +71,9 @@ class ChatCompletionRequest:
 
 
 @attrs.define(slots=True)
-class ChatCompletionResponseChoice:
+class ChatCompletionChoice:
     index: int
-    message: ChatMessage
+    message: ChatCompletionMessage
     finish_reason: str
 
 
@@ -57,10 +90,9 @@ class ChatCompletionsResponse:
     object: Literal["chat.completion", "chat.completion.chunk"]
     created: Optional[int]
     model: Optional[str]
-    choices: List[
-        Union[ChatCompletionResponseChoice, ChatCompletionResponseStreamChoice]
-    ]
+    choices: List[Union[ChatCompletionChoice, ChatCompletionResponseStreamChoice]]
     usage: Optional[dict] = None
+    system_fingerprint: str = "fp_0123456789"
 
 
 corpus = [
@@ -84,85 +116,92 @@ corpus = [
 sentences = cycle(corpus)
 
 
-@async_token_rate_limit(token_interval_conf)
-async def stream_generate(
-    model: str, texts, function_call_name: str | None, request: Request
-):
-    created = int(time.time())
-    id = f"chatcmpl-{get_unique_id()}"
-
-    delta = DeltaMessage()
-
-    choice_data = ChatCompletionResponseStreamChoice(
-        index=0, delta=delta, finish_reason=None
-    )
-    chunk = ChatCompletionsResponse(
-        id=id,
-        model=model,
-        choices=[choice_data],
-        object="chat.completion.chunk",
-        created=created,
-    )
-
-    def serialize_delta(
-        role=None, content=None, function_call=None, finish_reason=None
-    ):
-        if role:
-            delta.role = role
-        if content:
-            delta.content = content
-        if function_call:
-            delta.function_call = function_call
-
-        choice_data.finish_reason = finish_reason
-        choice_data.delta = delta
-
-        chunk.choices = [choice_data]
-
-        return (
-            b'data: '
-            + orjson.dumps(
-                attrs.asdict(chunk, filter=attrs.filters.exclude(type(None)))
-            )
-            + b'\n\n'
-        )
-
-    if function_call_name:
-        yield serialize_delta(
-            role="assistant",
-            function_call={"name": function_call_name, "arguments": ""},
-        )
-    else:
-        yield serialize_delta(role="assistant", content="")
-
-    delta = DeltaMessage()
-    for text in texts:
-        if function_call_name:
-            yield serialize_delta(function_call={"arguments": text})
-        else:
-            yield serialize_delta(content=text)
-
-    delta = DeltaMessage()
-    yield serialize_delta(
-        finish_reason="function_call" if function_call_name else "stop"
-    )
-
-    yield b'data: [DONE]\n\n'
+# todo: refactor this
+# @async_token_rate_limit(token_interval_conf)
+# async def stream_generate(
+#         model: str, texts, function_call_name: str | None, request: Request
+# ):
+#     created = int(time.time())
+#     id = f"chatcmpl-{get_unique_id()}"
+#
+#     delta = DeltaMessage()
+#
+#     choice_data = ChatCompletionResponseStreamChoice(
+#         index=0, delta=delta, finish_reason=None
+#     )
+#     chunk = ChatCompletionsResponse(
+#         id=id,
+#         model=model,
+#         choices=[choice_data],
+#         object="chat.completion.chunk",
+#         created=created,
+#     )
+#
+#     def serialize_delta(
+#             role=None, content=None, tool_calls=None, finish_reason=None
+#     ):
+#         if role:
+#             delta.role = role
+#         if content:
+#             delta.content = content
+#         if tool_calls:
+#             delta.tool_calls = tool_calls
+#
+#         choice_data.finish_reason = finish_reason
+#         choice_data.delta = delta
+#
+#         chunk.choices = [choice_data]
+#
+#         return (
+#                 b'data: '
+#                 + orjson.dumps(
+#             attrs.asdict(chunk, filter=attrs.filters.exclude(type(None)))
+#         )
+#                 + b'\n\n'
+#         )
+#
+#     if function_call_name:
+#         yield serialize_delta(
+#             role="assistant",
+#             tool_calls={"name": function_call_name, "arguments": ""},
+#         )
+#     else:
+#         yield serialize_delta(role="assistant", content="")
+#
+#     delta = DeltaMessage()
+#     for text in texts:
+#         if function_call_name:
+#             yield serialize_delta(tool_calls={"arguments": text})
+#         else:
+#             yield serialize_delta(content=text)
+#
+#     delta = DeltaMessage()
+#     yield serialize_delta(
+#         finish_reason="function_call" if function_call_name else "stop"
+#     )
+#
+#     yield b'data: [DONE]\n\n'
 
 
 @async_token_rate_limit(token_interval_conf)
 async def stream_generate_efficient(
-    model: str, texts, function_call_name: str | None, request: Request
+    model: str, content: str | None, tool_calls: list | None, request: Request
 ):
     """More efficient (use dict) version of stream_generate
     Args:
         model (str): The model to use.
-        texts (List[str]): content or function_call['arguments'].
-        function_call_name (str | None): function_call['name'].
+        content (str): content.
+        tool_calls (list | None): tool_calls list.
         request (Request): A FastAPI request object.
     """
     created = int(time.time())
     id = f"chatcmpl-{get_unique_id()}"
+    if tool_calls:
+        function_name = tool_calls[0]['function']['name']
+        function_arguments = tool_calls[0]['function']['arguments']
+        texts = encode_as_pieces(function_arguments)
+    else:
+        texts = encode_as_pieces(content)
 
     delta = {}
     choice_data = {"index": 0, "delta": delta, "finish_reason": None}
@@ -172,17 +211,18 @@ async def stream_generate_efficient(
         "choices": [choice_data],
         "object": "chat.completion.chunk",
         "created": created,
+        "system_fingerprint": "fp_0123456789",
     }
 
     def serialize_delta(
-        role=None, content=None, function_call=None, finish_reason=None
+        role=None, content=None, delta_tool_calls=None, finish_reason=None
     ):
         if role:
             delta['role'] = role
         if content:
             delta['content'] = content
-        if function_call:
-            delta['function_call'] = function_call
+        if delta_tool_calls:
+            delta['tool_calls'] = delta_tool_calls
             delta['content'] = content
 
         choice_data['finish_reason'] = finish_reason
@@ -192,39 +232,53 @@ async def stream_generate_efficient(
 
         return b'data: ' + orjson.dumps(chunk) + b'\n\n'
 
-    if function_call_name:
+    if tool_calls:
         yield serialize_delta(
             role="assistant",
-            function_call={"name": function_call_name, "arguments": ""},
+            delta_tool_calls=[
+                {
+                    'index': 0,
+                    'id': f"call_{get_unique_id()}",
+                    'function': {"name": function_name, "arguments": ""},
+                    'type': 'function',
+                }
+            ],
         )
     else:
         yield serialize_delta(role="assistant", content="")
 
     delta = {}
-    for text in texts:
-        if function_call_name:
-            yield serialize_delta(function_call={"arguments": text})
+    for content in texts:
+        if tool_calls:
+            yield serialize_delta(
+                delta_tool_calls=[
+                    {
+                        'index': 0,
+                        'id': None,
+                        'function': {"name": None, "arguments": content},
+                        'type': None,
+                    }
+                ],
+            )
         else:
-            yield serialize_delta(content=text)
+            yield serialize_delta(content=content)
 
     delta = {}
-    yield serialize_delta(
-        finish_reason="function_call" if function_call_name else "stop"
-    )
+    yield serialize_delta(finish_reason="tool_calls" if tool_calls else "stop")
 
     yield b'data: [DONE]\n\n'
 
 
-def generate(model: str, sentence: str | None, function_call: dict | None, usage: dict):
+def generate(model: str, content: str | None, tool_calls: list | None, usage: dict):
     created = int(time.time())
     id = f"chatcmpl-{get_unique_id()}"
 
-    choice_data = ChatCompletionResponseChoice(
+    choice_data = ChatCompletionChoice(
         index=0,
-        message=ChatMessage(
-            role="assistant", content=sentence, function_call=function_call
+        message=ChatCompletionMessage(
+            role="assistant", content=content, tool_calls=tool_calls
         ),
-        finish_reason="function_call" if function_call else "stop",
+        finish_reason="tool_calls" if tool_calls else "stop",
     )
 
     data = ChatCompletionsResponse(
@@ -275,7 +329,6 @@ async def chat_completions_benchmark(request: Request):
     if stream:
         return StreamingResponse(
             stream_generate_efficient(model, model_result.texts, None, request),
-            # stream_generate(model, texts, request),
             media_type="text/event-stream",
         )
     else:

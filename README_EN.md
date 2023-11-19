@@ -1,11 +1,10 @@
 **English** | [**简体中文**](https://github.com/KenyonY/openai-forward/blob/main/README.md)
 
 <h1 align="center">
-    <br>
     OpenAI Forward
+    <br>
+    <br>
 </h1>
-
-<div align=center><img src=https://github.com/KenyonY/openai-forward/blob/main/.github/data/logo.png?raw=true width="160px"></div>
 
 
 <p align="center">
@@ -16,7 +15,7 @@
         <img alt="License" src="https://img.shields.io/github/license/KenyonY/openai-forward.svg?color=blue&style=flat-square">
     </a>
     <a href="https://hub.docker.com/r/beidongjiedeguang/openai-forward">
-        <img alt="docker image size" src="https://img.shields.io/docker/pulls/beidongjiedeguang/openai-forward?style=flat-square&label=docker image">
+        <img alt="docker pull" src="https://img.shields.io/docker/pulls/beidongjiedeguang/openai-forward?style=flat-square&label=docker pull">
     </a>
     <a href="https://github.com/KenyonY/openai-forward/actions/workflows/ci.yml">
         <img alt="tests" src="https://img.shields.io/github/actions/workflow/status/KenyonY/openai-forward/ci.yml?style=flat-square&label=tests">
@@ -147,8 +146,18 @@ The default option for `aifd run` is to proxy `https://api.openai.com`.
 
 The following uses the set up service address `https://api.openai-forward.com` as an example.
 
+**Python**
+
+```diff
+  from openai import OpenAI  # pip install openai>=1.0.0
+  client = OpenAI(
++     base_url="https://api.openai-forward.com/v1", 
+      api_key="sk-******"
+  )
+```
+
 <details>
-   <summary>Click to expand</summary>
+   <summary> More </summary>
 
 #### Use in Third-party Applications
 
@@ -168,36 +177,6 @@ docker run -d \
 
 ---
 
-**Python**
-
-```diff
-  import openai
-+ openai.api_base = "https://api.openai-forward.com/v1"
-  openai.api_key = "sk-******"
-```
-
-**JS/TS**
-
-```diff
-  import { Configuration } from "openai";
-  
-  const configuration = new Configuration({
-+ basePath: "https://api.openai-forward.com/v1",
-  apiKey: "sk-******",
-  });
-```
-
-**gpt-3.5-turbo**
-
-```bash
-curl https://api.openai-forward.com/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk-******" \
-  -d '{
-    "model": "gpt-3.5-turbo",
-    "messages": [{"role": "user", "content": "Hello!"}]
-  }'
-```
 
 **Image Generation (DALL-E)**
 
@@ -279,29 +258,36 @@ Detailed configuration descriptions can be seen in the [.env.example](.env.examp
 
 ### Caching
 
-By default, caching uses a memory backend. You can choose a database backend but need to install the corresponding environment:
 
-```bash
-pip install openai-forward[lmdb] # lmdb backend
-pip install openai-forward[leveldb] # leveldb backend
-pip install openai-forward[rocksdb] # rocksdb backend
-```
-
-- Configure `CACHE_BACKEND` in the environment variable to use the respective database backend for storage. Options are `MEMORY`, `LMDB`, `ROCKSDB`, and `LEVELDB`.
+- Configure `CACHE_BACKEND` in the environment variable to use the respective database backend for storage. Options are `MEMORY`, `LMDB`, and `LEVELDB`.
 - Set `CACHE_CHAT_COMPLETION` to `true` to cache /v1/chat/completions results.
 
+**Python**
 ```diff
-  import openai
-  openai.api_base = "https://smart.openai-forward.com/v1"
-  openai.api_key = "sk-******"
-
-  completion = openai.ChatCompletion.create(
-+   caching=False, # Cache by default, can be set to not cache
+  from openai import OpenAI 
+  client = OpenAI(
++     base_url="https://smart.openai-forward.com/v1", 
+      api_key="sk-******"
+  )
+  completion = client.chat.completions.create(
     model="gpt-3.5-turbo",
     messages=[
       {"role": "user", "content": "Hello!"}
-    ]
+    ],
++   extra_body={"caching": True}
 )
+```
+**Curl**  
+```bash
+curl https://smart.openai.com/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer sk-******" \
+  -d '{
+    "model": "gpt-3.5-turbo",
+    "messages": [{"role": "user", "content": "Hello!"}],
+    "caching": true
+  }'
+
 ```
 
 ### Custom Keys
