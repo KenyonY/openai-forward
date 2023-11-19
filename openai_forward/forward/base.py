@@ -8,14 +8,11 @@ import aiohttp
 import anyio
 from aiohttp import TCPConnector
 from fastapi import HTTPException, Request, status
+from flaxkv.pack import encode
 from loguru import logger
 from starlette.responses import BackgroundTask, Response, StreamingResponse
 
-from ..cache.chat_completions import (
-    encode_as_pieces,
-    generate,
-    stream_generate_efficient,
-)
+from ..cache.chat_completions import generate, stream_generate_efficient
 from ..cache.database import db_dict
 from ..content.openai import ChatLogger, CompletionLogger, WhisperLogger
 from ..decorators import async_retry, async_token_rate_limit
@@ -360,9 +357,11 @@ class OpenaiForward(GenericForward):
                 target_info = self._handle_result(
                     chunk, uid, route_path, request.method
                 )
+                print(f"{target_info=}")
                 if target_info and CACHE_CHAT_COMPLETION and cache_key is not None:
-                    role = "assistant"
-                    db_dict[cache_key] = target_info[role]
+                    cached_value = db_dict.get(cache_key, [])
+                    cached_value.append(target_info["assistant"])
+                    db_dict[cache_key] = cached_value
             elif chunk is not None:
                 logger.warning(
                     f'uid: {uid}\n status: {r.status}\n {chunk.decode("utf-8")}'
@@ -395,35 +394,40 @@ class OpenaiForward(GenericForward):
             If a cache hit occurs, the cached response is immediately returned without contacting the external server.
         """
         # todo: refactor this function
+
         def construct_cache_key():
             elements = [
                 payload_info["n"],
                 payload_info['messages'],
                 payload_info['model'],
                 payload_info["max_tokens"],
+                payload_info['response_format'],
+                payload_info['seed'],
                 # payload_info['temperature'],
+                payload_info["tools"],
+                payload_info["tool_choice"],
             ]
-            functions = payload_info.get("functions")
-            if functions:
-                elements.append(functions)
-            return str(elements)
+
+            return encode(elements)
 
         def get_response_from_cache(key):
             logger.info(f'uid: {payload_info["uid"]} >>>>> [cache hit]')
-            cache_value = db_dict[key]
-            if isinstance(cache_value, dict):
-                function_call_name = cache_value['name']
-                text = cache_value['arguments']
+            cache_values = db_dict[key]
+            # todo: handle multiple choices
+            cache_value = cache_values[-1]
+            if isinstance(cache_value, list):
+                text = None
+                tool_calls = cache_value
             else:
-                function_call_name = None
                 text = cache_value
+                tool_calls = None
 
             if payload_info["stream"]:
                 return StreamingResponse(
                     stream_generate_efficient(
                         payload_info['model'],
-                        encode_as_pieces(text),
-                        function_call_name,
+                        text,
+                        tool_calls,
                         request,
                     ),
                     status_code=200,
@@ -431,17 +435,13 @@ class OpenaiForward(GenericForward):
                 )
 
             else:
-                if function_call_name:
-                    text, function_call = None, cache_value
-                else:
-                    text, function_call = cache_value, None
                 usage = {
                     "prompt_tokens": 0,
                     "completion_tokens": 0,
                     "total_tokens": 0,
                 }
                 return Response(
-                    content=generate(payload_info['model'], text, function_call, usage),
+                    content=generate(payload_info['model'], text, tool_calls, usage),
                     media_type="application/json",
                 )
 
@@ -449,7 +449,8 @@ class OpenaiForward(GenericForward):
             return None, None
 
         cache_key = construct_cache_key()
-        if cache_key in db_dict:
+
+        if payload_info['caching'] and cache_key in db_dict:
             return get_response_from_cache(cache_key), cache_key
 
         return None, cache_key

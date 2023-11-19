@@ -1,5 +1,4 @@
 from openai import OpenAI
-from openai._types import Headers, Query
 from rich import print
 from sparrow import MeasureTime, yaml_load  # pip install sparrow-python
 
@@ -27,7 +26,9 @@ max_tokens = None
 user_content = """
 用c实现目前已知最快平方根算法
 """
-# user_content = 'hi'
+user_content = 'hi'
+model = "gpt-3.5-turbo"
+# model="gpt-4"
 
 mt = MeasureTime().start()
 
@@ -51,7 +52,7 @@ if is_function_call:
         }
     ]
     resp = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model=model,
         messages=[
             {"role": "user", "content": "What's the weather like in Boston today?"}
         ],
@@ -63,8 +64,7 @@ if is_function_call:
 
 else:
     resp = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        # model="gpt-4",
+        model=model,
         messages=[
             {"role": "user", "content": user_content},
         ],
@@ -73,9 +73,7 @@ else:
         max_tokens=max_tokens,
         timeout=30,
         # extra_headers=(caching, caching)
-        # extra_query={"caching": False},
-        # extra_headers = {"caching": False},
-        extra_body={"caching": False},
+        extra_body={"caching": caching},
     )
 
 if stream:

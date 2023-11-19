@@ -13,12 +13,15 @@ monitor:
 
 start:
 	@docker run -d \
+	--restart=unless-stopped \
     --name $(container) \
     --env-file .env \
     -p 8000:8000 \
     -v $(shell pwd)/Log:/home/openai-forward/Log \
+	-v $(shell pwd)/CACHE_LMDB:/home/openai-forward/CACHE_LMDB \
+	-v $(shell pwd)/CACHE_LEVELDB:/home/openai-forward/CACHE_LEVELDB \
     -v $(shell pwd)/openai_forward:/home/openai-forward/openai_forward \
-    $(image)
+    $(image) --port=8000 --workers=2
 	@make log
 
 exec:

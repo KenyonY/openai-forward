@@ -10,7 +10,7 @@ services:
       - ./CACHE_LMDB:/home/openai-forward/CACHE_LMDB
       - ./CACHE_LEVELDB:/home/openai-forward/CACHE_LEVELDB
       - ./Log:/home/openai-forward/Log
-      - ./openai_forward:/home/openai-forward/openai_forward
+#      - ./openai_forward:/home/openai-forward/openai_forward
     command:
       - --port=8000
       - --workers=1
