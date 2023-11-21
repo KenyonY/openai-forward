@@ -7,6 +7,7 @@ from loguru import logger
 from orjson import JSONDecodeError
 
 from ..helper import get_client_ip, get_unique_id, route_prefix_to_str
+from ..settings import DEFAULT_REQUEST_CACHING_VALUE
 from .helper import markdown_print, parse_sse_buffer, print
 
 
@@ -150,7 +151,9 @@ class ChatLogger:
                 "tool_choice": payload.get("tool_choice", None),
                 "ip": get_client_ip(request) or "",
                 "uid": uid,
-                "caching": payload.pop("caching", False),  # pop caching
+                "caching": payload.pop(
+                    "caching", DEFAULT_REQUEST_CACHING_VALUE
+                ),  # pop caching
                 "datetime": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
             }
         )

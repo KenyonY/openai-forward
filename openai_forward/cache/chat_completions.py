@@ -116,71 +116,92 @@ corpus = [
 sentences = cycle(corpus)
 
 
-# todo: refactor this
-# @async_token_rate_limit(token_interval_conf)
-# async def stream_generate(
-#         model: str, texts, function_call_name: str | None, request: Request
-# ):
-#     created = int(time.time())
-#     id = f"chatcmpl-{get_unique_id()}"
-#
-#     delta = DeltaMessage()
-#
-#     choice_data = ChatCompletionResponseStreamChoice(
-#         index=0, delta=delta, finish_reason=None
-#     )
-#     chunk = ChatCompletionsResponse(
-#         id=id,
-#         model=model,
-#         choices=[choice_data],
-#         object="chat.completion.chunk",
-#         created=created,
-#     )
-#
-#     def serialize_delta(
-#             role=None, content=None, tool_calls=None, finish_reason=None
-#     ):
-#         if role:
-#             delta.role = role
-#         if content:
-#             delta.content = content
-#         if tool_calls:
-#             delta.tool_calls = tool_calls
-#
-#         choice_data.finish_reason = finish_reason
-#         choice_data.delta = delta
-#
-#         chunk.choices = [choice_data]
-#
-#         return (
-#                 b'data: '
-#                 + orjson.dumps(
-#             attrs.asdict(chunk, filter=attrs.filters.exclude(type(None)))
-#         )
-#                 + b'\n\n'
-#         )
-#
-#     if function_call_name:
-#         yield serialize_delta(
-#             role="assistant",
-#             tool_calls={"name": function_call_name, "arguments": ""},
-#         )
-#     else:
-#         yield serialize_delta(role="assistant", content="")
-#
-#     delta = DeltaMessage()
-#     for text in texts:
-#         if function_call_name:
-#             yield serialize_delta(tool_calls={"arguments": text})
-#         else:
-#             yield serialize_delta(content=text)
-#
-#     delta = DeltaMessage()
-#     yield serialize_delta(
-#         finish_reason="function_call" if function_call_name else "stop"
-#     )
-#
-#     yield b'data: [DONE]\n\n'
+@async_token_rate_limit(token_interval_conf)
+async def stream_generate(
+    model: str, content: str | None, tool_calls: list | None, request: Request
+):
+    created = int(time.time())
+    id = f"chatcmpl-{get_unique_id()}"
+
+    if tool_calls:
+        function_name = tool_calls[0]['function']['name']
+        function_arguments = tool_calls[0]['function']['arguments']
+        texts = encode_as_pieces(function_arguments)
+    else:
+        texts = encode_as_pieces(content)
+
+    delta = DeltaMessage()
+
+    choice_data = ChatCompletionResponseStreamChoice(
+        index=0, delta=delta, finish_reason=None
+    )
+    chunk = ChatCompletionsResponse(
+        id=id,
+        model=model,
+        choices=[choice_data],
+        object="chat.completion.chunk",
+        created=created,
+        system_fingerprint="fp_0123456789",
+    )
+
+    def serialize_delta(
+        role=None, content=None, delta_tool_calls=None, finish_reason=None
+    ):
+        if role:
+            delta.role = role
+        if content:
+            delta.content = content
+        if tool_calls:
+            delta.tool_calls = delta_tool_calls
+
+        choice_data.finish_reason = finish_reason
+        choice_data.delta = delta
+
+        chunk.choices = [choice_data]
+
+        return (
+            b'data: '
+            + orjson.dumps(
+                attrs.asdict(chunk, filter=attrs.filters.exclude(type(None)))
+            )
+            + b'\n\n'
+        )
+
+    if tool_calls:
+        yield serialize_delta(
+            role="assistant",
+            delta_tool_calls=[
+                {
+                    'index': 0,
+                    'id': f"call_{get_unique_id()}",
+                    'function': {"name": function_name, "arguments": ""},
+                    'type': 'function',
+                }
+            ],
+        )
+    else:
+        yield serialize_delta(role="assistant", content="")
+
+    delta = DeltaMessage()
+    for content in texts:
+        if tool_calls:
+            yield serialize_delta(
+                delta_tool_calls=[
+                    {
+                        'index': 0,
+                        'id': None,
+                        'function': {"name": None, "arguments": content},
+                        'type': None,
+                    }
+                ],
+            )
+        else:
+            yield serialize_delta(content=content)
+
+    delta = DeltaMessage()
+    yield serialize_delta(finish_reason="tool_calls" if tool_calls else "stop")
+
+    yield b'data: [DONE]\n\n'
 
 
 @async_token_rate_limit(token_interval_conf)
@@ -192,7 +213,7 @@ async def stream_generate_efficient(
         model (str): The model to use.
         content (str): content.
         tool_calls (list | None): tool_calls list.
-        request (Request): A FastAPI request object.
+        request (Request): A FastAPI request object. For rate limit.
     """
     created = int(time.time())
     id = f"chatcmpl-{get_unique_id()}"
@@ -298,23 +319,19 @@ def generate(model: str, content: str | None, tool_calls: list | None, usage: di
 
 @attrs.define(slots=True)
 class ModelInferResult:
-    texts: List[str]
+    content: str
     usage: dict
 
 
-def model_inference(model: str, messages: List, stream: bool):
+def model_inference(model: str, messages: List):
     sentence = next(sentences)
 
     if TIKTOKEN_VALID:
         usage = count_tokens(messages, sentence, 'gpt-3.5-turbo')
     else:
-        usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": -1}
+        usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
 
-    if stream:
-        texts = encode_as_pieces(sentence)
-    else:
-        texts = [sentence]
-    return ModelInferResult(texts=texts, usage=usage)
+    return ModelInferResult(content=sentence, usage=usage)
 
 
 @async_random_sleep(min_time=0, max_time=1)
@@ -324,15 +341,15 @@ async def chat_completions_benchmark(request: Request):
     stream = payload.get("stream", False)
     messages = payload.get("messages", [])
 
-    model_result = model_inference(model, messages, stream)
+    model_result = model_inference(model, messages)
 
     if stream:
         return StreamingResponse(
-            stream_generate_efficient(model, model_result.texts, None, request),
+            stream_generate_efficient(model, model_result.content, None, request),
             media_type="text/event-stream",
         )
     else:
         return Response(
-            content=generate(model, model_result.texts[0], None, model_result.usage),
+            content=generate(model, model_result.content, None, model_result.usage),
             media_type="application/json",
         )
