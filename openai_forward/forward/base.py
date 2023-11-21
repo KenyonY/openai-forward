@@ -357,7 +357,6 @@ class OpenaiForward(GenericForward):
                 target_info = self._handle_result(
                     chunk, uid, route_path, request.method
                 )
-                print(f"{target_info=}")
                 if target_info and CACHE_CHAT_COMPLETION and cache_key is not None:
                     cached_value = db_dict.get(cache_key, [])
                     cached_value.append(target_info["assistant"])

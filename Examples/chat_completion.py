@@ -17,8 +17,8 @@ n = 1
 # debug = True
 debug = False
 
-# is_function_call = True
-is_function_call = False
+is_tool_calls = True
+# is_tool_call = False
 caching = True
 
 max_tokens = None
@@ -32,22 +32,24 @@ model = "gpt-3.5-turbo"
 
 mt = MeasureTime().start()
 
-# function_call
-if is_function_call:
-    functions = [
+if is_tool_calls:
+    tools = [
         {
-            "name": "get_current_weather",
-            "description": "Get the current weather in a given location",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "location": {
-                        "type": "string",
-                        "description": "The city and state, e.g. San Francisco, CA",
+            "type": "function",
+            "function": {
+                "name": "get_current_weather",
+                "description": "Get the current weather in a given location",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "location": {
+                            "type": "string",
+                            "description": "The city and state, e.g. San Francisco, CA",
+                        },
+                        "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]},
                     },
-                    "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]},
+                    "required": ["location"],
                 },
-                "required": ["location"],
             },
         }
     ]
@@ -56,10 +58,10 @@ if is_function_call:
         messages=[
             {"role": "user", "content": "What's the weather like in Boston today?"}
         ],
-        functions=functions,
-        function_call="auto",  # auto is default, but we'll be explicit
+        tools=tools,
+        tool_choice="auto",  # auto is default, but we'll be explicit
         stream=stream,
-        timeout=30,
+        extra_body={"caching": caching},
     )
 
 else:
@@ -84,20 +86,21 @@ if stream:
         for idx, chunk in enumerate(resp):
             chunk_message = chunk.choices[0].delta or ""
             if idx == 0:
-                if is_function_call:
-                    function_call = chunk_message.function_call or ""
-                    name = function_call.name
+                if is_tool_calls:
+                    function = chunk_message.tool_calls[0].function
+                    name = function.name
                     print(f"{chunk_message.role}: \n{name}: ")
                 else:
                     print(f"{chunk_message.role}: ")
                 continue
 
             content = ""
-            if is_function_call:
-                function_call = chunk_message.function_call or ""
-                if function_call:
-                    content = function_call.arguments or ""
-
+            if is_tool_calls:
+                tool_calls = chunk_message.tool_calls
+                if tool_calls:
+                    function = tool_calls[0].function
+                    if function:
+                        content = function.arguments or ""
             else:
                 content = chunk_message.content or ""
             print(content, end="")

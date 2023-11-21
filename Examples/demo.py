@@ -11,8 +11,8 @@ client = OpenAI(
     base_url=config['api_base'],
 )
 
-caching = True
-# caching = False
+# extra_body={"caching": True}
+extra_body = {}
 stream = True
 
 json_obj_case = True
@@ -30,7 +30,7 @@ if json_obj_case:
             {"role": "user", "content": "Who won the world series in 2020?"},
         ],
         stream=stream,
-        extra_body={"caching": caching},
+        extra_body=extra_body,
     )
     if stream:
         for chunk in response:
@@ -66,7 +66,7 @@ if function_case:
         tools=tools,
         tool_choice="auto",
         stream=stream,
-        extra_body={"caching": caching},
+        extra_body=extra_body,
     )
 
     if stream:

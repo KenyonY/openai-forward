@@ -56,8 +56,13 @@ LOG_CACHE_DB_INFO = (
     os.environ.get("LOG_CACHE_DB_INFO", "false").strip().lower() == "true"
 )
 CACHE_BACKEND = os.environ.get("CACHE_BACKEND", "MEMORY").strip()
+DEFAULT_REQUEST_CACHING_VALUE = False
 if CACHE_CHAT_COMPLETION:
     additional_start_info["cache_backend"] = CACHE_BACKEND
+    DEFAULT_REQUEST_CACHING_VALUE = (
+        os.environ.get("DEFAULT_REQUEST_CACHING_VALUE", "false").strip().lower()
+        == "true"
+    )
 
 IP_WHITELIST = env2list("IP_WHITELIST", sep=ENV_VAR_SEP)
 IP_BLACKLIST = env2list("IP_BLACKLIST", sep=ENV_VAR_SEP)
