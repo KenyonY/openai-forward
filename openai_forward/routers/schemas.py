@@ -78,3 +78,21 @@ class AnthropicChatCompletion(BaseModel):
     )
     stream: bool = Field(default=False)
 
+class NAICompletion(BaseModel):
+    """Creates a completion for the input"""
+
+    model: str = Field(
+        ..., 
+        description="The model to use for the completion",
+        example="clio-v1"
+    )
+    input: str = Field(
+        ...,
+        description="The input to complete",
+        example="Human: Hi! How are you?\n\nAssistant:"
+    )
+    parameters: Dict[str, Any] = Field(
+        ...,
+        description="Generation parameters to be sent to the model",
+        example={"max_length": 150, "min_length": 1}
+    )
