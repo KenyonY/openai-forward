@@ -23,7 +23,7 @@ async def models_list(request: Request):
 
 @router.post("/v1/complete")
 async def anthropic_completions(params: AnthropicChatCompletion, request: Request):
-    return  await  anthropic. reverse_proxy(request)
+    return await anthropic.reverse_proxy(request)
 
 @router.get("/user/subscription")
 async def subscription_status(request: Request):
