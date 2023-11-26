@@ -1,7 +1,7 @@
 **English** | [**简体中文**](https://github.com/KenyonY/openai-forward/blob/main/README.md)
 
 <h1 align="center">
-    OpenAI Forward
+    <a href="https://github.com/KenyonY/openai-forward"> 🌠 OpenAI Forward </a>
     <br>
     <br>
 </h1>
@@ -15,7 +15,7 @@
         <img alt="License" src="https://img.shields.io/github/license/KenyonY/openai-forward.svg?color=blue&style=flat-square">
     </a>
     <a href="https://hub.docker.com/r/beidongjiedeguang/openai-forward">
-        <img alt="docker pull" src="https://img.shields.io/docker/pulls/beidongjiedeguang/openai-forward?style=flat-square&label=docker pull">
+        <img alt="docker pull" src="https://img.shields.io/docker/pulls/beidongjiedeguang/openai-forward?style=flat-square&label=docker pulls">
     </a>
     <a href="https://github.com/KenyonY/openai-forward/actions/workflows/ci.yml">
         <img alt="tests" src="https://img.shields.io/github/actions/workflow/status/KenyonY/openai-forward/ci.yml?style=flat-square&label=tests">
@@ -51,6 +51,11 @@ OpenAI Forward facilitates easy implementation.
 With the support of libraries like [uvicorn](https://github.com/encode/uvicorn), [aiohttp](https://github.com/aio-libs/aiohttp), and [asyncio](https://docs.python.org/3/library/asyncio.html), 
 OpenAI-Forward achieves impressive asynchronous performance.
 
+
+### News
+- Adapted to GPT-1106 version.
+- The cache backend is switched to [🗲 FlaxKV](https://github.com/KenyonY/flaxkv)
+ 
 <a>
    <img src="https://raw.githubusercontent.com/KenyonY/openai-forward/main/.github/images/separators/aqua.png" height=3px width="100%">
 </a>

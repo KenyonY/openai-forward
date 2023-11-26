@@ -1,7 +1,7 @@
 **简体中文** | [**English**](https://github.com/KenyonY/openai-forward/blob/main/README_EN.md)
 
 <h1 align="center">
-    OpenAI Forward
+    <a href="https://github.com/KenyonY/openai-forward"> 🌠 OpenAI Forward </a>
     <br>
     <br>
 </h1>
@@ -14,7 +14,7 @@
         <img alt="License" src="https://img.shields.io/github/license/KenyonY/openai-forward.svg?color=blue&style=flat-square">
     </a>
     <a href="https://hub.docker.com/r/beidongjiedeguang/openai-forward">
-        <img alt="docker pull" src="https://img.shields.io/docker/pulls/beidongjiedeguang/openai-forward?style=flat-square&label=docker pull">
+        <img alt="docker pull" src="https://img.shields.io/docker/pulls/beidongjiedeguang/openai-forward?style=flat-square&label=docker pulls">
     </a>
     <a href="https://github.com/KenyonY/openai-forward/actions/workflows/ci.yml">
         <img alt="tests" src="https://img.shields.io/github/actions/workflow/status/KenyonY/openai-forward/ci.yml?style=flat-square&label=tests">
@@ -42,6 +42,10 @@
 无论是代理本地语言模型还是云端语言模型，如 [LocalAI](https://github.com/go-skynet/LocalAI) 或 [OpenAI](https://api.openai.com)，都可以由 OpenAI Forward 轻松实现。
 得益于 [uvicorn](https://github.com/encode/uvicorn), [aiohttp](https://github.com/aio-libs/aiohttp), 和 [asyncio](https://docs.python.org/3/library/asyncio.html)
 等库支持，OpenAI-Forward 实现了出色的异步性能。
+
+### News
+- gpt-1106版本已适配
+- 缓存后端切换为高性能数据库后端：[🗲 FlaxKV](https://github.com/KenyonY/flaxkv)
 
 
 <a>
