@@ -11,7 +11,7 @@ class OpenAIV1ChatCompletion(BaseModel):
     model: str = Field(
         ..., description="The model to use for the completion", example="gpt-3.5-turbo"
     )
-    messages: List[Dict[str, str]] = Field(
+    messages: List[Dict[str, Any]] = Field(
         ...,
         description="The message to complete",
         example=[{"role": "user", "content": "hi"}],
