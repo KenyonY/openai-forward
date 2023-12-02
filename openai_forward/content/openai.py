@@ -169,7 +169,7 @@ class ChatLogger:
         Returns:
             Dict[str, Any]: A dictionary containing metadata and content. The keys include:
                 - "assistant" (str): content
-                - "is_function_call" (boolean)
+                - "is_tool_calls" (boolean)
         """
         start_token = "data: "
         start_token_len = len(start_token)

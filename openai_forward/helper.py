@@ -128,8 +128,8 @@ def get_matches(messages: List[Dict], assistants: List[Dict]):
         "model": msg.get("model"),
         "temperature": msg.get("temperature", 1),
         "messages": msg.get("messages"),
-        "functions": msg.get("functions"),
-        "is_function_call": ass.get("is_function_call"),
+        "tools": msg.get("tools"),
+        "is_tool_calls": ass.get("is_tool_calls"),
         "assistant": ass.get("assistant"),
     }
 
