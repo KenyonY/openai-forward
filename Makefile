@@ -21,7 +21,7 @@ start:
 	-v $(shell pwd)/CACHE_LMDB:/home/openai-forward/CACHE_LMDB \
 	-v $(shell pwd)/CACHE_LEVELDB:/home/openai-forward/CACHE_LEVELDB \
     -v $(shell pwd)/openai_forward:/home/openai-forward/openai_forward \
-    $(image) --port=8000 --workers=2
+    $(image) --port=8000 --workers=1
 	@make log
 
 exec:
@@ -32,6 +32,9 @@ log:
 
 rm:
 	docker rm -f $(container)
+
+stop:
+	docker stop $(container)
 
 up:
 	@docker-compose  -f $(compose_path) up
