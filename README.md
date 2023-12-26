@@ -57,10 +57,10 @@
 OpenAI-Forward 提供以下核心功能：
 
 - **全能转发**：可转发几乎所有类型的请求
-- **性能优先**：拥有出色的异步性能
+- **性能优先**：出色的异步性能
 - **缓存AI预测**：对AI预测进行缓存，加速服务访问并节省费用
-- **用户流量控制**：自定义请求与Token速率
-- **实时响应日志**：优化调用链的可观察性
+- **用户流量控制**：自定义请求速率与Token速率
+- **实时响应日志**：提升LLMs可观察性
 - **自定义秘钥**：替代原始API密钥
 - **多目标路由**：转发多个服务地址至同一服务下的不同路由
 - **自动重试**：确保服务的稳定性，请求失败时将自动重试
@@ -246,7 +246,7 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 | TOKEN_RATE_LIMIT      | 限制流式响应中每个token（或SSE chunk）的输出速率                                      |           无            |
 | PROXY                 | 设置HTTP代理地址                                                           |           无            |
 | LOG_CHAT              | 开关聊天内容的日志记录，用于调试和监控                                                  |        `false`         |
-| CACHE_BACKEND         | cache后端，支持内存后端和数据库后端，默认为内存后端，可选lmdb, rocksdb和leveldb数据库后端            |        `MEMORY`        |
+| CACHE_BACKEND         | cache后端，支持内存后端和数据库后端，默认为内存后端，可选lmdb、leveldb数据库后端                     |         `lmdb`         |
 | CACHE_CHAT_COMPLETION | 是否缓存/v1/chat/completions 结果                                          |        `false`         |
 
 详细配置说明可参见 [.env.example](.env.example) 文件。(待完善)
@@ -254,11 +254,11 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 > 注意：如果你设置了 OPENAI_API_KEY 但未设置 FORWARD_KEY，客户端在调用时将不需要提供密钥。由于这可能存在安全风险，除非有明确需求，否则不推荐将
 > FORWARD_KEY 置空。
 
-### Caching
+### 智能缓存
 
-缓存默认使用内存后端，可选择数据库后端，需安装相应的环境：
+缓存可选择数据库后端，需安装相应的环境：
 
-- 配置环境变量中`CACHE_BACKEND`以使用相应的数据库后端进行存储。 可选值`MEMORY`、`LMDB`、`LEVELDB`
+- 配置环境变量中`CACHE_BACKEND`以使用相应的数据库后端进行存储。 可选值`LMDB`、`LEVELDB`
 - 配置`CACHE_CHAT_COMPLETION`为`true`以缓存/v1/chat/completions 结果。
 
 **Python**
@@ -328,7 +328,7 @@ FORWARD_KEY=fk-****** # 这里fk-token由我们自己定义
 
 ```text
 {'messages': [{'role': 'user', 'content': 'hi'}], 'model': 'gpt-3.5-turbo', 'stream': True, 'max_tokens': None, 'n': 1, 'temperature': 1, 'top_p': 1, 'logit_bias': None, 'frequency_penalty': 0, 'presence_penalty': 0, 'stop': None, 'user': None, 'ip': '127.0.0.1', 'uid': '2155fe1580e6aed626aa1ad74c1ce54e', 'datetime': '2023-10-17 15:27:12'}
-{'assistant': 'Hello! How can I assist you today?', 'is_function_call': False, 'uid': '2155fe1580e6aed626aa1ad74c1ce54e'}
+{'assistant': 'Hello! How can I assist you today?', 'is_tool_calls': False, 'uid': '2155fe1580e6aed626aa1ad74c1ce54e'}
 ```
 
 转换为`json`格式：
@@ -351,8 +351,8 @@ aifd convert
         "user": "hi"
       }
     ],
-    "functions": null,
-    "is_function_call": false,
+    "tools": null,
+    "is_tool_calls": false,
     "assistant": "Hello! How can I assist you today?"
   }
 ]

@@ -240,22 +240,22 @@ Execute `aifd run --help` to get details on arguments.
 
 You can create a .env file in the project's run directory to customize configurations. For a reference configuration, see the [.env.example](.env.example) file in the root directory.
 
-| Environment Variable  | Description                                                                                      | Default Value                 |
-|-----------------------|-------------------------------------------------------------------------------------------------|:-----------------------------:|
-| OPENAI_BASE_URL       | Set base address for OpenAI-style API                                                            | https://api.openai.com        |
-| OPENAI_ROUTE_PREFIX   | Define a route prefix for the OPENAI_BASE_URL interface address                                 | /                             |
-| OPENAI_API_KEY        | Configure API key in OpenAI style, supports using multiple keys separated by commas              | None                          |
-| FORWARD_KEY           | Set a custom key for proxying, multiple keys can be separated by commas. If not set (not recommended), it will directly use `OPENAI_API_KEY` | None |
-| EXTRA_BASE_URL        | Configure the base URL for additional proxy services                                             | None                          |
-| EXTRA_ROUTE_PREFIX    | Define the route prefix for additional proxy services                                           | None                          |
-| REQ_RATE_LIMIT        | Set the user request rate limit for specific routes (user distinguished)                         | None                          |
-| GLOBAL_RATE_LIMIT     | Configure a global request rate limit applicable to routes not specified in `REQ_RATE_LIMIT`    | None                          |
-| RATE_LIMIT_STRATEGY   | Choose a rate limit strategy, options include: fixed-window, fixed-window-elastic-expiry, moving-window | None |
-| TOKEN_RATE_LIMIT      | Limit the output rate of each token (or SSE chunk) in a streaming response                      | None                          |
-| PROXY                 | Set HTTP proxy address                                                                           | None                          |
-| LOG_CHAT              | Toggle chat content logging for debugging and monitoring                                        | `false`                       |
-| CACHE_BACKEND         | Cache backend, supports memory backend and database backend. By default, it's memory backend, optional database backends are lmdb, rocksdb, and leveldb | `MEMORY` |
-| CACHE_CHAT_COMPLETION | Whether to cache /v1/chat/completions results                                                    | `false`                       |
+| Environment Variable  | Description                                                                                      |     Default Value      |
+|-----------------------|-------------------------------------------------------------------------------------------------|:----------------------:|
+| OPENAI_BASE_URL       | Set base address for OpenAI-style API                                                            | https://api.openai.com |
+| OPENAI_ROUTE_PREFIX   | Define a route prefix for the OPENAI_BASE_URL interface address                                 |           /            |
+| OPENAI_API_KEY        | Configure API key in OpenAI style, supports using multiple keys separated by commas              |          None          |
+| FORWARD_KEY           | Set a custom key for proxying, multiple keys can be separated by commas. If not set (not recommended), it will directly use `OPENAI_API_KEY` |          None          |
+| EXTRA_BASE_URL        | Configure the base URL for additional proxy services                                             |          None          |
+| EXTRA_ROUTE_PREFIX    | Define the route prefix for additional proxy services                                           |          None          |
+| REQ_RATE_LIMIT        | Set the user request rate limit for specific routes (user distinguished)                         |          None          |
+| GLOBAL_RATE_LIMIT     | Configure a global request rate limit applicable to routes not specified in `REQ_RATE_LIMIT`    |          None          |
+| RATE_LIMIT_STRATEGY   | Choose a rate limit strategy, options include: fixed-window, fixed-window-elastic-expiry, moving-window |          None          |
+| TOKEN_RATE_LIMIT      | Limit the output rate of each token (or SSE chunk) in a streaming response                      |          None          |
+| PROXY                 | Set HTTP proxy address                                                                           |          None          |
+| LOG_CHAT              | Toggle chat content logging for debugging and monitoring                                        |        `false`         |
+| CACHE_BACKEND         | Cache backend, supports memory backend and database backend. By default, it's memory backend, optional database backends are lmdb, and leveldb |         `lmdb`         |
+| CACHE_CHAT_COMPLETION | Whether to cache /v1/chat/completions results                                                    |        `false`         |
 
 Detailed configuration descriptions can be seen in the [.env.example](.env.example) file. (To be completed)
 
@@ -264,7 +264,7 @@ Detailed configuration descriptions can be seen in the [.env.example](.env.examp
 ### Caching
 
 
-- Configure `CACHE_BACKEND` in the environment variable to use the respective database backend for storage. Options are `MEMORY`, `LMDB`, and `LEVELDB`.
+- Configure `CACHE_BACKEND` in the environment variable to use the respective database backend for storage. Options are `LMDB`, and `LEVELDB`.
 - Set `CACHE_CHAT_COMPLETION` to `true` to cache /v1/chat/completions results.
 
 **Python**
