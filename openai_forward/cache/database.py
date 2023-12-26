@@ -55,7 +55,7 @@ elif CACHE_BACKEND.upper() == "REMOTE":
         db_dict = FlaxKV(
             "REMOTE_DB",
             root_path_or_url=CACHE_ROOT_PATH_OR_URL,
-            backend="remote",
+            backend="leveldb",
             cache=cache,
             log="INFO",
             save_log=True,
@@ -64,7 +64,7 @@ elif CACHE_BACKEND.upper() == "REMOTE":
         db_dict = FlaxKV(
             "REMOTE_DB",
             root_path_or_url=CACHE_ROOT_PATH_OR_URL,
-            backend="remote",
+            backend="leveldb",
             cache=cache,
         )
 
