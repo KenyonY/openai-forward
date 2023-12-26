@@ -29,7 +29,7 @@ dependencies = [
     "pytz",
     "slowapi==0.1.8",
     "aiohttp>=3.8.5",
-    "flaxkv>=0.1.4",
+    "flaxkv[client]>=0.2.1",
     "msgpack",
     "tiktoken>=0.5.1",
     "tomli",

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import time
 from itertools import cycle
 from typing import List, Literal, Optional, Union
