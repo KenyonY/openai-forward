@@ -56,9 +56,12 @@ LOG_CACHE_DB_INFO = (
     os.environ.get("LOG_CACHE_DB_INFO", "false").strip().lower() == "true"
 )
 CACHE_BACKEND = os.environ.get("CACHE_BACKEND", "MEMORY").strip()
+CACHE_ROOT_PATH_OR_URL = os.environ.get("CACHE_ROOT_PATH_OR_URL", ".").strip()
+
 DEFAULT_REQUEST_CACHING_VALUE = False
 if CACHE_CHAT_COMPLETION:
     additional_start_info["cache_backend"] = CACHE_BACKEND
+    additional_start_info["cache_root_path_or_url"] = CACHE_ROOT_PATH_OR_URL
     DEFAULT_REQUEST_CACHING_VALUE = (
         os.environ.get("DEFAULT_REQUEST_CACHING_VALUE", "false").strip().lower()
         == "true"
