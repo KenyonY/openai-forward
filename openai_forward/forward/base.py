@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 import traceback
 from asyncio import Queue
