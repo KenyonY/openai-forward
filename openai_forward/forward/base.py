@@ -10,13 +10,18 @@ import aiohttp
 import anyio
 from aiohttp import TCPConnector
 from fastapi import HTTPException, Request, status
-from flaxkv.pack import encode
 from loguru import logger
-from starlette.responses import BackgroundTask, Response, StreamingResponse
+from starlette.responses import BackgroundTask, StreamingResponse
 
-from ..cache.chat_completions import generate, stream_generate_efficient
+from openai_forward.cache import get_cached_response
+
 from ..cache.database import db_dict
-from ..content.openai import ChatLogger, CompletionLogger, WhisperLogger
+from ..content.openai import (
+    ChatLogger,
+    CompletionLogger,
+    EmbeddingLogger,
+    WhisperLogger,
+)
 from ..decorators import async_retry, async_token_rate_limit
 from ..settings import *
 
@@ -199,6 +204,7 @@ class OpenaiForward(GenericForward):
             self.chat_logger = ChatLogger(self.ROUTE_PREFIX)
             self.completion_logger = CompletionLogger(self.ROUTE_PREFIX)
             self.whisper_logger = WhisperLogger(self.ROUTE_PREFIX)
+            self.embedding_logger = EmbeddingLogger(self.ROUTE_PREFIX)
 
     def _handle_result(
         self, buffer: bytearray, uid: str, route_path: str, request_method: str
@@ -228,6 +234,8 @@ class OpenaiForward(GenericForward):
                 logger_instance = self.chat_logger
             elif route_path == COMPLETION_ROUTE:
                 logger_instance = self.completion_logger
+            elif route_path == EMBEDDING_ROUTE:
+                logger_instance = self.embedding_logger
             elif route_path.startswith("/v1/audio/"):
                 self.whisper_logger.log_buffer(buffer)
                 return result_info
@@ -238,7 +246,7 @@ class OpenaiForward(GenericForward):
                 result_info["uid"] = uid
 
                 if LOG_CHAT:
-                    logger_instance.log(result_info)
+                    logger_instance.log_result(result_info)
 
                 if PRINT_CHAT and logger_instance == self.chat_logger:
                     self.chat_logger.print_chat_info(result_info)
@@ -265,8 +273,9 @@ class OpenaiForward(GenericForward):
         """
         payload_log_info = {"uid": None}
 
+        payload = await request.body()
+
         if not (LOG_CHAT or PRINT_CHAT) or request.method != "POST":
-            payload = await request.body()
             return False, payload_log_info, payload
 
         try:
@@ -276,13 +285,17 @@ class OpenaiForward(GenericForward):
                 logger_instance = self.chat_logger
             elif url_path == COMPLETION_ROUTE:
                 logger_instance = self.completion_logger
+            elif url_path == EMBEDDING_ROUTE:
+                logger_instance = self.embedding_logger
 
             # If a logger method is determined, parse payload and log if necessary
             if logger_instance:
-                payload_log_info, payload = await logger_instance.parse_payload(request)
+                payload_log_info, payload = logger_instance.parse_payload(
+                    request, payload
+                )
 
                 if payload_log_info and LOG_CHAT:
-                    logger_instance.log(payload_log_info)
+                    logger_instance.logger.debug(payload_log_info)
 
                 if (
                     payload_log_info
@@ -291,13 +304,12 @@ class OpenaiForward(GenericForward):
                 ):
                     self.chat_logger.print_chat_info(payload_log_info)
             else:
-                payload = await request.body()
+                ...
 
         except Exception as e:
             logger.warning(
                 f"log chat error:\nhost:{request.client.host} method:{request.method}: {traceback.format_exc()}"
             )
-            payload = await request.body()
 
         valid = True if payload_log_info['uid'] is not None else False
         return valid, payload_log_info, payload
@@ -372,10 +384,30 @@ class OpenaiForward(GenericForward):
                 target_info = self._handle_result(
                     chunk, uid, route_path, request.method
                 )
-                if target_info and CACHE_CHAT_COMPLETION and cache_key is not None:
+                if (
+                    target_info
+                    and CACHE_CHAT_COMPLETION
+                    and route_path == CHAT_COMPLETION_ROUTE
+                    and cache_key is not None
+                ):
                     cached_value = db_dict.get(cache_key, [])
                     cached_value.append(target_info["assistant"])
-                    db_dict[cache_key] = cached_value
+                    db_dict[cache_key] = {
+                        "data": cached_value,
+                        "route_path": route_path,
+                    }
+                elif (
+                    target_info
+                    and CACHE_EMBEDDING
+                    and route_path == EMBEDDING_ROUTE
+                    and cache_key is not None
+                ):
+                    cached_value = bytes(target_info["buffer"])
+                    db_dict[cache_key] = {
+                        "data": cached_value,
+                        "route_path": route_path,
+                    }
+
             elif chunk is not None:
                 logger.warning(
                     f'uid: {uid}\n status: {r.status}\n {chunk.decode("utf-8")}'
@@ -390,85 +422,6 @@ class OpenaiForward(GenericForward):
             client_config["headers"]["Authorization"] = auth
         return auth
 
-    @staticmethod
-    def _get_cached_response(payload_info, valid_payload, request):
-        """
-        Attempts to retrieve a cached response based on the current request's payload information.
-
-        This function constructs a cache key based on various aspects of the request payload,
-        checks if the response for this key has been cached, and if so, constructs and returns
-        the appropriate cached response.
-
-        Returns:
-            Tuple[Union[Response, None], Union[str, None]]:
-                - Response (Union[Response, None]): The cached response if available; otherwise, None.
-                - cache_key (Union[str, None]): The constructed cache key for the request. None if caching is not applicable.
-
-        Note:
-            If a cache hit occurs, the cached response is immediately returned without contacting the external server.
-        """
-        # todo: refactor this function
-
-        def construct_cache_key():
-            elements = [
-                payload_info["n"],
-                payload_info['messages'],
-                payload_info['model'],
-                payload_info["max_tokens"],
-                payload_info['response_format'],
-                payload_info['seed'],
-                # payload_info['temperature'],
-                payload_info["tools"],
-                payload_info["tool_choice"],
-            ]
-
-            return encode(elements)
-
-        def get_response_from_cache(key):
-            logger.info(f'uid: {payload_info["uid"]} >>>>> [cache hit]')
-            cache_values = db_dict[key]
-            # todo: handle multiple choices
-            cache_value = cache_values[-1]
-            if isinstance(cache_value, list):
-                text = None
-                tool_calls = cache_value
-            else:
-                text = cache_value
-                tool_calls = None
-
-            if payload_info["stream"]:
-                return StreamingResponse(
-                    stream_generate_efficient(
-                        payload_info['model'],
-                        text,
-                        tool_calls,
-                        request,
-                    ),
-                    status_code=200,
-                    media_type="text/event-stream",
-                )
-
-            else:
-                usage = {
-                    "prompt_tokens": 0,
-                    "completion_tokens": 0,
-                    "total_tokens": 0,
-                }
-                return Response(
-                    content=generate(payload_info['model'], text, tool_calls, usage),
-                    media_type="application/json",
-                )
-
-        if not (CACHE_CHAT_COMPLETION and valid_payload):
-            return None, None
-
-        cache_key = construct_cache_key()
-
-        if payload_info['caching'] and cache_key in db_dict:
-            return get_response_from_cache(cache_key), cache_key
-
-        return None, cache_key
-
     async def reverse_proxy(self, request: Request):
         """
         Asynchronously handles reverse proxying the incoming request.
@@ -480,23 +433,23 @@ class OpenaiForward(GenericForward):
             StreamingResponse: A FastAPI StreamingResponse containing the server's response.
         """
         client_config = self.prepare_client(request, return_origin_header=False)
-        url_path = client_config["url_path"]
+        route_path = client_config["url_path"]
 
         self.handle_authorization(client_config)
         valid_payload, payload_info, payload = await self._handle_payload(
-            request, url_path
+            request, route_path
         )
         uid = payload_info["uid"]
 
-        cached_response, cache_key = self._get_cached_response(
-            payload_info, valid_payload, request
+        cached_response, cache_key = get_cached_response(
+            payload_info, valid_payload, route_path, request
         )
         if cached_response:
             return cached_response
 
         r = await self.send(client_config, data=payload)
         return StreamingResponse(
-            self.aiter_bytes(r, request, url_path, uid, cache_key),
+            self.aiter_bytes(r, request, route_path, uid, cache_key),
             status_code=r.status,
             media_type=r.headers.get("content-type"),
         )

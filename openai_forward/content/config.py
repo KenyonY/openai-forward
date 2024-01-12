@@ -86,6 +86,13 @@ def setting_log(
                     "format": "{message}",
                 },
                 {
+                    "sink": f"./Log/{_prefix}/embedding/embedding.log",
+                    "enqueue": multi_process,
+                    "rotation": "100 MB",
+                    "filter": lambda record: f"{_prefix}_embedding" in record["extra"],
+                    "format": "{message}",
+                },
+                {
                     "sink": f"./Log/{_prefix}/whisper/whisper.log",
                     "enqueue": multi_process,
                     "rotation": "30 MB",
