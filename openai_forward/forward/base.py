@@ -140,7 +140,20 @@ class GenericForward:
         auth = request.headers.get("Authorization", "")
 
         if return_origin_header:
-            headers = request.headers
+            headers = dict(request.headers)
+            headers_to_remove = [
+                "host",
+                "cookie",
+                "user-agent",
+                "connection",
+                # "cache-control", "upgrade-insecure-requests",
+                # "sec-fetch-site", "sec-fetch-mode", "sec-fetch-user", "sec-fetch-dest",
+                "accept-encoding",
+                "accept-language",
+            ]
+            for key in headers_to_remove:
+                headers.pop(key, None)
+
         else:
             headers = {
                 "content-type": request.headers.get("content-type", "application/json"),
