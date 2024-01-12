@@ -25,8 +25,12 @@
 **一键免费云平台部署**
 
 1. [Render一键部署](deploy.md#render-一键部署)
-2. [CloudFlare AI Gateway](https://developers.cloudflare.com/ai-gateway/get-started/creating-gateway/)
-3. 更多部署： https://github.com/KenyonY/openai-forward/blob/0.5.x/deploy.md
+2. 更多部署： https://github.com/KenyonY/openai-forward/blob/0.5.x/deploy.md
+
+**其它反代**  
+[CloudFlare AI Gateway](https://developers.cloudflare.com/ai-gateway/get-started/creating-gateway/)  
+[ChatGPT](https://github.com/pandora-next/deploy)  
+
 
 ---
 ## pip部署

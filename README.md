@@ -196,15 +196,19 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 
 ### 代理其它云端模型
 
-- **适用场景：**
-  例如可通过 [LiteLLM](https://github.com/BerriAI/litellm) 可以将 众多云模型的 API 格式转换为 openai
-  的api格式，
-  然后使用本服务进行代理。
+- **场景1:**
+  使用通用转发,由环境变量中`EXTRA_BASE_URL`与`EXTRA_ROUTE_PREFIX` 两变量控制，可对任意来源服务进行转发，
+  可获得请求速率控制与token速率控制；但通用转发不支持自定义秘钥、实时日志和缓存AI响应.
+
+- **场景2：**
+  可通过 [LiteLLM](https://github.com/BerriAI/litellm) 可以将 众多云模型的 API 格式转换为 openai
+  的api格式，然后使用openai风格转发(即`OPENAI_BASE_URL`) 
+
 
 (更多)
 
 ### 代理ChatGPT
-参考根路径下 `docker-compose.yaml` 和 `.env.chatgpt`
+[参考](./deploy.md)
 
 
 <a>
@@ -248,6 +252,7 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 | LOG_CHAT              | 开关聊天内容的日志记录，用于调试和监控                                                  |        `false`         |
 | CACHE_BACKEND         | cache后端，支持内存后端和数据库后端，默认为内存后端，可选lmdb、leveldb数据库后端                     |         `lmdb`         |
 | CACHE_CHAT_COMPLETION | 是否缓存/v1/chat/completions 结果                                          |        `false`         |
+| DEFAULT_REQUEST_CACHING_VALUE | 是否默认开启缓存                                                           |        `false`         |
 
 详细配置说明可参见 [.env.example](.env.example) 文件。(待完善)
 

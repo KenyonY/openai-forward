@@ -17,19 +17,3 @@ services:
     restart: unless-stopped
     depends_on:
       - chatgpt
-
-  chatgpt:
-      # use project: https://github.com/gngpp/ninja
-      image: ghcr.io/gngpp/ninja:latest
-      container_name: chatgpt
-      restart: unless-stopped
-      environment:
-        - TZ=Asia/Shanghai
-      command:
-        - run
-        - --arkose-gpt4-har-dir=/root/.gpt4
-#        - --level=debug
-      volumes:
-        - ./har:/root/.gpt4
-#      ports:
-#        - "7999:7999"
