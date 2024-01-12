@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import random
+
 from fastapi.responses import Response, StreamingResponse
 from flaxkv.pack import encode
 from loguru import logger
@@ -44,10 +46,16 @@ def get_cached_chat_response(payload_info, valid_payload, request):
         return encode(elements)
 
     def get_response_from_key(key):
-        logger.info(f'uid: {payload_info["uid"]} >>>>> [cache hit]')
-        cache_values = db_dict[key]['data']
+        value = db_dict[key]
+        cache_values = value.get('data')
+
+        if cache_values is None:  # deprecate soon
+            # compatible with previous version
+            cache_values = value
+        idx = random.randint(0, len(cache_values) - 1) if len(cache_values) > 1 else 0
+        logger.info(f'uid: {payload_info["uid"]} >>>{idx}>>>> [cache hit]')
         # todo: handle multiple choices
-        cache_value = cache_values[-1]
+        cache_value = cache_values[idx]
         if isinstance(cache_value, list):
             text = None
             tool_calls = cache_value
