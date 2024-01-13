@@ -7,22 +7,16 @@ if CACHE_BACKEND.upper() == "MEMORY":
 
 elif CACHE_BACKEND.lower() in ("leveldb", "lmdb"):
 
-    if LOG_CACHE_DB_INFO:
-        db_dict = FlaxKV(
-            "CACHE_DB",
-            root_path_or_url=CACHE_ROOT_PATH_OR_URL,
-            backend=CACHE_BACKEND.lower(),
-            cache=True,
-            log="INFO",
-            save_log=True,
-        )
-    else:
-        db_dict = FlaxKV(
-            "CACHE_DB",
-            root_path_or_url=CACHE_ROOT_PATH_OR_URL,
-            backend=CACHE_BACKEND.lower(),
-            cache=True,
-        )
+    log, save_log = ("INFO", True) if LOG_CACHE_DB_INFO else (None, False)
+
+    db_dict = FlaxKV(
+        "CACHE_DB",
+        root_path_or_url=CACHE_ROOT_PATH_OR_URL,
+        backend=CACHE_BACKEND.lower(),
+        cache=True,
+        log=log,
+        save_log=save_log,
+    )
 
 else:
     raise ValueError(

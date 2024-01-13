@@ -21,6 +21,7 @@ CHAT_COMPLETION_ROUTE = (
 )
 
 COMPLETION_ROUTE = os.environ.get("COMPLETION_ROUTE", "").strip() or "/v1/completions"
+EMBEDDING_ROUTE = os.environ.get("EMBEDDING_ROUTE", "").strip() or "/v1/embeddings"
 
 ENV_VAR_SEP = ","
 OPENAI_BASE_URL = env2list("OPENAI_BASE_URL", sep=ENV_VAR_SEP) or [
@@ -49,6 +50,7 @@ if LOG_CHAT:
 if PRINT_CHAT:
     additional_start_info["print_chat"] = True
 
+CACHE_EMBEDDING = os.environ.get("CACHE_EMBEDDING", "false").strip().lower() == "true"
 CACHE_CHAT_COMPLETION = (
     os.environ.get("CACHE_CHAT_COMPLETION", "false").strip().lower() == "true"
 )

@@ -9,74 +9,36 @@ client = OpenAI(
     api_key=config['api_key'],
     base_url=config['api_base'],
 )
+
 stream = True
-# stream = False
 
 n = 1
 
-# debug = True
-debug = False
-
-is_tool_calls = True
-# is_tool_call = False
-caching = True
+debug, caching = False, True
 
 max_tokens = None
 
 user_content = """
 用c实现目前已知最快平方根算法
 """
-user_content = 'hi'
+# user_content = '最初有1000千克的蘑菇，其中99%的成分是水。经过几天的晴天晾晒后，蘑菇中的水分含量现在是98%，蘑菇中减少了多少水分？'
+user_content = "讲个简短的笑话"
 model = "gpt-3.5-turbo"
 # model="gpt-4"
 
 mt = MeasureTime().start()
 
-if is_tool_calls:
-    tools = [
-        {
-            "type": "function",
-            "function": {
-                "name": "get_current_weather",
-                "description": "Get the current weather in a given location",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "location": {
-                            "type": "string",
-                            "description": "The city and state, e.g. San Francisco, CA",
-                        },
-                        "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]},
-                    },
-                    "required": ["location"],
-                },
-            },
-        }
-    ]
-    resp = client.chat.completions.create(
-        model=model,
-        messages=[
-            {"role": "user", "content": "What's the weather like in Boston today?"}
-        ],
-        tools=tools,
-        tool_choice="auto",  # auto is default, but we'll be explicit
-        stream=stream,
-        extra_body={"caching": caching},
-    )
-
-else:
-    resp = client.chat.completions.create(
-        model=model,
-        messages=[
-            {"role": "user", "content": user_content},
-        ],
-        stream=stream,
-        n=n,
-        max_tokens=max_tokens,
-        timeout=30,
-        # extra_headers=(caching, caching)
-        extra_body={"caching": caching},
-    )
+resp = client.chat.completions.create(
+    model=model,
+    messages=[
+        {"role": "user", "content": user_content},
+    ],
+    stream=stream,
+    n=n,
+    max_tokens=max_tokens,
+    timeout=30,
+    extra_body={"caching": caching},
+)
 
 if stream:
     if debug:
@@ -86,23 +48,10 @@ if stream:
         for idx, chunk in enumerate(resp):
             chunk_message = chunk.choices[0].delta or ""
             if idx == 0:
-                if is_tool_calls:
-                    function = chunk_message.tool_calls[0].function
-                    name = function.name
-                    print(f"{chunk_message.role}: \n{name}: ")
-                else:
-                    print(f"{chunk_message.role}: ")
+                mt.show_interval("tcp time:")
+                print(f"{chunk_message.role}: ")
                 continue
-
-            content = ""
-            if is_tool_calls:
-                tool_calls = chunk_message.tool_calls
-                if tool_calls:
-                    function = tool_calls[0].function
-                    if function:
-                        content = function.arguments or ""
-            else:
-                content = chunk_message.content or ""
+            content = chunk_message.content or ""
             print(content, end="")
         print()
 else:

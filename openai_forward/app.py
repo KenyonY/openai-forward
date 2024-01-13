@@ -54,7 +54,7 @@ def healthz(request: Request):
 
 
 if BENCHMARK_MODE:
-    from .cache.chat_completions import chat_completions_benchmark
+    from .cache.chat.chat_completions import chat_completions_benchmark
 
     app.add_route(
         "/benchmark/v1/chat/completions",

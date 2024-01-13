@@ -9,9 +9,9 @@ import orjson
 from fastapi import Request
 from fastapi.responses import Response, StreamingResponse
 
-from ..decorators import async_random_sleep, async_token_rate_limit
-from ..helper import get_unique_id
-from ..settings import token_interval_conf
+from ...decorators import async_random_sleep, async_token_rate_limit
+from ...helper import get_unique_id
+from ...settings import token_interval_conf
 from .tokenizer import TIKTOKEN_VALID, count_tokens, encode_as_pieces
 
 

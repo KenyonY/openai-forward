@@ -1,5 +1,6 @@
 import time
-from typing import List
+from abc import ABC, abstractmethod
+from typing import Dict, List, Tuple
 
 import orjson
 from fastapi import Request
@@ -11,7 +12,27 @@ from ..settings import DEFAULT_REQUEST_CACHING_VALUE
 from .helper import markdown_print, parse_sse_buffer, print
 
 
-class CompletionLogger:
+class LoggerBase(ABC):
+    def __init__(self, route_prefix: str, _suffix: str):
+        _prefix = route_prefix_to_str(route_prefix)
+        kwargs = {f"{_prefix}{_suffix}": True}
+        self.logger = logger.bind(**kwargs)
+
+    @staticmethod
+    @abstractmethod
+    def parse_payload(request: Request, raw_payload) -> Tuple[Dict, bytes]:
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def parse_bytearray(buffer: bytearray) -> Dict:
+        pass
+
+    def log_result(self, *args, **kwargs):
+        pass
+
+
+class CompletionLogger(LoggerBase):
     def __init__(self, route_prefix: str):
         """
         Initialize the Completions logger with a route prefix.
@@ -19,14 +40,12 @@ class CompletionLogger:
         Args:
             route_prefix (str): The prefix used for routing, e.g., '/openai'.
         """
-        _prefix = route_prefix_to_str(route_prefix)
-        kwargs = {_prefix + "_completion": True}
-        self.logger = logger.bind(**kwargs)
+        super().__init__(route_prefix, "_completion")
 
     @staticmethod
-    async def parse_payload(request: Request):
+    def parse_payload(request: Request, raw_payload):
         uid = get_unique_id()
-        payload = await request.json()
+        payload = orjson.loads(raw_payload)
         print(f"{payload=}")
 
         content = {
@@ -38,7 +57,7 @@ class CompletionLogger:
             "uid": uid,
             "datetime": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
         }
-        return content, payload
+        return content, raw_payload
 
     @staticmethod
     def parse_bytearray(buffer: bytearray):
@@ -88,7 +107,7 @@ class CompletionLogger:
         target_info['text'] = text
         return target_info
 
-    def log(self, chat_info: dict):
+    def log_result(self, chat_info: dict):
         """
         Log chat information to the logger bound to this instance.
 
@@ -98,7 +117,7 @@ class CompletionLogger:
         self.logger.debug(f"{chat_info}")
 
 
-class ChatLogger:
+class ChatLogger(LoggerBase):
     def __init__(self, route_prefix: str):
         """
         Initialize the Chat Completions logger with a route prefix.
@@ -106,12 +125,10 @@ class ChatLogger:
         Args:
             route_prefix (str): The prefix used for routing, e.g., '/openai'.
         """
-        _prefix = route_prefix_to_str(route_prefix)
-        kwargs = {_prefix + "_chat": True}
-        self.logger = logger.bind(**kwargs)
+        super().__init__(route_prefix, "_chat")
 
     @staticmethod
-    async def parse_payload(request: Request):
+    def parse_payload(request: Request, raw_payload):
         """
         Asynchronously parse the payload from a FastAPI request.
 
@@ -122,42 +139,38 @@ class ChatLogger:
             dict: A dictionary containing parsed messages, model, IP address, UID, and datetime.
         """
         uid = get_unique_id()
-        payload = await request.json()
+        payload = orjson.loads(raw_payload)
+        caching = payload.pop("caching", None)
+        if caching is None:
+            caching = DEFAULT_REQUEST_CACHING_VALUE
+            payload_return = raw_payload
+        else:
+            payload_return = orjson.dumps(payload)
 
-        # functions = payload.get("functions") # deprecated
-        # if functions:
-        #     info = {
-        #         "functions": functions, # Deprecated in favor of `tools`
-        #         "function_call": payload.get("function_call", None), # Deprecated in favor of `tool_choice`
-        #     }
-        info = {}
-        info.update(
-            {
-                "messages": payload["messages"],
-                "model": payload["model"],
-                "stream": payload.get("stream", False),
-                "max_tokens": payload.get("max_tokens", None),
-                "response_format": payload.get("response_format", None),
-                "n": payload.get("n", 1),
-                "temperature": payload.get("temperature", 1),
-                "top_p": payload.get("top_p", 1),
-                "logit_bias": payload.get("logit_bias", None),
-                "frequency_penalty": payload.get("frequency_penalty", 0),
-                "presence_penalty": payload.get("presence_penalty", 0),
-                "seed": payload.get("seed", None),
-                "stop": payload.get("stop", None),
-                "user": payload.get("user", None),
-                "tools": payload.get("tools", None),
-                "tool_choice": payload.get("tool_choice", None),
-                "ip": get_client_ip(request) or "",
-                "uid": uid,
-                "caching": payload.pop(
-                    "caching", DEFAULT_REQUEST_CACHING_VALUE
-                ),  # pop caching
-                "datetime": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
-            }
-        )
-        return info, orjson.dumps(payload)
+        info = {
+            "messages": payload["messages"],
+            "model": payload["model"],
+            "stream": payload.get("stream", False),
+            "max_tokens": payload.get("max_tokens", None),
+            "response_format": payload.get("response_format", None),
+            "n": payload.get("n", 1),
+            "temperature": payload.get("temperature", 1),
+            "top_p": payload.get("top_p", 1),
+            "logit_bias": payload.get("logit_bias", None),
+            "frequency_penalty": payload.get("frequency_penalty", 0),
+            "presence_penalty": payload.get("presence_penalty", 0),
+            "seed": payload.get("seed", None),
+            "stop": payload.get("stop", None),
+            "user": payload.get("user", None),
+            "tools": payload.get("tools", None),
+            "tool_choice": payload.get("tool_choice", None),
+            "ip": get_client_ip(request) or "",
+            "uid": uid,
+            "caching": caching,
+            "datetime": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+        }
+
+        return info, payload_return
 
     def parse_bytearray(self, buffer: bytearray):
         """
@@ -267,6 +280,15 @@ class ChatLogger:
         """
         self.logger.debug(f"{chat_info}")
 
+    def log_result(self, chat_info: dict):
+        """
+        Log chat information to the logger bound to this instance.
+
+        Args:
+            chat_info (dict): A dictionary containing chat information to be logged.
+        """
+        self.logger.debug(f"{chat_info}")
+
     @staticmethod
     def print_chat_info(chat_info: dict):
         """
@@ -293,6 +315,60 @@ class ChatLogger:
                 markdown_print(f"assistant: {assistant}", role='assistant')
                 print(f'uid: {chat_info.get("uid")}')
                 print(77 * "=", role='assistant')
+
+
+class EmbeddingLogger:
+    def __init__(self, route_prefix: str):
+        _prefix = route_prefix_to_str(route_prefix)
+        kwargs = {_prefix + "_embedding": True}
+        self.logger = logger.bind(**kwargs)
+
+    @staticmethod
+    def parse_payload(request: Request, raw_payload: bytes):
+        uid = get_unique_id()
+        payload = orjson.loads(raw_payload)
+        caching = payload.pop("caching", None)
+        if caching is None:
+            caching = DEFAULT_REQUEST_CACHING_VALUE
+            payload_return = raw_payload
+        else:
+            payload_return = orjson.dumps(payload)
+
+        content = {
+            "input": payload['input'],
+            "model": payload['model'],
+            "encoding_format": payload.get("encoding_format", 'float'),
+            "ip": get_client_ip(request) or "",
+            "uid": uid,
+            "caching": caching,
+            "datetime": time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()),
+        }
+        return content, payload_return
+
+    def parse_bytearray(self, buffer: bytearray):
+        """
+        Parse a bytearray into a dictionary.
+        """
+        result_dict = orjson.loads(buffer)
+        target_info = {
+            "object": result_dict["object"],
+            "usage": result_dict["usage"],
+            "model": result_dict["model"],
+            "buffer": buffer,
+        }
+        return target_info
+
+    def log(self, info: dict):
+        self.logger.debug(f"{info}")
+
+    def log_result(self, info: dict):
+        result_info = {
+            "object": info["object"],
+            "usage": info["usage"],
+            "model": info["model"],
+            "uid": info["uid"],
+        }
+        self.logger.debug(f"{result_info}")
 
 
 class WhisperLogger:
