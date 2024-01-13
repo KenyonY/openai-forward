@@ -18,7 +18,6 @@ elif CACHE_BACKEND.lower() in ("leveldb", "lmdb"):
         save_log=save_log,
     )
 
-
 else:
     raise ValueError(
         f"Unknown cache backend: {CACHE_BACKEND}. The valid backends are: 'leveldb', 'lmdb', 'memory'"

@@ -13,9 +13,7 @@ from fastapi import HTTPException, Request, status
 from loguru import logger
 from starlette.responses import BackgroundTask, StreamingResponse
 
-from openai_forward.cache import get_cached_response
-
-from ..cache.database import db_dict
+from ..cache import cache_response, get_cached_response
 from ..content.openai import (
     ChatLogger,
     CompletionLogger,
@@ -384,30 +382,7 @@ class OpenaiForward(GenericForward):
                 target_info = self._handle_result(
                     chunk, uid, route_path, request.method
                 )
-                if (
-                    target_info
-                    and CACHE_CHAT_COMPLETION
-                    and route_path == CHAT_COMPLETION_ROUTE
-                    and cache_key is not None
-                ):
-                    cached_value = db_dict.get(cache_key, {"data": []})["data"]
-                    if len(cached_value) < 10:
-                        cached_value.append(target_info["assistant"])
-                        db_dict[cache_key] = {
-                            "data": cached_value,
-                            "route_path": route_path,
-                        }
-                elif (
-                    target_info
-                    and CACHE_EMBEDDING
-                    and route_path == EMBEDDING_ROUTE
-                    and cache_key is not None
-                ):
-                    cached_value = bytes(target_info["buffer"])
-                    db_dict[cache_key] = {
-                        "data": cached_value,
-                        "route_path": route_path,
-                    }
+                cache_response(cache_key, target_info, route_path)
 
             elif chunk is not None:
                 logger.warning(
