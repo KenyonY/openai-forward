@@ -15,5 +15,3 @@ services:
       - --port=8000
       - --workers=1
     restart: unless-stopped
-    depends_on:
-      - chatgpt

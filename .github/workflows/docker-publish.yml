@@ -8,7 +8,7 @@ on:
 
 jobs:
   push_to_registry:
-    name: Push Docker image to Docker Hub
+    name: Push Docker images to Docker Hub
     runs-on: ubuntu-latest
     steps:
       -
@@ -40,7 +40,7 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       -
-        name: Build and push Docker image
+        name: Build and push main Docker image
         uses: docker/build-push-action@v4
         with:
           context: .
@@ -48,6 +48,19 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      -
+        name: Build and push webui Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: ./webui.Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }},webui-${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

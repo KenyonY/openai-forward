@@ -55,6 +55,9 @@ twine:
 build:
 	docker build --tag $(image) .
 
+build-webui:
+	docker build --tag "beidongjiedeguang/openai-forward:webui-latest" . -f webui.Dockerfile
+
 build-push:
 	docker buildx build --push --platform linux/arm64/v8,linux/amd64 --tag $(image) .
 

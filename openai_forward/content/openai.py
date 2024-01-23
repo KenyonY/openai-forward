@@ -317,11 +317,9 @@ class ChatLogger(LoggerBase):
                 print(77 * "=", role='assistant')
 
 
-class EmbeddingLogger:
+class EmbeddingLogger(LoggerBase):
     def __init__(self, route_prefix: str):
-        _prefix = route_prefix_to_str(route_prefix)
-        kwargs = {_prefix + "_embedding": True}
-        self.logger = logger.bind(**kwargs)
+        super().__init__(route_prefix, "_embedding")
 
     @staticmethod
     def parse_payload(request: Request, raw_payload: bytes):
