@@ -11,7 +11,7 @@ import uvicorn
 
 
 class Cli:
-    def run(self, port=8000, workers=1, webui='false', web_port=17860, mq_port=15555):
+    def run(self, port=8000, workers=1, webui='false', ui_port=17860, mq_port=15555):
         """
         Runs the application using the Uvicorn server.
 
@@ -56,7 +56,7 @@ class Cli:
                 ssl_keyfile=ssl_keyfile,
                 ssl_certfile=ssl_certfile,
             )
-            self._start_streamlit(port=web_port)
+            self._start_streamlit(port=ui_port)
             atexit.register(self._stop)
 
             while True:
