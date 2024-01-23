@@ -29,11 +29,7 @@ def construct_cache_key(payload_info: dict):
 
 def get_response_from_key(key, payload_info, request):
     value = db_dict[key]
-    cache_values = value.get('data')
-
-    if cache_values is None:  # deprecate soon
-        # compatible with previous version
-        cache_values = value
+    cache_values = value['data']
     idx = random.randint(0, len(cache_values) - 1) if len(cache_values) > 1 else 0
     logger.info(f'chat uid: {payload_info["uid"]} >>>{idx}>>>> [cache hit]')
     # todo: handle multiple choices
