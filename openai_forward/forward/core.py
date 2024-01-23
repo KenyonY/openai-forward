@@ -150,8 +150,8 @@ class GenericForward:
             headers_to_remove = [
                 "host",
                 "cookie",
-                "user-agent",
-                "connection",
+                # "user-agent",
+                # "connection",
                 # "cache-control", "upgrade-insecure-requests",
                 # "sec-fetch-site", "sec-fetch-mode", "sec-fetch-user", "sec-fetch-dest",
                 "accept-encoding",
