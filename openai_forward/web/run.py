@@ -28,7 +28,7 @@ config = st.session_state['config']
 with st.sidebar:
     selected_section = st.radio(
         "Select a configuration section",
-        ("Forward", "API Key", "Cache", "Rate Limit", "Other"),
+        ("Forward", "API Key", "Cache", "Rate Limit", "Other", "Dashboard"),
     )
 
     if st.button("Apply and Restart"):
@@ -225,3 +225,19 @@ elif selected_section == "Rate Limit":
 
 elif selected_section == "Other":
     display_other_configuration(config)
+
+elif selected_section == "Dashboard":
+    with st.chat_message("user"):
+        msg = "ajs;dfij apsodifujpoqwieur aospdifujpio pqoiweufp ioadspufioup iu fpqaiowdufpoiqweu f"
+        st.write("Hello 👋\n" + msg)
+        # st.line_chart(np.random.randn(30, 3))
+    with st.chat_message("assistant"):
+        with st.spinner("Thinking..."):
+            response = 'as;df;oasdofifuiewhqoifuhoaisudhfoquwyhegofuaghsodufghoa aosd8ufto8a7wetgfo8 ao87sduf79yot78auwe pewo8urfpiuhgdfosiudfhgvujshdoiufhasdi'
+            placeholder = st.empty()
+            full_response = ''
+            for item in response:
+                full_response += item
+                time.sleep(0.2)
+                placeholder.markdown(full_response)
+            placeholder.markdown(full_response)
