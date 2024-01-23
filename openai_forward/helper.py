@@ -12,6 +12,21 @@ from fastapi import Request
 from rich import print
 
 
+def wait_for_serve_start(url, timeout=20):
+    import httpx
+
+    start_time = time.time()
+    while True:
+        try:
+            response = httpx.get(url)
+            response.raise_for_status()
+            break
+        except Exception:
+            time.sleep(0.3)
+            if time.time() - start_time > timeout:
+                raise RuntimeError("Server didn't start in time")
+
+
 def get_client_ip(request: Request):
     if "x-forwarded-for" in request.headers:
         return request.headers["x-forwarded-for"].split(",")[0]

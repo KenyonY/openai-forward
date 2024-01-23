@@ -23,16 +23,28 @@ class Forward(Base):
         ForwardItem(base_url="https://api.openai.com", route_prefix="/")
     ]
 
+    def _to_str(self, li):
+        base_url_str = ""
+        route_prefix_str = ""
+        for i in li:
+            if not (i.base_url and i.base_url):
+                continue
+            i.base_url = i.base_url.strip()
+            i.route_prefix = i.route_prefix.strip()
+            if i.base_url and i.route_prefix:
+                base_url_str += f"{i.base_url},"
+                route_prefix_str += f"{i.route_prefix},"
+        base_url_str = base_url_str[:-1]
+        route_prefix_str = route_prefix_str[:-1]
+        return base_url_str, route_prefix_str
+
     def convert_to_env(self, set_env=False):
         env_dict = {}
-        env_dict['OPENAI_BASE_URL'] = ','.join([i.base_url for i in self.openai])
-        env_dict['OPENAI_ROUTE_PREFIX'] = ','.join(
-            [i.route_prefix for i in self.openai]
+        env_dict['OPENAI_BASE_URL'], env_dict['OPENAI_ROUTE_PREFIX'] = self._to_str(
+            self.openai
         )
-
-        env_dict['EXTRA_BASE_URL'] = ','.join([i.base_url for i in self.general])
-        env_dict['EXTRA_ROUTE_PREFIX'] = ','.join(
-            [i.route_prefix for i in self.general]
+        env_dict['GENERAL_BASE_URL'], env_dict['GENERAL_ROUTE_PREFIX'] = self._to_str(
+            self.general
         )
 
         if set_env:
@@ -43,7 +55,7 @@ class Forward(Base):
 
 @define(slots=True)
 class CacheConfig(Base):
-    backend: str = 'memory'
+    backend: str = 'MEMORY'
     root_path_or_url: str = './FLAXKV_DB'
     default_request_caching_value: bool = False
     cache_chat_completion: bool = True
@@ -95,10 +107,10 @@ class RateLimit(Base):
         env_dict['GLOBAL_RATE_LIMIT'] = self.global_rate_limit
         env_dict['RATE_LIMIT_STRATEGY'] = self.strategy
         env_dict['TOKEN_RATE_LIMIT'] = json.dumps(
-            {i.route: i.value for i in self.token_rate_limit}
+            {i.route: i.value for i in self.token_rate_limit if i.route and i.value}
         )
         env_dict['REQ_RATE_LIMIT'] = json.dumps(
-            {i.route: i.value for i in self.req_rate_limit}
+            {i.route: i.value for i in self.req_rate_limit if i.route and i.value}
         )
         env_dict['ITER_CHUNK_TYPE'] = self.iter_chunk
         if set_env:
@@ -173,7 +185,7 @@ class Config(Base):
     log: Log = Log()
 
     timezone: str = 'Asia/Shanghai'
-    timeout: int = 60
+    timeout: int = 6
 
     def convert_to_env(self, set_env=False):
         env_dict = {}
