@@ -76,6 +76,12 @@ proxy_buffering off;
 docker run -d -p 8000:8000 beidongjiedeguang/openai-forward:latest 
 ```
 
+If the `.env` environment variable is specified:
+
+```bash
+docker run --env-file .env -d -p 8000:8000 beidongjiedeguang/openai-forward:latest 
+```
+
 This will map the host's 8000 port. Access the service via `http://{ip}:8000`.  
 The log path inside the container is `/home/openai-forward/Log/`. It can be mapped when starting up.
 

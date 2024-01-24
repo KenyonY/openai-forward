@@ -81,6 +81,12 @@ proxy_buffering off;
 docker run -d -p 8000:8000 beidongjiedeguang/openai-forward:latest 
 ```
 
+如果指定 `.env` 环境变量则：
+
+```bash
+docker run --env-file .env -d -p 8000:8000 beidongjiedeguang/openai-forward:latest 
+```
+
 将映射宿主机的8000端口，通过`http://{ip}:8000`访问服务。  
 容器内日志路径为`/home/openai-forward/Log/`, 可在启动时将其映射出来。  
 
