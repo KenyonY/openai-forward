@@ -11,13 +11,17 @@ import uvicorn
 
 
 class Cli:
-    def run(self, port=8000, workers=1, webui='false', ui_port=17860, mq_port=15555):
+    def run(self, port=8000, workers=1, webui=False, ui_port=17860, mq_port=15555):
         """
         Runs the application using the Uvicorn server.
 
         Args:
             port (int): The port number on which to run the server. Default is 8000.
             workers (int): The number of worker processes to run. Default is 1.
+            webui (bool): Whether to run the web UI. Default is False.
+            ui_port (int): The port number on which to run streamlit. Default is 17860.
+            mq_port (int): The port number on which to run zmq. Default is 15555.
+
 
         Returns:
             None
@@ -29,7 +33,7 @@ class Cli:
         ssl_keyfile = os.environ.get("ssl_keyfile", None) or None
         ssl_certfile = os.environ.get("ssl_certfile", None) or None
 
-        if not webui.lower() == 'true':
+        if not webui:
             uvicorn.run(
                 app="openai_forward.app:app",
                 host="0.0.0.0",
@@ -40,9 +44,9 @@ class Cli:
                 ssl_certfile=ssl_certfile,
             )
         else:
-            import zmq
+            os.environ['OPENAI_FORWARD_WEBUI'] = 'true'
 
-            from openai_forward.web.interface import Config
+            import zmq
 
             context = zmq.Context()
             socket = context.socket(
@@ -63,6 +67,7 @@ class Cli:
                 message = socket.recv()
                 env_dict: dict = pickle.loads(message)
                 print(f"{env_dict=}")
+
                 for key, value in env_dict.items():
                     os.environ[key] = value
 
@@ -96,13 +101,23 @@ class Cli:
         wait_for_serve_start(f"http://localhost:{port}/healthz")
 
     def _start_streamlit(self, port):
+        from openai_forward.helper import relp
+
         self.streamlit_proc = subprocess.Popen(
             [
                 'streamlit',
                 'run',
-                'openai_forward/web/run.py',
+                f'{relp("./web/run.py")}',
                 '--server.port',
                 str(port),
+                '--server.headless',
+                'true',
+                '--server.enableCORS',
+                'true',
+                '--server.runOnSave',
+                'true',
+                '--theme.base',
+                'light',
             ]
         )
 

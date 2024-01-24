@@ -6,7 +6,9 @@ from attrs import asdict, define, field, filters
 
 
 class Base:
-    def to_dict(self):
+    def to_dict(self, drop_none=True):
+        if drop_none:
+            return asdict(self, filter=filters.exclude(type(None)))
         return asdict(self)
 
 
@@ -23,14 +25,18 @@ class Forward(Base):
         ForwardItem(base_url="https://api.openai.com", route_prefix="/")
     ]
 
-    def _to_str(self, li):
+    @staticmethod
+    def format(li):
         base_url_str = ""
         route_prefix_str = ""
         for i in li:
             if not (i.base_url and i.base_url):
                 continue
-            i.base_url = i.base_url.strip()
-            i.route_prefix = i.route_prefix.strip()
+            try:
+                i.base_url = i.base_url.strip()
+                i.route_prefix = i.route_prefix.strip()
+            except Exception:
+                continue
             if i.base_url and i.route_prefix:
                 base_url_str += f"{i.base_url},"
                 route_prefix_str += f"{i.route_prefix},"
@@ -40,10 +46,11 @@ class Forward(Base):
 
     def convert_to_env(self, set_env=False):
         env_dict = {}
-        env_dict['OPENAI_BASE_URL'], env_dict['OPENAI_ROUTE_PREFIX'] = self._to_str(
+
+        env_dict['OPENAI_BASE_URL'], env_dict['OPENAI_ROUTE_PREFIX'] = self.format(
             self.openai
         )
-        env_dict['GENERAL_BASE_URL'], env_dict['GENERAL_ROUTE_PREFIX'] = self._to_str(
+        env_dict['GENERAL_BASE_URL'], env_dict['GENERAL_ROUTE_PREFIX'] = self.format(
             self.general
         )
 
@@ -87,7 +94,7 @@ class RateLimitType(Base):
 
 @define(slots=True)
 class RateLimit(Base):
-    global_rate_limit: str = '100/minute'
+    global_rate_limit: str = 'inf'
     token_rate_limit: List[RateLimitType] = [
         RateLimitType(route="/v1/chat/completions", value="60/second"),
         RateLimitType(route="/v1/completions", value="60/second"),
@@ -121,8 +128,8 @@ class RateLimit(Base):
 
 @define(slots=True)
 class ApiKeyItem(Base):
-    api_key: str
-    level: int = 0
+    api_key: Optional[str] = None
+    level: Optional[int] = None
 
 
 @define(slots=True)
@@ -133,17 +140,31 @@ class ApiKeyLevel(Base):
 
 @define(slots=True)
 class ApiKey(Base):
-    openai_key: List[ApiKeyItem] = [ApiKeyItem(api_key="")]
-    forward_key: List[ApiKeyItem] = [ApiKeyItem(api_key="")]
+    openai_key: List[ApiKeyItem] = [ApiKeyItem("", 0)]
+    forward_key: List[ApiKeyItem] = [ApiKeyItem("", 0)]
     level: List[ApiKeyLevel] = [
         ApiKeyLevel(),
-        ApiKeyLevel(level=1, models="gpt3.5-turbo"),
+        ApiKeyLevel(level=1, models="gpt-3.5-turbo"),
     ]
+
+    @staticmethod
+    def format(keys: List[ApiKeyItem]):
+        target_dict = {}
+        for i in keys:
+            try:
+                if i.api_key is None or i.level is None:
+                    continue
+                if not i.api_key.strip():
+                    continue
+                target_dict[i.api_key.strip()] = int(i.level)
+            except Exception:
+                continue
+        return target_dict
 
     def convert_to_env(self, set_env=False):
         env_dict = {}
-        env_dict['OPENAI_API_KEY'] = ','.join([i.api_key for i in self.openai_key])
-        env_dict['FORWARD_KEY'] = ','.join([i.api_key for i in self.forward_key])
+        env_dict['OPENAI_API_KEY'] = json.dumps(self.format(self.openai_key))
+        env_dict['FORWARD_KEY'] = json.dumps(self.format(self.forward_key))
         if set_env:
             for key, value in env_dict.items():
                 os.environ[key] = value
@@ -156,9 +177,9 @@ class Log(Base):
     # completion: bool = True
     # embedding: bool = False
 
-    CHAT_COMPLETION_ROUTE = '/v1/chat/completions'
-    COMPLETION_ROUTE = '/v1/completions'
-    EMBEDDING_ROUTE = '/v1/embeddings'
+    CHAT_COMPLETION_ROUTE: str = '/v1/chat/completions'
+    COMPLETION_ROUTE: str = '/v1/completions'
+    EMBEDDING_ROUTE: str = '/v1/embeddings'
 
     def convert_to_env(self):
         env_dict = {}
@@ -186,6 +207,8 @@ class Config(Base):
 
     timezone: str = 'Asia/Shanghai'
     timeout: int = 6
+    benchmark_mode: bool = False
+    proxy: str = ''
 
     def convert_to_env(self, set_env=False):
         env_dict = {}
@@ -197,6 +220,8 @@ class Config(Base):
 
         env_dict['TZ'] = self.timezone
         env_dict['TIMEOUT'] = str(self.timeout)
+        env_dict['BENCHMARK_MODE'] = str(self.benchmark_mode)
+        env_dict['PROXY'] = self.proxy
 
         if set_env:
             for key, value in env_dict.items():

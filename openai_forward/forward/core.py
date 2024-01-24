@@ -247,8 +247,11 @@ class OpenaiForward(GenericForward):
                 result_info["uid"] = uid
 
                 if LOG_CHAT:
+                    if logger_instance.webui:
+                        logger_instance.q.put({"uid": uid, "result": result_info})
                     logger_instance.log_result(result_info)
 
+                # todo: Deprecated soon
                 if PRINT_CHAT and logger_instance == self.chat_logger:
                     self.chat_logger.print_chat_info(result_info)
 

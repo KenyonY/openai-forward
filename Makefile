@@ -19,8 +19,7 @@ start:
     --env-file .env \
     -p 8000:8000 \
     -v $(shell pwd)/Log:/home/openai-forward/Log \
-	-v $(shell pwd)/CACHE_LMDB:/home/openai-forward/CACHE_LMDB \
-	-v $(shell pwd)/CACHE_LEVELDB:/home/openai-forward/CACHE_LEVELDB \
+	-v $(shell pwd)/FLAXKV_DB:/home/openai-forward/FLAXDV_DB \
     -v $(shell pwd)/openai_forward:/home/openai-forward/openai_forward \
     $(image) --port=8000 --workers=1
 	@make log
@@ -33,8 +32,7 @@ start-webui:
     -p 8000:8000 \
     -p 17860:17860 \
     -v $(shell pwd)/Log:/home/openai-forward/Log \
-	-v $(shell pwd)/CACHE_LMDB:/home/openai-forward/CACHE_LMDB \
-	-v $(shell pwd)/CACHE_LEVELDB:/home/openai-forward/CACHE_LEVELDB \
+	-v $(shell pwd)/FLAXKV_DB:/home/openai-forward/FLAXDV_DB \
     -v $(shell pwd)/openai_forward:/home/openai-forward/openai_forward \
     $(webui_image)
 	@make log
