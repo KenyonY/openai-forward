@@ -133,12 +133,15 @@ class GenericForward:
             self.validate_request_host(ip)
 
         _url_path = f"{request.scope.get('root_path')}{request.scope.get('path')}"
-        url_path = (
+        route_path = (
             _url_path[len(self.ROUTE_PREFIX) :]
             if self.ROUTE_PREFIX != '/'
             else _url_path
         )
-        url = f"{self.BASE_URL}{url_path}?{request.url.query}"
+        if request.url.query:
+            url = f"{self.BASE_URL}{route_path}?{request.url.query}"
+        else:
+            url = f"{self.BASE_URL}{route_path}"
 
         auth = request.headers.get("Authorization", "")
 
@@ -147,8 +150,8 @@ class GenericForward:
             headers_to_remove = [
                 "host",
                 "cookie",
-                "user-agent",
-                "connection",
+                # "user-agent",
+                # "connection",
                 # "cache-control", "upgrade-insecure-requests",
                 # "sec-fetch-site", "sec-fetch-mode", "sec-fetch-user", "sec-fetch-dest",
                 "accept-encoding",
@@ -171,7 +174,7 @@ class GenericForward:
             'headers': headers,
             "method": request.method,
             'url': url,
-            'url_path': url_path,
+            'route_path': route_path,
         }
 
     async def reverse_proxy(self, request: Request):
@@ -244,8 +247,11 @@ class OpenaiForward(GenericForward):
                 result_info["uid"] = uid
 
                 if LOG_CHAT:
+                    if logger_instance.webui:
+                        logger_instance.q.put({"uid": uid, "result": result_info})
                     logger_instance.log_result(result_info)
 
+                # todo: Deprecated soon
                 if PRINT_CHAT and logger_instance == self.chat_logger:
                     self.chat_logger.print_chat_info(result_info)
 
@@ -254,13 +260,13 @@ class OpenaiForward(GenericForward):
 
         return result_info
 
-    async def _handle_payload(self, request: Request, url_path: str):
+    async def _handle_payload(self, request: Request, route_path: str):
         """
         Asynchronously logs the payload of the API call.
 
         Args:
             request (Request): The original FastAPI request object.
-            url_path (str): The API route path.
+            route_path (str): The API route path.
 
         Returns:
             dict: A dictionary containing parsed messages, model, IP address, UID, and datetime.
@@ -277,13 +283,13 @@ class OpenaiForward(GenericForward):
             return False, payload_log_info, payload
 
         try:
-            # Determine which logger and method to use based on the url_path
+            # Determine which logger and method to use based on the route_path
             logger_instance = None
-            if url_path == CHAT_COMPLETION_ROUTE:
+            if route_path == CHAT_COMPLETION_ROUTE:
                 logger_instance = self.chat_logger
-            elif url_path == COMPLETION_ROUTE:
+            elif route_path == COMPLETION_ROUTE:
                 logger_instance = self.completion_logger
-            elif url_path == EMBEDDING_ROUTE:
+            elif route_path == EMBEDDING_ROUTE:
                 logger_instance = self.embedding_logger
 
             # If a logger method is determined, parse payload and log if necessary
@@ -409,7 +415,7 @@ class OpenaiForward(GenericForward):
             StreamingResponse: A FastAPI StreamingResponse containing the server's response.
         """
         client_config = self.prepare_client(request, return_origin_header=False)
-        route_path = client_config["url_path"]
+        route_path = client_config["route_path"]
 
         self.handle_authorization(client_config)
         valid_payload, payload_info, payload = await self._handle_payload(

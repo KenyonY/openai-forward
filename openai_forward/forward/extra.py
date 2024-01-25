@@ -1,4 +1,4 @@
-from .base import GenericForward
+from .core import GenericForward
 
 
 def create_generic_proxies():

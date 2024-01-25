@@ -1,6 +1,7 @@
-.PHONY: monitor start build push run down test twine log pull
+.PHONY: monitor start start-webui build push run down test twine log pull
 
 image := "beidongjiedeguang/openai-forward:latest"
+webui_image := "beidongjiedeguang/openai-forward:webui-latest"
 container := "openai-forward-container"
 compose_path := "docker-compose.yaml"
 
@@ -18,10 +19,22 @@ start:
     --env-file .env \
     -p 8000:8000 \
     -v $(shell pwd)/Log:/home/openai-forward/Log \
-	-v $(shell pwd)/CACHE_LMDB:/home/openai-forward/CACHE_LMDB \
-	-v $(shell pwd)/CACHE_LEVELDB:/home/openai-forward/CACHE_LEVELDB \
+	-v $(shell pwd)/FLAXKV_DB:/home/openai-forward/FLAXDV_DB \
     -v $(shell pwd)/openai_forward:/home/openai-forward/openai_forward \
     $(image) --port=8000 --workers=1
+	@make log
+
+
+start-webui:
+	@docker run -d \
+    --name $(container) \
+    --env-file .env \
+    -p 8000:8000 \
+    -p 8001:8001 \
+    -v $(shell pwd)/Log:/home/openai-forward/Log \
+	-v $(shell pwd)/FLAXKV_DB:/home/openai-forward/FLAXDV_DB \
+    -v $(shell pwd)/openai_forward:/home/openai-forward/openai_forward \
+    $(webui_image)
 	@make log
 
 exec:
@@ -54,6 +67,9 @@ twine:
 
 build:
 	docker build --tag $(image) .
+
+build-webui:
+	docker build --tag $(webui_image) . -f webui.Dockerfile
 
 build-push:
 	docker buildx build --push --platform linux/arm64/v8,linux/amd64 --tag $(image) .

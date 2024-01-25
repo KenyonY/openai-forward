@@ -9,8 +9,8 @@ body:
       options:
         - label: I believe the idea is awesome and would benefit the framework
           required: true
-        - label: I have searched in the issue tracker for similar requests, including closed ones
-          required: true
+        - label: I am willing to submit a PR to implement this idea.
+          required: false
 
   - type: textarea
     attributes:

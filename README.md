@@ -44,6 +44,7 @@
 等库支持，OpenAI-Forward 实现了出色的异步性能。
 
 ### News
+- 🚀🚀 从v0.7.0版本后支持通过WebUI进行配置管理
 - gpt-1106版本已适配
 - 缓存后端切换为高性能数据库后端：[🗲 FlaxKV](https://github.com/KenyonY/flaxkv)
 
@@ -97,13 +98,17 @@ OpenAI-Forward 提供以下核心功能：
 **安装**
 
 ```bash
-pip install openai-forward
+pip install openai-forward 
+# 或安装webui版本：
+pip install openai-forward[webui]
 ```
 
 **启动服务**
 
 ```bash
 aifd run
+# 或启动带webui的服务
+aifd run --webui
 ```
 
 如果读入了根路径的`.env`的配置, 将会看到以下启动信息
@@ -365,6 +370,8 @@ aifd convert
 
 </details>
 
+## 贡献
+欢迎通过提交拉取请求或在仓库中提出问题来为此项目做出贡献。
 
 ## 赞助者与支持者
 

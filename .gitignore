@@ -7,6 +7,7 @@ package.json
 .vscode/
 .DS_Store
 third-party/
+FLAXKV_DB
 run.sh
 ssl/
 chat.yaml

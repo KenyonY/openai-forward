@@ -1,3 +1,6 @@
+import os
+import pickle
+import threading
 import time
 from abc import ABC, abstractmethod
 from typing import Dict, List, Tuple
@@ -17,6 +20,34 @@ class LoggerBase(ABC):
         _prefix = route_prefix_to_str(route_prefix)
         kwargs = {f"{_prefix}{_suffix}": True}
         self.logger = logger.bind(**kwargs)
+
+        self.webui = False
+        if os.environ.get("OPENAI_FORWARD_WEBUI"):
+            self.webui = True
+
+            import zmq
+            from flaxkv.helper import SimpleQueue
+
+            context = zmq.Context()
+            socket = context.socket(zmq.DEALER)
+            socket.connect(f"tcp://localhost:15556")
+
+            self.q = SimpleQueue(maxsize=200)
+
+            def _worker():
+                while True:
+                    message: dict = self.q.get(block=True)
+                    if message.get("payload"):
+                        uid = b"0" + message["uid"].encode()
+                        msg = message["payload"]
+                    else:
+                        uid = b"1" + message["uid"].encode()
+                        msg = message["result"]
+                        msg = orjson.dumps(msg)
+
+                    socket.send_multipart([uid, msg])
+
+            threading.Thread(target=_worker, daemon=True).start()
 
     @staticmethod
     @abstractmethod
@@ -127,8 +158,7 @@ class ChatLogger(LoggerBase):
         """
         super().__init__(route_prefix, "_chat")
 
-    @staticmethod
-    def parse_payload(request: Request, raw_payload):
+    def parse_payload(self, request: Request, raw_payload):
         """
         Asynchronously parse the payload from a FastAPI request.
 
@@ -139,6 +169,10 @@ class ChatLogger(LoggerBase):
             dict: A dictionary containing parsed messages, model, IP address, UID, and datetime.
         """
         uid = get_unique_id()
+
+        if self.webui:
+            self.q.put({"uid": uid, "payload": raw_payload})
+
         payload = orjson.loads(raw_payload)
         caching = payload.pop("caching", None)
         if caching is None:
@@ -317,11 +351,9 @@ class ChatLogger(LoggerBase):
                 print(77 * "=", role='assistant')
 
 
-class EmbeddingLogger:
+class EmbeddingLogger(LoggerBase):
     def __init__(self, route_prefix: str):
-        _prefix = route_prefix_to_str(route_prefix)
-        kwargs = {_prefix + "_embedding": True}
-        self.logger = logger.bind(**kwargs)
+        super().__init__(route_prefix, "_embedding")
 
     @staticmethod
     def parse_payload(request: Request, raw_payload: bytes):

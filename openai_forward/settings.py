@@ -72,8 +72,9 @@ if CACHE_CHAT_COMPLETION:
 IP_WHITELIST = env2list("IP_WHITELIST", sep=ENV_VAR_SEP)
 IP_BLACKLIST = env2list("IP_BLACKLIST", sep=ENV_VAR_SEP)
 
-OPENAI_API_KEY = env2list("OPENAI_API_KEY", sep=ENV_VAR_SEP)
-FWD_KEY = env2list("FORWARD_KEY", sep=ENV_VAR_SEP)
+# TODO: API KEY permission system
+OPENAI_API_KEY = list(env2dict("OPENAI_API_KEY").keys())
+FWD_KEY = list(env2dict("FORWARD_KEY").keys())
 
 PROXY = os.environ.get("PROXY", "").strip() or None
 
