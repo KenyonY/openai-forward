@@ -3,12 +3,12 @@ services:
     image: beidongjiedeguang/openai-forward:latest
     container_name: openai-forward-container
     env_file:
-      .env.chatgpt
+      .env
     ports:
       - "8000:8000"
+      - "8001:8001"
     volumes:
-      - ./CACHE_LMDB:/home/openai-forward/CACHE_LMDB
-      - ./CACHE_LEVELDB:/home/openai-forward/CACHE_LEVELDB
+      - ./FLAXKV_DB:/home/openai-forward/FLAXKV_DB
       - ./Log:/home/openai-forward/Log
 #      - ./openai_forward:/home/openai-forward/openai_forward
     command:
