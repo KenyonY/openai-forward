@@ -30,7 +30,7 @@ start-webui:
     --name $(container) \
     --env-file .env \
     -p 8000:8000 \
-    -p 17860:17860 \
+    -p 8001:8001 \
     -v $(shell pwd)/Log:/home/openai-forward/Log \
 	-v $(shell pwd)/FLAXKV_DB:/home/openai-forward/FLAXDV_DB \
     -v $(shell pwd)/openai_forward:/home/openai-forward/openai_forward \
