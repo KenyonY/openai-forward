@@ -44,7 +44,7 @@
 等库支持，OpenAI-Forward 实现了出色的异步性能。
 
 ### News
-- 🚀🚀 支持通过WebUI进行配置管理
+- 🚀🚀 从v0.7.0版本后支持通过WebUI进行配置管理
 - gpt-1106版本已适配
 - 缓存后端切换为高性能数据库后端：[🗲 FlaxKV](https://github.com/KenyonY/flaxkv)
 
