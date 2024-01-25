@@ -354,8 +354,8 @@ You'll get `chat_openai.json`:
         "user": "hi"
       }
     ],
-    "functions": null,
-    "is_function_call": false,
+    "tools": null,
+    "is_tool_calls": false,
     "assistant": "Hello! How can I assist you today?"
   }
 ]
@@ -364,6 +364,8 @@ You'll get `chat_openai.json`:
 
 </details>
 
+## Contributions
+Feel free to make contributions to this module by submitting pull requests or raising issues in the repository.
 
 ## Backer and Sponsor
 
