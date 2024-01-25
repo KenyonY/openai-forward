@@ -21,21 +21,16 @@ st.set_page_config(
     },
 )
 
-if 'socket' not in st.session_state:
+
+@st.cache_resource
+def get_socket():
     context = zmq.Context()
-    socket = context.socket(zmq.REQ)  # REQ (REQUEST) socket for request-reply pattern
+    socket = context.socket(zmq.REQ)
     # socket.setsockopt(zmq.CONNECT_TIMEOUT, 20000) # 20s
-    socket.connect("tcp://localhost:15555")
-
     log_socket = context.socket(zmq.ROUTER)
+
+    socket.connect("tcp://localhost:15555")
     log_socket.bind("tcp://*:15556")
-
-    st.session_state['socket'] = socket
-    st.session_state['log_socket'] = log_socket
-
-    st.session_state['config'] = Config()
-
-    st.session_state['q'] = SimpleQueue(maxsize=200)
 
     def worker(log_socket: zmq.Socket, q: SimpleQueue):
         while True:
@@ -44,9 +39,20 @@ if 'socket' not in st.session_state:
             identify, uid, msg = message
             q.put((uid, msg))
 
-    log_socket = st.session_state['log_socket']
-    q = st.session_state['q']
+    q = SimpleQueue(maxsize=200)
     threading.Thread(target=worker, args=(log_socket, q)).start()
+    config = Config()
+    return socket, log_socket, q, config
+
+
+if 'socket' not in st.session_state:
+    socket, log_socket, q, config = get_socket()
+
+    st.session_state['q'] = q
+    st.session_state['socket'] = socket
+    st.session_state['log_socket'] = log_socket
+    st.session_state['config'] = config
+
 
 config = st.session_state['config']
 
@@ -63,7 +69,9 @@ with st.sidebar:
             env_dict = config.convert_to_env(set_env=False)
             socket = st.session_state['socket']
             socket.send(pickle.dumps(env_dict))
+            # message: bytes = socket.recv_multipart()
             message: bytes = socket.recv()
+            print("run message", message)
 
         st.success(message.decode())
 
@@ -318,7 +326,7 @@ elif selected_section == "Dashboard":
 
     with st.container():
 
-        log_socket = st.session_state['log_socket']
+        # log_socket = st.session_state['log_socket']
         q = st.session_state['q']
         while True:
             uid, msg = q.get()

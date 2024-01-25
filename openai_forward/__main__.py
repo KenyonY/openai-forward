@@ -49,9 +49,7 @@ class Cli:
             import zmq
 
             context = zmq.Context()
-            socket = context.socket(
-                zmq.REP
-            )  # REP (REPLY) socket for request-reply pattern
+            socket = context.socket(zmq.REP)
             socket.bind(f"tcp://*:{mq_port}")
 
             self._start_uvicorn(
@@ -64,7 +62,9 @@ class Cli:
             atexit.register(self._stop)
 
             while True:
+                # identity, message = socket.recv_multipart()
                 message = socket.recv()
+                print(f"15555 socket {message=}")
                 env_dict: dict = pickle.loads(message)
                 print(f"{env_dict=}")
 
@@ -77,7 +77,9 @@ class Cli:
                     ssl_keyfile=ssl_keyfile,
                     ssl_certfile=ssl_certfile,
                 )
+                # socket.send_multipart([identity, f"Restart success!".encode()])
                 socket.send(f"Restart success!".encode())
+                print("send restart success")
 
     def _start_uvicorn(self, port, workers, ssl_keyfile=None, ssl_certfile=None):
         from openai_forward.helper import wait_for_serve_start
