@@ -99,8 +99,8 @@ OpenAI-Forward 提供以下核心功能：
 
 ```bash
 pip install openai-forward 
-# 或安装webui版本：
-pip install openai-forward[webui]
+# 或安装webui版本（当前为非正式版）：
+pip install openai-forward[webui]==0.7.0a0 
 ```
 
 **启动服务**
