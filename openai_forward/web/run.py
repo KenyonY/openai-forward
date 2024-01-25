@@ -1,28 +1,30 @@
 import pickle
-import time
+import threading
 
 import orjson
 import pandas as pd
 import streamlit as st
 import zmq
+from flaxkv.helper import SimpleQueue
 
 from openai_forward.web.interface import *
 
 st.set_page_config(
-    page_title="Openai Forward Dashboard",
+    page_title="Openai Forward ",
     page_icon="🚀",
     # layout="wide",
     initial_sidebar_state="expanded",
     menu_items={
         'Get help': 'https://github.com/KenyonY/openai-forward',
         'Report a bug': "https://github.com/KenyonY/openai-forward/issues",
-        'About': "# This is a header. This is an *extremely* cool app!",
+        'About': "# Openai Forward",
     },
 )
 
 if 'socket' not in st.session_state:
     context = zmq.Context()
     socket = context.socket(zmq.REQ)  # REQ (REQUEST) socket for request-reply pattern
+    # socket.setsockopt(zmq.CONNECT_TIMEOUT, 20000) # 20s
     socket.connect("tcp://localhost:15555")
 
     log_socket = context.socket(zmq.ROUTER)
@@ -33,6 +35,18 @@ if 'socket' not in st.session_state:
 
     st.session_state['config'] = Config()
 
+    st.session_state['q'] = SimpleQueue(maxsize=200)
+
+    def worker(log_socket: zmq.Socket, q: SimpleQueue):
+        while True:
+            message = log_socket.recv_multipart()
+            print(f"{message=}")
+            identify, uid, msg = message
+            q.put((uid, msg))
+
+    log_socket = st.session_state['log_socket']
+    q = st.session_state['q']
+    threading.Thread(target=worker, args=(log_socket, q)).start()
 
 config = st.session_state['config']
 
@@ -274,7 +288,7 @@ def display_other_configuration():
             "Timeout (seconds)", value=config.timeout, min_value=1, step=1
         )
         proxy = st.text_input(
-            "Proxy", config.proxy, placeholder="i.e. http://127.0.0.1:7890"
+            "Proxy", config.proxy, placeholder="e.g. http://127.0.0.1:7890"
         )
         benchmark_mode = st.checkbox("Benchmark Mode", config.benchmark_mode)
 
@@ -303,32 +317,27 @@ elif selected_section == "Other":
 elif selected_section == "Dashboard":
 
     with st.container():
-        with st.chat_message("user"):
-            msg = "ajs;dfij apsodifujpoqwieur aospdifujpio pqoiweufp ioadspufioup iu fpqaiowdufpoiqweu f"
-            st.write("Hello 👋\n" + msg)
-            # st.line_chart(np.random.randn(30, 3))
-        with st.chat_message("assistant"):
-            # with st.spinner("Thinking..."):
-            log_socket = st.session_state['log_socket']
 
-            placeholder = st.empty()
-            full_response = ''
-            while True:
-                message = log_socket.recv_multipart()
-                print(f"{message=}")
-                identify, uid, msg = message
-                uid: bytes
-                item = orjson.loads(msg)
-                if uid.startswith(b"0"):
-                    st.write("message")
-                else:
-                    st.write("assistant")
-                st.write(item)
+        log_socket = st.session_state['log_socket']
+        q = st.session_state['q']
+        while True:
+            uid, msg = q.get()
+            uid: bytes
+            item = orjson.loads(msg)
+            if uid.startswith(b"0"):
+                with st.chat_message("user"):
+                    st.write(item['messages'])
+            else:
+                with st.chat_message("assistant"):
+                    st.write(item)
+                    # with st.spinner("Thinking..."):
+                    # placeholder = st.empty()
+                    # full_response = ''
+                    # placeholder.markdown(full_response)
+
+                # response = 'as;df;oasdofifuiewhqoifuhoaisudhfoquwyhegofuaghsodufghoa aosd8ufto8a7wetgfo8 ao87sduf79yot78auwe pewo8urfpiuhgdfosiudfhgvujshdoiufhasdi'
+                # for item in response:
+                #     full_response += item
+                #     time.sleep(0.02)
+                #     placeholder.markdown(full_response)
                 # placeholder.markdown(full_response)
-
-            # response = 'as;df;oasdofifuiewhqoifuhoaisudhfoquwyhegofuaghsodufghoa aosd8ufto8a7wetgfo8 ao87sduf79yot78auwe pewo8urfpiuhgdfosiudfhgvujshdoiufhasdi'
-            # for item in response:
-            #     full_response += item
-            #     time.sleep(0.02)
-            #     placeholder.markdown(full_response)
-            # placeholder.markdown(full_response)
