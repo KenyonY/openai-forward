@@ -7,7 +7,7 @@ import streamlit as st
 import zmq
 from flaxkv.helper import SimpleQueue
 
-from openai_forward.web.interface import *
+from openai_forward.webui.interface import *
 
 st.set_page_config(
     page_title="Openai Forward ",
@@ -60,18 +60,26 @@ config = st.session_state['config']
 with st.sidebar:
     selected_section = st.radio(
         "Select a configuration section",
-        ("Forward", "API Key", "Cache", "Rate Limit", "Other", "Dashboard"),
+        (
+            "Forward",
+            "API Key",
+            "Cache",
+            "Rate Limit",
+            "Other",
+            "Real-time Logs",
+            "Playground",
+        ),
     )
 
-    if st.button("Apply and Restart"):
+    if st.button(
+        "Apply and Restart", help="Saving configuration and reloading openai forward"
+    ):
 
         with st.spinner("Saving configuration and reloading openai forward..."):
             env_dict = config.convert_to_env(set_env=False)
             socket = st.session_state['socket']
             socket.send(pickle.dumps(env_dict))
-            # message: bytes = socket.recv_multipart()
             message: bytes = socket.recv()
-            print("run message", message)
 
         st.success(message.decode())
 
@@ -95,7 +103,6 @@ with st.sidebar:
 
 def display_forward_configuration():
     forward_config = config.forward
-    log = config.log
 
     with st.form("forward_configuration", border=False):
         st.subheader("OpenAI Forward")
@@ -110,14 +117,6 @@ def display_forward_configuration():
             df2, num_rows="dynamic", key="editor2", use_container_width=True
         )
 
-        st.subheader("Log Configuration")
-        log_chat = st.checkbox("Log Chat", log.chat)
-        log_CHAT_COMPLETION_ROUTE = st.text_input(
-            "Chat Completion Route", log.CHAT_COMPLETION_ROUTE
-        )
-        log_COMPLETION_ROUTE = st.text_input("Completion Route", log.COMPLETION_ROUTE)
-        log_EMBEDDING_ROUTE = st.text_input("Embedding Route", log.EMBEDDING_ROUTE)
-
         submitted = st.form_submit_button("Save", use_container_width=True)
         if submitted:
             forward_config.openai = [
@@ -131,15 +130,12 @@ def display_forward_configuration():
                 for i, row in edited_df2.iterrows()
                 if row["route_prefix"] is not None
             ]
-            log.chat = log_chat
-            log.CHAT_COMPLETION_ROUTE = log_CHAT_COMPLETION_ROUTE
-            log.COMPLETION_ROUTE = log_COMPLETION_ROUTE
-            log.EMBEDDING_ROUTE = log_EMBEDDING_ROUTE
 
             print(forward_config.convert_to_env())
 
 
 def display_api_key_configuration():
+    st.header("【WIP】")
     api_key = config.api_key
     with st.form("api_key_form", border=False):
 
@@ -193,9 +189,23 @@ def display_api_key_configuration():
 
 
 def display_cache_configuration():
+    log = config.log
     cache = config.cache
 
-    with st.form("cache_form", border=False):
+    with st.container():
+
+        st.subheader("Log Configuration")
+        log_chat = st.checkbox("Log Chat", log.chat)
+        log_CHAT_COMPLETION_ROUTE = st.text_input(
+            "Chat Completion Route", log.CHAT_COMPLETION_ROUTE, disabled=not log_chat
+        )
+        log_COMPLETION_ROUTE = st.text_input(
+            "Completion Route", log.COMPLETION_ROUTE, disabled=not log_chat
+        )
+        log_EMBEDDING_ROUTE = st.text_input(
+            "Embedding Route", log.EMBEDDING_ROUTE, disabled=not log_chat
+        )
+
         st.subheader("Cache Configuration")
 
         cache_backend = st.selectbox(
@@ -204,7 +214,9 @@ def display_cache_configuration():
             index=["MEMORY", "LMDB", "LevelDB"].index(cache.backend),
         )
         cache_root_path_or_url = st.text_input(
-            "Root Path or URL", cache.root_path_or_url
+            "Root Path or URL",
+            cache.root_path_or_url,
+            disabled=cache_backend == "MEMORY",
         )
         cache_default_request_caching_value = st.checkbox(
             "Default Request Caching Value", cache.default_request_caching_value
@@ -214,8 +226,13 @@ def display_cache_configuration():
         )
         cache_cache_embedding = st.checkbox("Cache Embedding", cache.cache_embedding)
 
-        submitted = st.form_submit_button("Save", use_container_width=True)
+        submitted = st.button("Save", use_container_width=True)
         if submitted:
+            log.chat = log_chat
+            log.CHAT_COMPLETION_ROUTE = log_CHAT_COMPLETION_ROUTE
+            log.COMPLETION_ROUTE = log_COMPLETION_ROUTE
+            log.EMBEDDING_ROUTE = log_EMBEDDING_ROUTE
+
             cache.backend = cache_backend
             cache.root_path_or_url = cache_root_path_or_url
             cache.default_request_caching_value = cache_default_request_caching_value
@@ -223,6 +240,7 @@ def display_cache_configuration():
             cache.cache_embedding = cache_cache_embedding
 
             print(cache.convert_to_env())
+            print(log.convert_to_env())
 
 
 def display_rate_limit_configuration():
@@ -286,6 +304,8 @@ def display_rate_limit_configuration():
                 for _, row in edited_req_rate_limit_df.iterrows()
             ]
 
+            print(rate_limit.convert_to_env())
+
 
 def display_other_configuration():
     with st.form("other_form", border=False):
@@ -306,6 +326,8 @@ def display_other_configuration():
             config.proxy = proxy
             config.benchmark_mode = benchmark_mode
 
+            print(config.convert_to_env())
+
 
 if selected_section == "Forward":
     display_forward_configuration()
@@ -322,11 +344,12 @@ elif selected_section == "Rate Limit":
 elif selected_section == "Other":
     display_other_configuration()
 
-elif selected_section == "Dashboard":
+elif selected_section == "Real-time Logs":
+    st.write("### Real-time Logs")
+    st.write("\n")
 
     with st.container():
 
-        # log_socket = st.session_state['log_socket']
         q = st.session_state['q']
         while True:
             uid, msg = q.get()
@@ -334,18 +357,19 @@ elif selected_section == "Dashboard":
             item = orjson.loads(msg)
             if uid.startswith(b"0"):
                 with st.chat_message("user"):
-                    st.write(item['messages'])
+                    messages = item.pop('messages')
+                    st.write(
+                        {msg_item['role']: msg_item['content'] for msg_item in messages}
+                    )
+                    st.write(item)
             else:
                 with st.chat_message("assistant"):
+                    ass_content = item.pop('assistant')
+                    st.write(ass_content)
                     st.write(item)
-                    # with st.spinner("Thinking..."):
-                    # placeholder = st.empty()
-                    # full_response = ''
-                    # placeholder.markdown(full_response)
 
-                # response = 'as;df;oasdofifuiewhqoifuhoaisudhfoquwyhegofuaghsodufghoa aosd8ufto8a7wetgfo8 ao87sduf79yot78auwe pewo8urfpiuhgdfosiudfhgvujshdoiufhasdi'
-                # for item in response:
-                #     full_response += item
-                #     time.sleep(0.02)
-                #     placeholder.markdown(full_response)
-                # placeholder.markdown(full_response)
+elif selected_section == "Playground":
+    st.write("## todo")
+
+elif selected_section == "Static":
+    st.write("## todo")

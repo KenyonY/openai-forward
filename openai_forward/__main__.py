@@ -4,14 +4,14 @@ import pickle
 import platform
 import signal
 import subprocess
-import time
 
 import fire
 import uvicorn
+from loguru import logger
 
 
 class Cli:
-    def run(self, port=8000, workers=1, webui=False, ui_port=17860, mq_port=15555):
+    def run(self, port=8000, workers=1, webui=False, ui_port=8001):
         """
         Runs the application using the Uvicorn server.
 
@@ -20,7 +20,6 @@ class Cli:
             workers (int): The number of worker processes to run. Default is 1.
             webui (bool): Whether to run the web UI. Default is False.
             ui_port (int): The port number on which to run streamlit. Default is 17860.
-            mq_port (int): The port number on which to run zmq. Default is 15555.
 
 
         Returns:
@@ -48,6 +47,7 @@ class Cli:
 
             import zmq
 
+            mq_port = 15555
             context = zmq.Context()
             socket = context.socket(zmq.REP)
             socket.bind(f"tcp://*:{mq_port}")
@@ -62,11 +62,9 @@ class Cli:
             atexit.register(self._stop)
 
             while True:
-                # identity, message = socket.recv_multipart()
                 message = socket.recv()
-                print(f"15555 socket {message=}")
                 env_dict: dict = pickle.loads(message)
-                print(f"{env_dict=}")
+                logger.debug(f"{env_dict=}")
 
                 for key, value in env_dict.items():
                     os.environ[key] = value
@@ -77,9 +75,8 @@ class Cli:
                     ssl_keyfile=ssl_keyfile,
                     ssl_certfile=ssl_certfile,
                 )
-                # socket.send_multipart([identity, f"Restart success!".encode()])
                 socket.send(f"Restart success!".encode())
-                print("send restart success")
+                logger.debug("send restart success")
 
     def _start_uvicorn(self, port, workers, ssl_keyfile=None, ssl_certfile=None):
         from openai_forward.helper import wait_for_serve_start
@@ -109,7 +106,7 @@ class Cli:
             [
                 'streamlit',
                 'run',
-                f'{relp("./web/run.py")}',
+                f'{relp("webui/run.py")}',
                 '--server.port',
                 str(port),
                 '--server.headless',
