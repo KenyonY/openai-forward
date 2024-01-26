@@ -48,9 +48,9 @@ def get_socket():
 if 'socket' not in st.session_state:
     socket, log_socket, q, config = get_socket()
 
-    st.session_state['q'] = q
     st.session_state['socket'] = socket
     st.session_state['log_socket'] = log_socket
+    st.session_state['q'] = q
     st.session_state['config'] = config
 
 
@@ -68,6 +68,7 @@ with st.sidebar:
             "Other",
             "Real-time Logs",
             "Playground",
+            "Statistics",
         ),
     )
 
@@ -105,30 +106,29 @@ def display_forward_configuration():
     forward_config = config.forward
 
     with st.form("forward_configuration", border=False):
-        st.subheader("OpenAI Forward")
-        df = pd.DataFrame([i.to_dict() for i in forward_config.openai])
+        st.subheader("AI Forward")
+        df = pd.DataFrame([i.to_dict() for i in forward_config.forward])
         edited_df = st.data_editor(
             df, num_rows="dynamic", key="editor1", use_container_width=True
         )
-
-        st.subheader("General Forward")
-        df2 = pd.DataFrame([i.to_dict() for i in forward_config.general])
-        edited_df2 = st.data_editor(
-            df2, num_rows="dynamic", key="editor2", use_container_width=True
+        st.write(
+            "> 在以上默认设置下:  \n"
+            "> - openai转发地址为： http://localhost:8000/openai  \n"
+            "> 即 https://api.openai.com 等于 http://localhost:8000/openai  \n"
+            "> - type=openai转发下的服务需要满足openai api 格式才能被正确解析  \n\n"
+            "> - gemini转发地址为： http://localhost:8000/gemini  \n"
+            "> - type=general转发下的服务可以是任何服务（暂不支持websocket)"
         )
+
+        st.write("#")
+        st.write("#")
 
         submitted = st.form_submit_button("Save", use_container_width=True)
         if submitted:
-            forward_config.openai = [
-                ForwardItem(row["base_url"], row["route_prefix"])
+            forward_config.forward = [
+                ForwardItem(row["base_url"], row["route"], row["type"])
                 for i, row in edited_df.iterrows()
-                if row["route_prefix"] is not None
-            ]
-
-            forward_config.general = [
-                ForwardItem(row["base_url"], row["route_prefix"])
-                for i, row in edited_df2.iterrows()
-                if row["route_prefix"] is not None
+                if row["route"] is not None and row["base_url"] is not None
             ]
 
             print(forward_config.convert_to_env())
@@ -136,6 +136,15 @@ def display_forward_configuration():
 
 def display_api_key_configuration():
     st.header("【WIP】")
+    st.write(
+        """\
+> **说明**  
+> - 不同level对应不同权限，可以定义不同权限可以访问哪些模型。 例如, level为0，全权限，可访问任何模型; level为1，只可访问gpt-3.5-turbo。
+> - 对于api key而言，level的意义是区分该api key自身是否有权限访问哪些模型。每个api key可对应多个level。
+> - 对于forward key而言，每个key对应一个level，level表示它可以访问该level对应的所有api key。
+
+"""
+    )
     api_key = config.api_key
     with st.form("api_key_form", border=False):
 
@@ -177,15 +186,6 @@ def display_api_key_configuration():
                 for i, row in edited_df3.iterrows()
             ]
             print(api_key.convert_to_env())
-        st.write(
-            """\
-> **说明**  
-> - 不同level对应不同权限，可以定义不同权限可以访问哪些模型。 例如, level为0，全权限，可访问任何模型; level为1，只可访问gpt-3.5-turbo。
-> - 对于api key而言，level的意义是区分该api key自身是否有权限访问哪些模型。每个api key可对应多个level。
-> - 对于forward key而言，每个key对应一个level，level表示它可以访问该level对应的所有api key。
-
-        """
-        )
 
 
 def display_cache_configuration():
@@ -371,5 +371,5 @@ elif selected_section == "Real-time Logs":
 elif selected_section == "Playground":
     st.write("## todo")
 
-elif selected_section == "Static":
+elif selected_section == "Statistics":
     st.write("## todo")
