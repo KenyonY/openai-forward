@@ -12,6 +12,34 @@ from fastapi import Request
 from rich import print
 
 
+def urljoin(base_url, *relative_urls):
+    """
+    This function concatenates a base URL with any number of relative URL segments, producing a complete URL string.
+    It's designed to mimic the behavior of `os.path.join()` but for URL paths.
+
+    Args:
+        base_url (str): This is the starting point of the URL to which the relative URLs will be appended.
+        *relative_urls (str): An arbitrary number of relative URL segments to be appended to the base_url.
+    Returns
+        (string): A string representing the fully concatenated URL.
+    """
+
+    if base_url.endswith('/'):
+        base_url = base_url[:-1]
+
+    urls = [base_url]
+    for relative_url in relative_urls:
+        if relative_url == "":
+            continue
+
+        if relative_url.startswith('/'):
+            relative_url = relative_url[1:]
+
+        urls.append(relative_url)
+
+    return "/".join(urls)
+
+
 def wait_for_serve_start(url, timeout=20):
     import httpx
 

@@ -23,19 +23,30 @@ CHAT_COMPLETION_ROUTE = (
 COMPLETION_ROUTE = os.environ.get("COMPLETION_ROUTE", "").strip() or "/v1/completions"
 EMBEDDING_ROUTE = os.environ.get("EMBEDDING_ROUTE", "").strip() or "/v1/embeddings"
 
+FORWARD_CONFIG = env2dict("FORWARD_CONFIG")
+print(f"{FORWARD_CONFIG=}")
+
 ENV_VAR_SEP = ","
-OPENAI_BASE_URL = env2list("OPENAI_BASE_URL", sep=ENV_VAR_SEP) or [
-    "https://api.openai.com"
-]
 
+OPENAI_BASE_URL = [
+    i['base_url'] for i in FORWARD_CONFIG if i and i.get('type') == 'openai'
+]
 OPENAI_ROUTE_PREFIX = [
-    format_route_prefix(i) for i in env2list("OPENAI_ROUTE_PREFIX", sep=ENV_VAR_SEP)
-] or ['/']
-
-EXTRA_BASE_URL = env2list("EXTRA_BASE_URL", sep=ENV_VAR_SEP)
-EXTRA_ROUTE_PREFIX = [
-    format_route_prefix(i) for i in env2list("EXTRA_ROUTE_PREFIX", sep=ENV_VAR_SEP)
+    i['route'] for i in FORWARD_CONFIG if i and i.get('type') == 'openai'
 ]
+print(f"{OPENAI_BASE_URL=}")
+print(f"{OPENAI_ROUTE_PREFIX=}")
+
+GENERAL_BASE_URL = [
+    i['base_url'] for i in FORWARD_CONFIG if i and i.get('type') == 'general'
+]
+GENERAL_ROUTE_PREFIX = [
+    i['route'] for i in FORWARD_CONFIG if i and i.get('type') == 'general'
+]
+
+print(f"{GENERAL_BASE_URL=}")
+print(f"{GENERAL_ROUTE_PREFIX=}")
+
 
 BENCHMARK_MODE = os.environ.get("BENCHMARK_MODE", "false").strip().lower() == "true"
 if BENCHMARK_MODE:
@@ -63,7 +74,8 @@ CACHE_ROOT_PATH_OR_URL = os.environ.get("CACHE_ROOT_PATH_OR_URL", ".").strip()
 DEFAULT_REQUEST_CACHING_VALUE = False
 if CACHE_CHAT_COMPLETION:
     additional_start_info["cache_backend"] = CACHE_BACKEND
-    additional_start_info["cache_root_path_or_url"] = CACHE_ROOT_PATH_OR_URL
+    if not CACHE_BACKEND.lower() == 'memory':
+        additional_start_info["cache_root_path_or_url"] = CACHE_ROOT_PATH_OR_URL
     DEFAULT_REQUEST_CACHING_VALUE = (
         os.environ.get("DEFAULT_REQUEST_CACHING_VALUE", "false").strip().lower()
         == "true"
@@ -133,7 +145,7 @@ def show_startup():
             style=next(styles),
             **additional_start_info,
         )
-    for base_url, route_prefix in zip(EXTRA_BASE_URL, EXTRA_ROUTE_PREFIX):
+    for base_url, route_prefix in zip(GENERAL_BASE_URL, GENERAL_ROUTE_PREFIX):
         extra_additional_start_info = {}
         print_startup_info(
             base_url,

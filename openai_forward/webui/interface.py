@@ -15,44 +15,23 @@ class Base:
 @define(slots=True)
 class ForwardItem(Base):
     base_url: str
-    route_prefix: str
+    route: str
+    type: Literal["openai", "general"] = field(default="general")
 
 
 @define(slots=True)
 class Forward(Base):
-    general: List[ForwardItem] = [ForwardItem(base_url="", route_prefix="")]
-    openai: List[ForwardItem] = [
-        ForwardItem(base_url="https://api.openai.com", route_prefix="/")
+    forward: List[ForwardItem] = [
+        ForwardItem(base_url="https://api.openai.com", route="/openai", type="openai"),
+        ForwardItem(
+            base_url="https://generativelanguage.googleapis.com",
+            route="/gemini",
+            type="general",
+        ),
     ]
 
-    @staticmethod
-    def format(li):
-        base_url_str = ""
-        route_prefix_str = ""
-        for i in li:
-            if not (i.base_url and i.base_url):
-                continue
-            try:
-                i.base_url = i.base_url.strip()
-                i.route_prefix = i.route_prefix.strip()
-            except Exception:
-                continue
-            if i.base_url and i.route_prefix:
-                base_url_str += f"{i.base_url},"
-                route_prefix_str += f"{i.route_prefix},"
-        base_url_str = base_url_str[:-1]
-        route_prefix_str = route_prefix_str[:-1]
-        return base_url_str, route_prefix_str
-
     def convert_to_env(self, set_env=False):
-        env_dict = {}
-
-        env_dict['OPENAI_BASE_URL'], env_dict['OPENAI_ROUTE_PREFIX'] = self.format(
-            self.openai
-        )
-        env_dict['GENERAL_BASE_URL'], env_dict['GENERAL_ROUTE_PREFIX'] = self.format(
-            self.general
-        )
+        env_dict = {'FORWARD_CONFIG': json.dumps([i.to_dict() for i in self.forward])}
 
         if set_env:
             for key, value in env_dict.items():
