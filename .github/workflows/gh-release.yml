@@ -1,14 +1,7 @@
 on:
   push:
-#     Sequence of patterns matched against refs/tags
     tags:
-      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
-
-#on:
-#  push:
-#    branches-ignore:
-#      - '**'  # temporally disable this action
-
+      - 'v*' # Push events to matching v*, i.e. v1.0, v1.0.0-alpha, v1.0.0-beta, etc.
 
 name: Create Release
 
@@ -24,6 +17,15 @@ jobs:
         id: extract_tag
         run: echo "TAG_NAME=$(echo ${GITHUB_REF#refs/tags/})" >> $GITHUB_ENV
 
+      - name: Set prerelease flag
+        id: set_prerelease
+        run: |
+          if [[ $TAG_NAME == *"-alpha"* || $TAG_NAME == *"-beta"* || $TAG_NAME == *"-rc"* ]]; then
+            echo "PRERELEASE=true" >> $GITHUB_ENV
+          else
+            echo "PRERELEASE=false" >> $GITHUB_ENV
+          fi
+
       - name: Create Release and Generate Notes
         id: create_release
         uses: softprops/action-gh-release@v1
@@ -31,5 +33,5 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           name: 💫 Release ${{ env.TAG_NAME }}
           draft: false
-          prerelease: false
+          prerelease: ${{ env.PRERELEASE }}
           generate_release_notes: true
