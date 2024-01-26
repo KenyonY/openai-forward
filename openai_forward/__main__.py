@@ -21,7 +21,6 @@ class Cli:
             webui (bool): Whether to run the web UI. Default is False.
             ui_port (int): The port number on which to run streamlit. Default is 17860.
 
-
         Returns:
             None
         """
@@ -127,10 +126,16 @@ class Cli:
     def _stop(self, uvicorn=True, streamlit=True):
         if uvicorn and self.uvicorn_proc.poll() is None:
             self.uvicorn_proc.send_signal(signal.SIGINT)
-            self.uvicorn_proc.wait()
+            try:
+                self.uvicorn_proc.wait(timeout=15)
+            except subprocess.TimeoutExpired:
+                self.uvicorn_proc.kill()
         if streamlit and self.streamlit_proc.poll() is None:
             self.streamlit_proc.send_signal(signal.SIGINT)
-            self.streamlit_proc.wait()
+            try:
+                self.streamlit_proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self.streamlit_proc.kill()
 
     @staticmethod
     def convert(log_folder: str = None, target_path: str = None):
