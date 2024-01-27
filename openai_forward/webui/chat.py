@@ -6,7 +6,7 @@ import streamlit as st
 
 def render_chat_log_message(msg: Dict):
     msg = msg.copy()
-    if msg.get("user_role", None):
+    if msg.get("user_role"):
         with st.chat_message(name="human"):
             messages = msg.pop('messages')
             st.write({msg_item['role']: msg_item['content'] for msg_item in messages})

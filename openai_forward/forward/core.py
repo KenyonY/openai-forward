@@ -252,14 +252,14 @@ class OpenaiForward(GenericForward):
         """
         Get which logger to use based on the route_path
         """
-        logger_instance = None
-        if route_path == CHAT_COMPLETION_ROUTE:
-            logger_instance = self.chat_logger
-        elif route_path == COMPLETION_ROUTE:
-            logger_instance = self.completion_logger
-        elif route_path == EMBEDDING_ROUTE:
-            logger_instance = self.embedding_logger
-        return logger_instance
+        if LOG_CHAT:
+            if route_path == CHAT_COMPLETION_ROUTE:
+                return self.chat_logger
+            elif route_path == COMPLETION_ROUTE:
+                return self.completion_logger
+            elif route_path == EMBEDDING_ROUTE:
+                return self.embedding_logger
+        return None
 
     async def _handle_payload(self, request: Request, route_path: str):
         """
@@ -418,8 +418,13 @@ class OpenaiForward(GenericForward):
         uid = payload_info["uid"]
 
         cached_response, cache_key = get_cached_response(
-            payload_info, valid_payload, route_path, request
+            payload_info,
+            valid_payload,
+            route_path,
+            request,
+            logger_instance=self.get_logger(route_path),
         )
+
         if cached_response:
             return cached_response
 
