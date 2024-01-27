@@ -36,7 +36,7 @@ def get_global_vars():
     def worker(log_socket: zmq.Socket, q: SimpleQueue):
         while True:
             message = log_socket.recv_multipart()
-            print(f"{message=}")
+            # print(f"{message=}")
             identify, uid, msg = message
             q.put((uid, msg))
 
@@ -114,8 +114,7 @@ def display_forward_configuration():
         )
         st.write(
             "> 在以上默认设置下:  \n"
-            "> - openai转发地址为： http://localhost:8000/openai  \n"
-            "> 即 https://api.openai.com 等于 http://localhost:8000/openai  \n"
+            "> - openai转发地址为： http://localhost:8000/  \n"
             "> - type=openai转发下的服务需要满足openai api 格式才能被正确解析  \n\n"
             "> - gemini转发地址为： http://localhost:8000/gemini  \n"
             "> - type=general转发下的服务可以是任何服务（暂不支持websocket)"
