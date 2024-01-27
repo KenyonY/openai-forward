@@ -143,7 +143,7 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 
 `aifd run`的默认选项便是代理`https://api.openai.com`
 
-下面以搭建好的服务地址`https://api/openai-forward.com` 为例
+下面以搭建好的服务地址`https://api.openai-forward.com` 为例
 
 **Python**
 
