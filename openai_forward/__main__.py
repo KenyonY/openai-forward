@@ -75,7 +75,6 @@ class Cli:
                     ssl_certfile=ssl_certfile,
                 )
                 socket.send(f"Restart success!".encode())
-                logger.debug("send restart success")
 
     def _start_uvicorn(self, port, workers, ssl_keyfile=None, ssl_certfile=None):
         from openai_forward.helper import wait_for_serve_start

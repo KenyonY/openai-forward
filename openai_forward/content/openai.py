@@ -59,6 +59,7 @@ class LoggerBase(ABC):
     def parse_bytearray(buffer: bytearray) -> Dict:
         pass
 
+    @abstractmethod
     def log_result(self, *args, **kwargs):
         pass
 
@@ -404,6 +405,7 @@ class EmbeddingLogger(LoggerBase):
 
 
 class WhisperLogger:
+    # todo
     def __init__(self, route_prefix: str):
         """
         Initialize the Audio logger with a route prefix.

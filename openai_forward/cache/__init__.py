@@ -9,11 +9,13 @@ from .database import db_dict
 from .embedding.response import get_cached_embedding_response
 
 
-def get_cached_response(payload_info, valid_payload, route_path, request):
+def get_cached_response(payload_info, valid_payload, route_path, request, **kwargs):
     if route_path == EMBEDDING_ROUTE:
-        return get_cached_embedding_response(payload_info, valid_payload, request)
+        return get_cached_embedding_response(
+            payload_info, valid_payload, request, **kwargs
+        )
     elif route_path == CHAT_COMPLETION_ROUTE:
-        return get_cached_chat_response(payload_info, valid_payload, request)
+        return get_cached_chat_response(payload_info, valid_payload, request, **kwargs)
     else:
         return None, None
 

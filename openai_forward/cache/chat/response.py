@@ -27,19 +27,34 @@ def construct_cache_key(payload_info: dict):
     return encode(elements)
 
 
-def get_response_from_key(key, payload_info, request):
+def get_response_from_key(key, payload_info, request, **kwargs):
     value = db_dict[key]
     cache_values = value['data']
     idx = random.randint(0, len(cache_values) - 1) if len(cache_values) > 1 else 0
-    logger.info(f'chat uid: {payload_info["uid"]} >>>{idx}>>>> [cache hit]')
+    uid = payload_info["uid"]
+    logger.info(f'chat uid: {uid} >>>{idx}>>>> [cache hit]')
     # todo: handle multiple choices
     cache_value = cache_values[idx]
     if isinstance(cache_value, list):
         text = None
         tool_calls = cache_value
+        is_tool_calls = True
     else:
         text = cache_value
         tool_calls = None
+        is_tool_calls = False
+
+    logger_instance = kwargs.get("logger_instance")
+    if logger_instance:
+        result_info = {
+            "assistant": cache_value,
+            "is_tool_calls": is_tool_calls,
+            'uid': uid,
+        }
+        if logger_instance.webui:
+            logger_instance.q.put({"uid": uid, "result": result_info})
+
+        logger_instance.log_result(result_info)
 
     if payload_info["stream"]:
         return StreamingResponse(
@@ -65,7 +80,7 @@ def get_response_from_key(key, payload_info, request):
         )
 
 
-def get_cached_chat_response(payload_info, valid_payload, request):
+def get_cached_chat_response(payload_info, valid_payload, request, **kwargs):
     """
     Attempts to retrieve a cached response based on the current request's payload information.
 
@@ -87,6 +102,9 @@ def get_cached_chat_response(payload_info, valid_payload, request):
     cache_key = construct_cache_key(payload_info)
 
     if payload_info['caching'] and cache_key in db_dict:
-        return get_response_from_key(cache_key, payload_info, request), cache_key
+        return (
+            get_response_from_key(cache_key, payload_info, request, **kwargs),
+            cache_key,
+        )
 
     return None, cache_key

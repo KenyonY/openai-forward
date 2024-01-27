@@ -17,7 +17,7 @@ def construct_cache_key(payload_info):
     return encode(elements)
 
 
-def get_cached_embedding_response(payload_info, valid_payload, request):
+def get_cached_embedding_response(payload_info, valid_payload, request, **kwargs):
     """
     Attempts to retrieve a cached response based on the current request's payload information.
 

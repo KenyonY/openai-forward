@@ -22,7 +22,7 @@ class ForwardItem(Base):
 @define(slots=True)
 class Forward(Base):
     forward: List[ForwardItem] = [
-        ForwardItem(base_url="https://api.openai.com", route="/openai", type="openai"),
+        ForwardItem(base_url="https://api.openai.com", route="/", type="openai"),
         ForwardItem(
             base_url="https://generativelanguage.googleapis.com",
             route="/gemini",
@@ -41,7 +41,7 @@ class Forward(Base):
 
 @define(slots=True)
 class CacheConfig(Base):
-    backend: str = 'MEMORY'
+    backend: str = 'LevelDB'
     root_path_or_url: str = './FLAXKV_DB'
     default_request_caching_value: bool = False
     cache_chat_completion: bool = True

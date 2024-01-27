@@ -4,8 +4,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from . import __version__, custom_slowapi
-from .forward.extra import generic_objs
-from .forward.openai import openai_objs
+from .forward import ForwardManager
 from .helper import normalize_route as normalize_route_path
 from .settings import (
     BENCHMARK_MODE,
@@ -15,6 +14,8 @@ from .settings import (
     get_limiter_key,
     show_startup,
 )
+
+forward_manager = ForwardManager()
 
 limiter = Limiter(
     key_func=get_limiter_key,
@@ -65,14 +66,12 @@ if BENCHMARK_MODE:
 
 @app.on_event("startup")
 async def startup():
-    [await obj.build_client() for obj in openai_objs]
-    [await obj.build_client() for obj in generic_objs]
+    await forward_manager.start_up()
 
 
 @app.on_event("shutdown")
 async def shutdown():
-    [await obj.client.close() for obj in openai_objs]
-    [await obj.client.close() for obj in generic_objs]
+    await forward_manager.shutdown()
 
 
 add_route = lambda obj: app.add_route(
@@ -80,7 +79,9 @@ add_route = lambda obj: app.add_route(
     route=limiter.limit(dynamic_request_rate_limit)(obj.reverse_proxy),
     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH", "TRACE"],
 )
-[add_route(obj) for obj in openai_objs]
-[add_route(obj) for obj in generic_objs]
+[add_route(obj) for obj in forward_manager.openai_objs]
+[add_route(obj) for obj in forward_manager.generic_objs]
+[add_route(obj) for obj in forward_manager.root_objs]
+
 
 show_startup()

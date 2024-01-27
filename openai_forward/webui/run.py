@@ -7,6 +7,7 @@ import streamlit as st
 import zmq
 from flaxkv.helper import SimpleQueue
 
+from openai_forward.webui.chat import ChatData, render_chat_log_message
 from openai_forward.webui.interface import *
 
 st.set_page_config(
@@ -23,7 +24,7 @@ st.set_page_config(
 
 
 @st.cache_resource
-def get_socket():
+def get_global_vars():
     context = zmq.Context()
     socket = context.socket(zmq.REQ)
     # socket.setsockopt(zmq.CONNECT_TIMEOUT, 20000) # 20s
@@ -35,27 +36,28 @@ def get_socket():
     def worker(log_socket: zmq.Socket, q: SimpleQueue):
         while True:
             message = log_socket.recv_multipart()
-            print(f"{message=}")
+            # print(f"{message=}")
             identify, uid, msg = message
             q.put((uid, msg))
 
     q = SimpleQueue(maxsize=200)
     threading.Thread(target=worker, args=(log_socket, q)).start()
     config = Config()
-    return socket, log_socket, q, config
+    chat_data = ChatData(200, render_chat_log_message)
+    return {
+        "socket": socket,
+        "log_socket": log_socket,
+        "q": q,
+        "config": config,
+        "chat_data": chat_data,
+    }
 
 
 if 'socket' not in st.session_state:
-    socket, log_socket, q, config = get_socket()
-
-    st.session_state['socket'] = socket
-    st.session_state['log_socket'] = log_socket
-    st.session_state['q'] = q
-    st.session_state['config'] = config
+    st.session_state.update(get_global_vars())
 
 
 config = st.session_state['config']
-
 
 with st.sidebar:
     selected_section = st.radio(
@@ -75,7 +77,6 @@ with st.sidebar:
     if st.button(
         "Apply and Restart", help="Saving configuration and reloading openai forward"
     ):
-
         with st.spinner("Saving configuration and reloading openai forward..."):
             env_dict = config.convert_to_env(set_env=False)
             socket = st.session_state['socket']
@@ -113,8 +114,7 @@ def display_forward_configuration():
         )
         st.write(
             "> 在以上默认设置下:  \n"
-            "> - openai转发地址为： http://localhost:8000/openai  \n"
-            "> 即 https://api.openai.com 等于 http://localhost:8000/openai  \n"
+            "> - openai转发地址为： http://localhost:8000/  \n"
             "> - type=openai转发下的服务需要满足openai api 格式才能被正确解析  \n\n"
             "> - gemini转发地址为： http://localhost:8000/gemini  \n"
             "> - type=general转发下的服务可以是任何服务（暂不支持websocket)"
@@ -147,7 +147,6 @@ def display_api_key_configuration():
     )
     api_key = config.api_key
     with st.form("api_key_form", border=False):
-
         st.subheader("OpenAI API Key")
         df = pd.DataFrame([i.to_dict() for i in api_key.openai_key])
         edited_df = st.data_editor(
@@ -193,7 +192,6 @@ def display_cache_configuration():
     cache = config.cache
 
     with st.container():
-
         st.subheader("Log Configuration")
         log_chat = st.checkbox("Log Chat", log.chat)
         log_CHAT_COMPLETION_ROUTE = st.text_input(
@@ -351,22 +349,19 @@ elif selected_section == "Real-time Logs":
     with st.container():
 
         q = st.session_state['q']
+        chat_data: ChatData = st.session_state['chat_data']
+        chat_data.render_all_messages()
         while True:
             uid, msg = q.get()
             uid: bytes
+            print(f"{uid=}")
             item = orjson.loads(msg)
             if uid.startswith(b"0"):
-                with st.chat_message("user"):
-                    messages = item.pop('messages')
-                    st.write(
-                        {msg_item['role']: msg_item['content'] for msg_item in messages}
-                    )
-                    st.write(item)
+                item['user_role'] = True
             else:
-                with st.chat_message("assistant"):
-                    ass_content = item.pop('assistant')
-                    st.write(ass_content)
-                    st.write(item)
+                item['assistant_role'] = True
+
+            chat_data.add_message(item)
 
 elif selected_section == "Playground":
     st.write("## todo")

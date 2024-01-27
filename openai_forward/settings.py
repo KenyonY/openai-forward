@@ -24,7 +24,6 @@ COMPLETION_ROUTE = os.environ.get("COMPLETION_ROUTE", "").strip() or "/v1/comple
 EMBEDDING_ROUTE = os.environ.get("EMBEDDING_ROUTE", "").strip() or "/v1/embeddings"
 
 FORWARD_CONFIG = env2dict("FORWARD_CONFIG")
-print(f"{FORWARD_CONFIG=}")
 
 ENV_VAR_SEP = ","
 
@@ -32,21 +31,23 @@ OPENAI_BASE_URL = [
     i['base_url'] for i in FORWARD_CONFIG if i and i.get('type') == 'openai'
 ]
 OPENAI_ROUTE_PREFIX = [
-    i['route'] for i in FORWARD_CONFIG if i and i.get('type') == 'openai'
+    format_route_prefix(i['route'])
+    for i in FORWARD_CONFIG
+    if i and i.get('type') == 'openai'
 ]
-print(f"{OPENAI_BASE_URL=}")
-print(f"{OPENAI_ROUTE_PREFIX=}")
 
 GENERAL_BASE_URL = [
     i['base_url'] for i in FORWARD_CONFIG if i and i.get('type') == 'general'
 ]
 GENERAL_ROUTE_PREFIX = [
-    i['route'] for i in FORWARD_CONFIG if i and i.get('type') == 'general'
+    format_route_prefix(i['route'])
+    for i in FORWARD_CONFIG
+    if i and i.get('type') == 'general'
 ]
 
-print(f"{GENERAL_BASE_URL=}")
-print(f"{GENERAL_ROUTE_PREFIX=}")
-
+for openai_route, general_route in zip(OPENAI_ROUTE_PREFIX, GENERAL_ROUTE_PREFIX):
+    assert openai_route not in GENERAL_ROUTE_PREFIX
+    assert general_route not in OPENAI_ROUTE_PREFIX
 
 BENCHMARK_MODE = os.environ.get("BENCHMARK_MODE", "false").strip().lower() == "true"
 if BENCHMARK_MODE:

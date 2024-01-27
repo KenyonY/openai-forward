@@ -229,19 +229,7 @@ class OpenaiForward(GenericForward):
             return result_info
 
         try:
-            # Determine which logger and method to use based on the route_path
-            logger_instance = None
-            if route_path == CHAT_COMPLETION_ROUTE:
-                logger_instance = self.chat_logger
-            elif route_path == COMPLETION_ROUTE:
-                logger_instance = self.completion_logger
-            elif route_path == EMBEDDING_ROUTE:
-                logger_instance = self.embedding_logger
-            elif route_path.startswith("/v1/audio/"):
-                self.whisper_logger.log_buffer(buffer)
-                return result_info
-
-            # If a logger method is determined, parse bytearray and log if necessary
+            logger_instance = self.get_logger(route_path)
             if logger_instance:
                 result_info = logger_instance.parse_bytearray(buffer)
                 result_info["uid"] = uid
@@ -260,6 +248,19 @@ class OpenaiForward(GenericForward):
 
         return result_info
 
+    def get_logger(self, route_path: str):
+        """
+        Get which logger to use based on the route_path
+        """
+        if LOG_CHAT:
+            if route_path == CHAT_COMPLETION_ROUTE:
+                return self.chat_logger
+            elif route_path == COMPLETION_ROUTE:
+                return self.completion_logger
+            elif route_path == EMBEDDING_ROUTE:
+                return self.embedding_logger
+        return None
+
     async def _handle_payload(self, request: Request, route_path: str):
         """
         Asynchronously logs the payload of the API call.
@@ -269,7 +270,7 @@ class OpenaiForward(GenericForward):
             route_path (str): The API route path.
 
         Returns:
-            dict: A dictionary containing parsed messages, model, IP address, UID, and datetime.
+            valid, payload_info, payload
 
         Raises:
             Suppress all errors.
@@ -283,15 +284,8 @@ class OpenaiForward(GenericForward):
             return False, payload_log_info, payload
 
         try:
-            # Determine which logger and method to use based on the route_path
-            logger_instance = None
-            if route_path == CHAT_COMPLETION_ROUTE:
-                logger_instance = self.chat_logger
-            elif route_path == COMPLETION_ROUTE:
-                logger_instance = self.completion_logger
-            elif route_path == EMBEDDING_ROUTE:
-                logger_instance = self.embedding_logger
 
+            logger_instance = self.get_logger(route_path)
             # If a logger method is determined, parse payload and log if necessary
             if logger_instance:
                 payload_log_info, payload = logger_instance.parse_payload(
@@ -424,8 +418,13 @@ class OpenaiForward(GenericForward):
         uid = payload_info["uid"]
 
         cached_response, cache_key = get_cached_response(
-            payload_info, valid_payload, route_path, request
+            payload_info,
+            valid_payload,
+            route_path,
+            request,
+            logger_instance=self.get_logger(route_path),
         )
+
         if cached_response:
             return cached_response
 
