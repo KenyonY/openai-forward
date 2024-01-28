@@ -82,6 +82,23 @@ path = "openai_forward/__init__.py"
 [tool.isort]
 profile = "black"
 
+[tool.black]
+line-length = 88
+exclude = '''
+/(
+    \.git
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | _build
+    | buck-out
+    | build
+    | dist
+)/
+'''
+
+
 [tool.hatch.build]
 include = [
     "openai_forward/**/*.py",

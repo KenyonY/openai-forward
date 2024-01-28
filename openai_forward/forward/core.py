@@ -13,7 +13,12 @@ from fastapi import HTTPException, Request, status
 from loguru import logger
 from starlette.responses import BackgroundTask, StreamingResponse
 
-from ..cache import cache_response, get_cached_response
+from ..cache import (
+    cache_generic_response,
+    cache_response,
+    get_cached_generic_response,
+    get_cached_response,
+)
 from ..content.openai import (
     ChatLogger,
     CompletionLogger,
@@ -69,10 +74,25 @@ class GenericForward:
     @staticmethod
     @async_token_rate_limit(token_interval_conf)
     async def aiter_bytes(
-        r: aiohttp.ClientResponse, request: Request
+        r: aiohttp.ClientResponse,
+        request: Request,
+        route_path: str,
+        cache_key: str | None = None,
     ) -> AsyncGenerator[bytes, Any]:
+        chunk_list = []
+        cache = True if route_path in CACHE_ROUTE_SET else False
+
         async for chunk, _ in r.content.iter_chunks():  # yield chunk one by one.
+            if cache:
+                chunk_list.append(chunk)
             yield chunk
+
+        if cache and cache_key:
+            cache_generic_response(cache_key, chunk_list, route_path)
+
+        # Only log non-stream response:
+        if len(chunk_list) == 1 and LOG_GENERAL:
+            logger.debug(f"result: {chunk_list[0]}")
 
     @async_retry(
         max_retries=3,
@@ -179,12 +199,25 @@ class GenericForward:
 
     async def reverse_proxy(self, request: Request):
         assert self.client
+        data = await request.body()
+
+        if LOG_GENERAL:
+            logger.debug(f"payload: {data}")
         client_config = self.prepare_client(request, return_origin_header=True)
 
-        r = await self.send(client_config, data=await request.body())
+        route_path = client_config["route_path"]
+
+        cached_response, cache_key = get_cached_generic_response(
+            data, request, route_path
+        )
+
+        if cached_response:
+            return cached_response
+
+        r = await self.send(client_config, data=data)
 
         return StreamingResponse(
-            self.aiter_bytes(r, request),
+            self.aiter_bytes(r, request, cache_key),
             status_code=r.status,
             media_type=r.headers.get("content-type"),
             background=BackgroundTask(r.release),
@@ -201,7 +234,7 @@ class OpenaiForward(GenericForward):
 
     def __init__(self, base_url: str, route_prefix: str, proxy=None):
         super().__init__(base_url, route_prefix, proxy)
-        if LOG_CHAT or PRINT_CHAT:
+        if LOG_OPENAI or PRINT_CHAT:
             self.chat_logger = ChatLogger(self.ROUTE_PREFIX)
             self.completion_logger = CompletionLogger(self.ROUTE_PREFIX)
             self.whisper_logger = WhisperLogger(self.ROUTE_PREFIX)
@@ -225,7 +258,7 @@ class OpenaiForward(GenericForward):
         result_info = {}
 
         # If not configured to log or print chat, or the method is not POST, return early
-        if not (LOG_CHAT or PRINT_CHAT) or request_method != "POST":
+        if not (LOG_OPENAI or PRINT_CHAT) or request_method != "POST":
             return result_info
 
         try:
@@ -234,7 +267,7 @@ class OpenaiForward(GenericForward):
                 result_info = logger_instance.parse_bytearray(buffer)
                 result_info["uid"] = uid
 
-                if LOG_CHAT:
+                if LOG_OPENAI:
                     if logger_instance.webui:
                         logger_instance.q.put({"uid": uid, "result": result_info})
                     logger_instance.log_result(result_info)
@@ -252,7 +285,7 @@ class OpenaiForward(GenericForward):
         """
         Get which logger to use based on the route_path
         """
-        if LOG_CHAT:
+        if LOG_OPENAI:
             if route_path == CHAT_COMPLETION_ROUTE:
                 return self.chat_logger
             elif route_path == COMPLETION_ROUTE:
@@ -280,7 +313,7 @@ class OpenaiForward(GenericForward):
 
         payload = await request.body()
 
-        if not (LOG_CHAT or PRINT_CHAT) or request.method != "POST":
+        if not (LOG_OPENAI or PRINT_CHAT) or request.method != "POST":
             return False, payload_log_info, payload
 
         try:
@@ -292,7 +325,7 @@ class OpenaiForward(GenericForward):
                     request, payload
                 )
 
-                if payload_log_info and LOG_CHAT:
+                if payload_log_info and LOG_OPENAI:
                     logger_instance.logger.debug(payload_log_info)
 
                 if (
@@ -360,6 +393,7 @@ class OpenaiForward(GenericForward):
         queue = Queue()
         # todo:
         task = asyncio.create_task(self.read_chunks(r, queue))
+        chunk_list = []
         try:
             while True:
                 chunk = await queue.get()
@@ -367,6 +401,8 @@ class OpenaiForward(GenericForward):
                     queue.task_done()
                     queue_is_complete = True
                     break
+                if CACHE_OPENAI:
+                    chunk_list.append(chunk)
                 yield chunk
         except Exception:
             logger.warning(
@@ -382,7 +418,8 @@ class OpenaiForward(GenericForward):
                 target_info = self._handle_result(
                     chunk, uid, route_path, request.method
                 )
-                cache_response(cache_key, target_info, route_path)
+                if CACHE_OPENAI:
+                    cache_response(cache_key, target_info, route_path, chunk_list)
 
             elif chunk is not None:
                 logger.warning(
@@ -418,6 +455,7 @@ class OpenaiForward(GenericForward):
         uid = payload_info["uid"]
 
         cached_response, cache_key = get_cached_response(
+            payload,
             payload_info,
             valid_payload,
             route_path,
