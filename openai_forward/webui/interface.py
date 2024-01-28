@@ -162,22 +162,11 @@ class Log(Base):
     LOG_GENERAL: bool = True
     LOG_OPENAI: bool = True
 
-    # chat: bool = True
-    # completion: bool = True
-    # embedding: bool = False
-
-    # CHAT_COMPLETION_ROUTE: str = '/v1/chat/completions'
-    # COMPLETION_ROUTE: str = '/v1/completions'
-    # EMBEDDING_ROUTE: str = '/v1/embeddings'
-
     def convert_to_env(self):
         env_dict = {}
         env_dict['LOG_GENERAL'] = str(self.LOG_GENERAL)
         env_dict['LOG_OPENAI'] = str(self.LOG_OPENAI)
 
-        # env_dict['CHAT_COMPLETION_ROUTE'] = str(self.CHAT_COMPLETION_ROUTE)
-        # env_dict['COMPLETION_ROUTE'] = str(self.COMPLETION_ROUTE)
-        # env_dict['EMBEDDING_ROUTE'] = str(self.EMBEDDING_ROUTE)
         for key, value in env_dict.items():
             os.environ[key] = value
         return env_dict

@@ -189,7 +189,6 @@ def display_api_key_configuration():
 
 
 def display_cache_configuration():
-    # log = config.log
     cache = config.cache
 
     with st.container():
