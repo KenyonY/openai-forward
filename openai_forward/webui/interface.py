@@ -30,6 +30,10 @@ class Forward(Base):
         ),
     ]
 
+    # CHAT_COMPLETION_ROUTE: str = '/v1/chat/completions'
+    # COMPLETION_ROUTE: str = '/v1/completions'
+    # EMBEDDING_ROUTE: str = '/v1/embeddings'
+
     def convert_to_env(self, set_env=False):
         env_dict = {'FORWARD_CONFIG': json.dumps([i.to_dict() for i in self.forward])}
 
@@ -44,20 +48,23 @@ class CacheConfig(Base):
     backend: str = 'LevelDB'
     root_path_or_url: str = './FLAXKV_DB'
     default_request_caching_value: bool = False
-    cache_chat_completion: bool = True
-    cache_embedding: bool = True
+    cache_openai: bool = False
+    cache_general: bool = False
+    cache_routes: List = ['/v1/chat/completions']
 
     def convert_to_env(self, set_env=False):
 
         env_dict = {}
+
+        env_dict['CACHE_OPENAI'] = str(self.cache_openai)
+        env_dict['CACHE_GENERAL'] = str(self.cache_general)
 
         env_dict['CACHE_BACKEND'] = self.backend
         env_dict['CACHE_ROOT_PATH_OR_URL'] = self.root_path_or_url
         env_dict['DEFAULT_REQUEST_CACHING_VALUE'] = str(
             self.default_request_caching_value
         )
-        env_dict['CACHE_CHAT_COMPLETION'] = str(self.cache_chat_completion)
-        env_dict['CACHE_EMBEDDING'] = str(self.cache_embedding)
+        env_dict['CACHE_ROUTES'] = json.dumps(self.cache_routes)
 
         if set_env:
             for key, value in env_dict.items():
@@ -152,21 +159,25 @@ class ApiKey(Base):
 
 @define(slots=True)
 class Log(Base):
-    chat: bool = True
+    LOG_GENERAL: bool = True
+    LOG_OPENAI: bool = True
+
+    # chat: bool = True
     # completion: bool = True
     # embedding: bool = False
 
-    CHAT_COMPLETION_ROUTE: str = '/v1/chat/completions'
-    COMPLETION_ROUTE: str = '/v1/completions'
-    EMBEDDING_ROUTE: str = '/v1/embeddings'
+    # CHAT_COMPLETION_ROUTE: str = '/v1/chat/completions'
+    # COMPLETION_ROUTE: str = '/v1/completions'
+    # EMBEDDING_ROUTE: str = '/v1/embeddings'
 
     def convert_to_env(self):
         env_dict = {}
-        env_dict['LOG_CHAT'] = str(self.chat)
+        env_dict['LOG_GENERAL'] = str(self.LOG_GENERAL)
+        env_dict['LOG_OPENAI'] = str(self.LOG_OPENAI)
 
-        env_dict['CHAT_COMPLETION_ROUTE'] = str(self.CHAT_COMPLETION_ROUTE)
-        env_dict['COMPLETION_ROUTE'] = str(self.COMPLETION_ROUTE)
-        env_dict['EMBEDDING_ROUTE'] = str(self.EMBEDDING_ROUTE)
+        # env_dict['CHAT_COMPLETION_ROUTE'] = str(self.CHAT_COMPLETION_ROUTE)
+        # env_dict['COMPLETION_ROUTE'] = str(self.COMPLETION_ROUTE)
+        # env_dict['EMBEDDING_ROUTE'] = str(self.EMBEDDING_ROUTE)
         for key, value in env_dict.items():
             os.environ[key] = value
         return env_dict

@@ -20,7 +20,7 @@ def print_startup_info(base_url, route_prefix, api_key, fwd_key, /, style, **kwa
         api_key = True if len(api_key) else False
     if not isinstance(fwd_key, str):
         fwd_key = True if len(fwd_key) else False
-    table = Table(title="", box=None, width=60)
+    table = Table(title="", box=None, width=61)
 
     metric = {
         "base url": {
@@ -37,7 +37,7 @@ def print_startup_info(base_url, route_prefix, api_key, fwd_key, /, style, **kwa
             'style': "#62E883" if fwd_key or not api_key else "red",
         },
     }
-    table.add_column("", justify='left', width=10)
+    table.add_column("", justify='left', width=12)
     table.add_column("", justify='left')
     for key, value in metric.items():
         if value['value']:
@@ -66,7 +66,7 @@ def print_rate_limit_info(
     """
     Print rate limit information.
     """
-    table = Table(title="", box=None, width=60)
+    table = Table(title="", box=None, width=61)
     table.add_column("")
     table.add_column("", justify='left')
     backend = backend or "memory"

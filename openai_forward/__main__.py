@@ -95,7 +95,12 @@ class Cli:
             + (['--ssl-keyfile', ssl_keyfile] if ssl_keyfile else [])
             + (['--ssl-certfile', ssl_certfile] if ssl_certfile else [])
         )
-        wait_for_serve_start(f"http://localhost:{port}/healthz")
+        suppress_exception = platform.system() == "Windows"
+        wait_for_serve_start(
+            f"http://localhost:{port}/healthz",
+            timeout=10,
+            suppress_exception=suppress_exception,
+        )
 
     def _start_streamlit(self, port):
         from openai_forward.helper import relp
