@@ -14,15 +14,17 @@ stream = True
 
 n = 1
 
-debug, caching = False, True
+debug = False
 
 max_tokens = None
 
-user_content = """
-用c实现目前已知最快平方根算法
-"""
+# user_content = """
+# 用c实现目前已知最快平方根算法
+# """
 # user_content = '最初有1000千克的蘑菇，其中99%的成分是水。经过几天的晴天晾晒后，蘑菇中的水分含量现在是98%，蘑菇中减少了多少水分？'
-user_content = "讲个简短的笑话"
+# user_content = "Write down the most romantic sentence you can think of."
+user_content = "光散射中的Mie理论的理论公式是怎样的？请用latex语法表示它公式使用$$符号包裹。"
+
 model = "gpt-3.5-turbo"
 # model="gpt-4"
 
@@ -37,7 +39,7 @@ resp = client.chat.completions.create(
     n=n,
     max_tokens=max_tokens,
     timeout=30,
-    extra_body={"caching": caching},
+    # extra_body={"caching": True},
 )
 
 if stream:
