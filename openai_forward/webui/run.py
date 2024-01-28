@@ -195,11 +195,13 @@ def display_cache_configuration():
         st.subheader("Cache Configuration")
 
         cache_openai = st.checkbox("Cache OpenAI route", cache.cache_openai)
-        cache_general = st.checkbox("Cache General route", cache.cache_general)
-
         cache_default_request_caching_value = st.checkbox(
-            "Default Request Caching Value", cache.default_request_caching_value
+            "For OpenAI API, return using cache by default",
+            cache.default_request_caching_value,
+            disabled=not cache_openai,
         )
+
+        cache_general = st.checkbox("Cache General route", cache.cache_general)
 
         cache_backend = st.selectbox(
             "Cache Backend",

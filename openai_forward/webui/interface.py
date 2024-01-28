@@ -30,10 +30,6 @@ class Forward(Base):
         ),
     ]
 
-    # CHAT_COMPLETION_ROUTE: str = '/v1/chat/completions'
-    # COMPLETION_ROUTE: str = '/v1/completions'
-    # EMBEDDING_ROUTE: str = '/v1/embeddings'
-
     def convert_to_env(self, set_env=False):
         env_dict = {'FORWARD_CONFIG': json.dumps([i.to_dict() for i in self.forward])}
 
@@ -47,7 +43,7 @@ class Forward(Base):
 class CacheConfig(Base):
     backend: str = 'LevelDB'
     root_path_or_url: str = './FLAXKV_DB'
-    default_request_caching_value: bool = False
+    default_request_caching_value: bool = True
     cache_openai: bool = False
     cache_general: bool = False
     cache_routes: List = ['/v1/chat/completions']
