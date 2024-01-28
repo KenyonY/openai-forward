@@ -42,6 +42,14 @@
 
 ---
 
+> [!IMPORTANT]
+>
+> Significant configuration adjustments will be made after version v0.7.0, making it incompatible with previous versions.
+> Configuring through the UI will be more convenient, and more powerful configuration options are provided.
+> The alpha version can currently be experienced through source code deployment.
+
+
+
 **OpenAI-Forward** is an efficient forwarding service designed for large language models. 
 Its core features include user request rate control, Token rate limits, intelligent prediction caching, 
 log management, and API key management, aiming to provide a fast and convenient model forwarding 
@@ -106,13 +114,20 @@ Note: The proxy services deployed here are for personal learning and research pu
 **Installation**
 
 ```bash
-pip install openai-forward
+pip install openai-forward 
+
+# Or install `webui` version(Currently in alpha version)：
+git clone https://github.com/KenyonY/openai-forward.git
+cd openai-forward
+pip install -e .[webui]
 ```
 
 **Starting the Service**
 
 ```bash
 aifd run
+# or
+aifd run -webui
 ```
 
 If the configuration from the `.env` file at the root path is read, you will see the following startup information.

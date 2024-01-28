@@ -37,17 +37,26 @@
 
 </div>
 
+
+> [!IMPORTANT]
+>
+> 在v0.7.0以后在配置方面会有较大调整，并与之前版本不兼容。通过UI配置起来会更加方便，且提供了更强大的配置选项。当前可通过源码部署体验alpha版
+
+
 **OpenAI-Forward** 是为大型语言模型实现的高效转发服务。其核心功能包括
 用户请求速率控制、Token速率限制、智能预测缓存、日志管理和API密钥管理等，旨在提供高效、便捷的模型转发服务。
-无论是代理本地语言模型还是云端语言模型，如 [LocalAI](https://github.com/go-skynet/LocalAI) 或 [OpenAI](https://api.openai.com)，都可以由 OpenAI Forward 轻松实现。
-得益于 [uvicorn](https://github.com/encode/uvicorn), [aiohttp](https://github.com/aio-libs/aiohttp), 和 [asyncio](https://docs.python.org/3/library/asyncio.html)
+无论是代理本地语言模型还是云端语言模型，如 [LocalAI](https://github.com/go-skynet/LocalAI)
+或 [OpenAI](https://api.openai.com)，都可以由 OpenAI Forward 轻松实现。
+得益于 [uvicorn](https://github.com/encode/uvicorn), [aiohttp](https://github.com/aio-libs/aiohttp),
+和 [asyncio](https://docs.python.org/3/library/asyncio.html)
 等库支持，OpenAI-Forward 实现了出色的异步性能。
 
+
 ### News
-- 🚀🚀 从v0.7.0版本后支持通过WebUI进行配置管理
+
+-  v0.7.0版本后支持通过WebUI进行配置管理(开发中)
 - gpt-1106版本已适配
 - 缓存后端切换为高性能数据库后端：[🗲 FlaxKV](https://github.com/KenyonY/flaxkv)
-
 
 <a>
    <img src="https://raw.githubusercontent.com/KenyonY/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">
@@ -66,8 +75,6 @@ OpenAI-Forward 提供以下核心功能：
 - **多目标路由**：转发多个服务地址至同一服务下的不同路由
 - **自动重试**：确保服务的稳定性，请求失败时将自动重试
 - **快速部署**：支持通过pip和docker在本地或云端进行快速部署
-
-
 
 **由本项目搭建的代理服务地址:**
 
@@ -99,8 +106,11 @@ OpenAI-Forward 提供以下核心功能：
 
 ```bash
 pip install openai-forward 
+
 # 或安装webui版本（当前为非正式版）：
-pip install openai-forward[webui]==0.7.0a0 
+git clone https://github.com/KenyonY/openai-forward.git
+cd openai-forward
+pip install -e .[webui]
 ```
 
 **启动服务**
@@ -207,12 +217,12 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 
 - **场景2：**
   可通过 [LiteLLM](https://github.com/BerriAI/litellm) 可以将 众多云模型的 API 格式转换为 openai
-  的api格式，然后使用openai风格转发(即`OPENAI_BASE_URL`) 
-
+  的api格式，然后使用openai风格转发(即`OPENAI_BASE_URL`)
 
 (更多)
 
 ### 代理ChatGPT
+
 [参考](./deploy.md)
 
 
@@ -241,23 +251,22 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 你可以在项目的运行目录下创建 .env 文件来定制各项配置。参考配置可见根目录下的
 [.env.example](.env.example)文件
 
-| 环境变量                  | 说明                                                                   |          默认值           |
-|-----------------------|----------------------------------------------------------------------|:----------------------:|
-| OPENAI_BASE_URL       | 设置OpenAI API风格的基础地址                                                  | https://api.openai.com |
-| OPENAI_ROUTE_PREFIX   | 为OPENAI_BASE_URL接口地址定义路由前缀                                           |           /            |
-| OPENAI_API_KEY        | 配置OpenAI 接口风格的API密钥，支持使用多个密钥，通过逗号分隔                                  |           无            |
-| FORWARD_KEY           | 设定用于代理的自定义密钥，多个密钥可用逗号分隔。如果未设置(不建议)，将直接使用 `OPENAI_API_KEY`            |           无            |
-| EXTRA_BASE_URL        | 用于配置额外代理服务的基础URL                                                     |           无            |
-| EXTRA_ROUTE_PREFIX    | 定义额外代理服务的路由前缀                                                        |           无            |
-| REQ_RATE_LIMIT        | 设置特定路由的用户请求速率限制 (区分用户)                                               |           无            |
-| GLOBAL_RATE_LIMIT     | 配置全局请求速率限制，适用于未在 `REQ_RATE_LIMIT` 中指定的路由                             |           无            |
-| RATE_LIMIT_STRATEGY   | 选择速率限制策略，选项包括：fixed-window、fixed-window-elastic-expiry、moving-window |           无            |
-| TOKEN_RATE_LIMIT      | 限制流式响应中每个token（或SSE chunk）的输出速率                                      |           无            |
-| PROXY                 | 设置HTTP代理地址                                                           |           无            |
-| LOG_CHAT              | 开关聊天内容的日志记录，用于调试和监控                                                  |        `false`         |
-| CACHE_BACKEND         | cache后端，支持内存后端和数据库后端，默认为内存后端，可选lmdb、leveldb数据库后端                     |         `lmdb`         |
-| CACHE_CHAT_COMPLETION | 是否缓存/v1/chat/completions 结果                                          |        `false`         |
-| DEFAULT_REQUEST_CACHING_VALUE | 是否默认开启缓存                                                           |        `false`         |
+| 环境变量                          | 说明                                                                   |                                 默认值                                 |
+|-------------------------------|----------------------------------------------------------------------|:-------------------------------------------------------------------:|
+| FORWARD_CONFIG                | 配置转发base url与 转发路由                                                   | [{"base_url":"https://api.openai.com","route":"/","type":"openai"}] |
+| OPENAI_API_KEY                | 配置OpenAI 接口风格的API密钥，支持使用多个密钥，通过逗号分隔                                  |                                  无                                  |
+| FORWARD_KEY                   | 设定用于代理的自定义密钥，多个密钥可用逗号分隔。如果未设置(不建议)，将直接使用 `OPENAI_API_KEY`            |                                  无                                  |
+| EXTRA_BASE_URL                | 用于配置额外代理服务的基础URL                                                     |                                  无                                  |
+| EXTRA_ROUTE_PREFIX            | 定义额外代理服务的路由前缀                                                        |                                  无                                  |
+| REQ_RATE_LIMIT                | 设置特定路由的用户请求速率限制 (区分用户)                                               |                                  无                                  |
+| GLOBAL_RATE_LIMIT             | 配置全局请求速率限制，适用于未在 `REQ_RATE_LIMIT` 中指定的路由                             |                                  无                                  |
+| RATE_LIMIT_STRATEGY           | 选择速率限制策略，选项包括：fixed-window、fixed-window-elastic-expiry、moving-window |                                  无                                  |
+| TOKEN_RATE_LIMIT              | 限制流式响应中每个token（或SSE chunk）的输出速率                                      |                                  无                                  |
+| PROXY                         | 设置HTTP代理地址                                                           |                                  无                                  |
+| LOG_CHAT                      | 开关聊天内容的日志记录，用于调试和监控                                                  |                               `false`                               |
+| CACHE_BACKEND                 | cache后端，支持内存后端和数据库后端，默认为内存后端，可选lmdb、leveldb数据库后端                     |                               `lmdb`                                |
+| CACHE_CHAT_COMPLETION         | 是否缓存/v1/chat/completions 结果                                          |                               `false`                               |
+| DEFAULT_REQUEST_CACHING_VALUE | 是否默认开启缓存                                                             |                               `false`                               |
 
 详细配置说明可参见 [.env.example](.env.example) 文件。(待完善)
 
@@ -272,6 +281,7 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 - 配置`CACHE_CHAT_COMPLETION`为`true`以缓存/v1/chat/completions 结果。
 
 **Python**
+
 ```diff
   from openai import OpenAI 
   client = OpenAI(
@@ -286,7 +296,9 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 +   extra_body={"caching": True}
 )
 ```
-**Curl**  
+
+**Curl**
+
 ```bash
 curl https://smart.openai.com/v1/chat/completions \
   -H "Content-Type: application/json" \
@@ -351,26 +363,27 @@ aifd convert
 
 ```json
 [
-  {
-    "datetime": "2023-10-17 15:27:12",
-    "ip": "127.0.0.1",
-    "model": "gpt-3.5-turbo",
-    "temperature": 1,
-    "messages": [
-      {
-        "user": "hi"
-      }
-    ],
-    "tools": null,
-    "is_tool_calls": false,
-    "assistant": "Hello! How can I assist you today?"
-  }
+    {
+        "datetime": "2023-10-17 15:27:12",
+        "ip": "127.0.0.1",
+        "model": "gpt-3.5-turbo",
+        "temperature": 1,
+        "messages": [
+            {
+                "user": "hi"
+            }
+        ],
+        "tools": null,
+        "is_tool_calls": false,
+        "assistant": "Hello! How can I assist you today?"
+    }
 ]
 ```
 
 </details>
 
 ## 贡献
+
 欢迎通过提交拉取请求或在仓库中提出问题来为此项目做出贡献。
 
 ## 赞助者与支持者

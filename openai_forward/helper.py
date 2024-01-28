@@ -40,7 +40,7 @@ def urljoin(base_url, *relative_urls):
     return "/".join(urls)
 
 
-def wait_for_serve_start(url, timeout=20):
+def wait_for_serve_start(url, timeout=20, suppress_exception=False):
     import httpx
 
     start_time = time.time()
@@ -52,7 +52,11 @@ def wait_for_serve_start(url, timeout=20):
         except Exception:
             time.sleep(0.3)
             if time.time() - start_time > timeout:
-                raise RuntimeError("Server didn't start in time")
+                if suppress_exception:
+                    print("Warning: Server didn't start in time")
+                    return
+                else:
+                    raise RuntimeError("Server didn't start in time")
 
 
 def get_client_ip(request: Request):
@@ -142,12 +146,15 @@ def env2list(env_name: str, sep=","):
     return str2list(os.environ.get(env_name, "").strip(), sep=sep)
 
 
-def env2dict(env_name: str) -> Dict:
+def env2dict(env_name: str, _default=None) -> Dict:
     import json
+
+    if _default is None:
+        _default = {}
 
     env_str = os.environ.get(env_name, "").strip()
     if not env_str:
-        return {}
+        return _default
     return json.loads(env_str)
 
 

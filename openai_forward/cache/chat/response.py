@@ -1,14 +1,20 @@
 from __future__ import annotations
 
 import random
+from typing import List
 
 from fastapi.responses import Response, StreamingResponse
 from flaxkv.pack import encode
 from loguru import logger
 
-from ...settings import CACHE_CHAT_COMPLETION
+from ...settings import CACHE_OPENAI
 from ..database import db_dict
-from .chat_completions import generate, stream_generate_efficient
+from .chat_completions import (
+    async_token_rate_limit,
+    generate,
+    stream_generate_efficient,
+    token_interval_conf,
+)
 
 
 def construct_cache_key(payload_info: dict):
@@ -96,7 +102,7 @@ def get_cached_chat_response(payload_info, valid_payload, request, **kwargs):
     Note:
         If a cache hit occurs, the cached response is immediately returned without contacting the external server.
     """
-    if not (CACHE_CHAT_COMPLETION and valid_payload):
+    if not (CACHE_OPENAI and valid_payload):
         return None, None
 
     cache_key = construct_cache_key(payload_info)
@@ -108,3 +114,24 @@ def get_cached_chat_response(payload_info, valid_payload, request, **kwargs):
         )
 
     return None, cache_key
+
+
+@async_token_rate_limit(token_interval_conf)
+async def stream_generate(buffer_list: List, request):
+    for buffer in buffer_list:
+        yield buffer
+
+
+def gen_response(buffer_list, request):
+    if len(buffer_list) > 1:
+        return StreamingResponse(
+            stream_generate(buffer_list, request),
+            status_code=200,
+            media_type="application/octet-stream",
+        )
+    else:
+        return Response(
+            buffer_list[0],
+            status_code=200,
+            media_type="application/octet-stream",
+        )

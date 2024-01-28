@@ -8,6 +8,13 @@ on:
     paths-ignore:
       - 'docs/**'
       - '*.md'
+      - 'Example/**'
+      - '.env'
+      - '.env.example'
+      - 'Dockerfile'
+      - '*.yml'
+      - '*.yaml'
+      - 'Makfile'
     branches:
       - main
 

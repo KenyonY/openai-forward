@@ -4,7 +4,7 @@ from fastapi.responses import Response
 from flaxkv.pack import encode
 from loguru import logger
 
-from ...settings import CACHE_EMBEDDING
+from ...settings import CACHE_OPENAI
 from ..database import db_dict
 
 
@@ -24,7 +24,7 @@ def get_cached_embedding_response(payload_info, valid_payload, request, **kwargs
     Note:
         If a cache hit occurs, the cached response is immediately returned without contacting the external server.
     """
-    if not (CACHE_EMBEDDING and valid_payload):
+    if not (CACHE_OPENAI and valid_payload):
         return None, None
 
     cache_key = construct_cache_key(payload_info)

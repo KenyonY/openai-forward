@@ -1,5 +1,6 @@
 import pickle
 import threading
+import time
 
 import orjson
 import pandas as pd
@@ -188,57 +189,52 @@ def display_api_key_configuration():
 
 
 def display_cache_configuration():
-    log = config.log
     cache = config.cache
 
     with st.container():
-        st.subheader("Log Configuration")
-        log_chat = st.checkbox("Log Chat", log.chat)
-        log_CHAT_COMPLETION_ROUTE = st.text_input(
-            "Chat Completion Route", log.CHAT_COMPLETION_ROUTE, disabled=not log_chat
-        )
-        log_COMPLETION_ROUTE = st.text_input(
-            "Completion Route", log.COMPLETION_ROUTE, disabled=not log_chat
-        )
-        log_EMBEDDING_ROUTE = st.text_input(
-            "Embedding Route", log.EMBEDDING_ROUTE, disabled=not log_chat
-        )
-
         st.subheader("Cache Configuration")
+
+        cache_openai = st.checkbox("Cache OpenAI route", cache.cache_openai)
+        cache_general = st.checkbox("Cache General route", cache.cache_general)
+
+        cache_default_request_caching_value = st.checkbox(
+            "Default Request Caching Value", cache.default_request_caching_value
+        )
 
         cache_backend = st.selectbox(
             "Cache Backend",
             ["MEMORY", "LMDB", "LevelDB"],
-            index=["MEMORY", "LMDB", "LevelDB"].index(cache.backend),
+            index=["memory", "lmdb", "leveldb"].index(cache.backend.lower()),
         )
+
         cache_root_path_or_url = st.text_input(
             "Root Path or URL",
             cache.root_path_or_url,
             disabled=cache_backend == "MEMORY",
         )
-        cache_default_request_caching_value = st.checkbox(
-            "Default Request Caching Value", cache.default_request_caching_value
+
+        df = pd.DataFrame([{"cache_route": i} for i in cache.cache_routes])
+        edited_df = st.data_editor(
+            df, num_rows="dynamic", key="editor1", use_container_width=True
         )
-        cache_cache_chat_completion = st.checkbox(
-            "Cache Chat Completion", cache.cache_chat_completion
-        )
-        cache_cache_embedding = st.checkbox("Cache Embedding", cache.cache_embedding)
 
         submitted = st.button("Save", use_container_width=True)
         if submitted:
-            log.chat = log_chat
-            log.CHAT_COMPLETION_ROUTE = log_CHAT_COMPLETION_ROUTE
-            log.COMPLETION_ROUTE = log_COMPLETION_ROUTE
-            log.EMBEDDING_ROUTE = log_EMBEDDING_ROUTE
+
+            cache.cache_openai = cache_openai
+            cache.cache_general = cache_general
 
             cache.backend = cache_backend
             cache.root_path_or_url = cache_root_path_or_url
             cache.default_request_caching_value = cache_default_request_caching_value
-            cache.cache_chat_completion = cache_cache_chat_completion
-            cache.cache_embedding = cache_cache_embedding
+
+            cache.cache_routes = [
+                row['cache_route']
+                for i, row in edited_df.iterrows()
+                if row["cache_route"] is not None
+            ]
 
             print(cache.convert_to_env())
-            print(log.convert_to_env())
 
 
 def display_rate_limit_configuration():
@@ -355,6 +351,7 @@ elif selected_section == "Real-time Logs":
             uid, msg = q.get()
             uid: bytes
             print(f"{uid=}")
+            time.sleep(0.01)
             item = orjson.loads(msg)
             if uid.startswith(b"0"):
                 item['user_role'] = True
