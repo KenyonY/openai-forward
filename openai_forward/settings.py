@@ -24,7 +24,6 @@ EMBEDDING_ROUTE = "/v1/embeddings"
 
 CACHE_ROUTE_SET = set(env2dict("CACHE_ROUTES", []))
 
-print(f"{CACHE_ROUTE_SET=}")
 openai_additional_start_info['cache_routes'] = CACHE_ROUTE_SET
 general_additional_start_info['cache_routes'] = CACHE_ROUTE_SET
 

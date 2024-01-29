@@ -46,7 +46,6 @@
 >
 > Significant configuration adjustments will be made after version v0.7.0, making it incompatible with previous versions.
 > Configuring through the UI will be more convenient, and more powerful configuration options are provided.
-> The alpha version can currently be experienced through source code deployment.
 
 
 
@@ -218,9 +217,6 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 
 - **Applicable scenarios:** To be used in conjunction with projects such as [LocalAI](https://github.com/go-skynet/LocalAI) and [api-for-open-llm](https://github.com/xusenlinzy/api-for-open-llm).
 
-- **How to operate:** 
-  Using LocalAI as an example, if the LocalAI service has been deployed at http://localhost:8080, you only need to set `OPENAI_BASE_URL=http://localhost:8080` in the environment variable or in the .env file.
-  After that, you can access LocalAI through http://localhost:8000.
 
 (More)
 
@@ -257,8 +253,7 @@ You can create a .env file in the project's run directory to customize configura
 
 | Environment Variable  | Description                                                                                      |     Default Value      |
 |-----------------------|-------------------------------------------------------------------------------------------------|:----------------------:|
-| OPENAI_BASE_URL       | Set base address for OpenAI-style API                                                            | https://api.openai.com |
-| OPENAI_ROUTE_PREFIX   | Define a route prefix for the OPENAI_BASE_URL interface address                                 |           /            |
+| FORWARD_CONFIG                |                                                    | [{"base_url":"https://api.openai.com","route":"/","type":"openai"}] |
 | OPENAI_API_KEY        | Configure API key in OpenAI style, supports using multiple keys separated by commas              |          None          |
 | FORWARD_KEY           | Set a custom key for proxying, multiple keys can be separated by commas. If not set (not recommended), it will directly use `OPENAI_API_KEY` |          None          |
 | EXTRA_BASE_URL        | Configure the base URL for additional proxy services                                             |          None          |
@@ -278,9 +273,6 @@ Detailed configuration descriptions can be seen in the [.env.example](.env.examp
 
 ### Caching
 
-
-- Configure `CACHE_BACKEND` in the environment variable to use the respective database backend for storage. Options are `LMDB`, and `LEVELDB`.
-- Set `CACHE_CHAT_COMPLETION` to `true` to cache /v1/chat/completions results.
 
 **Python**
 ```diff
@@ -315,12 +307,6 @@ curl https://smart.openai.com/v1/chat/completions \
 <details open>
   <summary>Click for more details</summary>
 
-Configure OPENAI_API_KEY and FORWARD_KEY, for example:
-
-```bash
-OPENAI_API_KEY=sk-*******
-FORWARD_KEY=fk-****** # Here, the fk-token is customized
-```
 
 **Use case:**
 
@@ -381,12 +367,6 @@ You'll get `chat_openai.json`:
 
 ## Contributions
 Feel free to make contributions to this module by submitting pull requests or raising issues in the repository.
-
-## Backer and Sponsor
-
-<a href="https://www.jetbrains.com/?from=KenyonY/openai-forward" target="_blank">
-<img src="https://raw.githubusercontent.com/KenyonY/openai-forward/e7da8de4a48611b84430ca3ea44d355578134b85/.github/images/jetbrains.svg" width="100px" height="100px">
-</a>
 
 ## License
 
