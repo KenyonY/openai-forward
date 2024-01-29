@@ -107,10 +107,8 @@ OpenAI-Forward 提供以下核心功能：
 ```bash
 pip install openai-forward 
 
-# 或安装webui版本（当前为非正式版）：
-git clone https://github.com/KenyonY/openai-forward.git
-cd openai-forward
-pip install -e .[webui]
+# 或安装webui版本：
+pip install openai-forward[webui]
 ```
 
 **启动服务**
