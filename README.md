@@ -40,7 +40,7 @@
 
 > [!IMPORTANT]
 >
-> 在v0.7.0以后在配置方面会有较大调整，并与之前版本不兼容。通过UI配置起来会更加方便，且提供了更强大的配置选项。当前可通过源码部署体验alpha版
+> 在v0.7.0以后在配置方面会有较大调整，并与之前版本不兼容。通过UI配置起来会更加方便，且提供了更强大的配置选项。
 
 
 **OpenAI-Forward** 是为大型语言模型实现的高效转发服务。其核心功能包括
@@ -54,7 +54,7 @@
 
 ### News
 
--  v0.7.0版本后支持通过WebUI进行配置管理(开发中)
+- 🎉🎉🎉 v0.7.0版本后支持通过WebUI进行配置管理
 - gpt-1106版本已适配
 - 缓存后端切换为高性能数据库后端：[🗲 FlaxKV](https://github.com/KenyonY/flaxkv)
 
@@ -212,18 +212,15 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 ### 代理其它云端模型
 
 - **场景1:**
-  使用通用转发,由环境变量中`EXTRA_BASE_URL`与`EXTRA_ROUTE_PREFIX` 两变量控制，可对任意来源服务进行转发，
-  可获得请求速率控制与token速率控制；但通用转发不支持自定义秘钥、实时日志和缓存AI响应.
+  使用通用转发,可对任意来源服务进行转发，
+  可获得请求速率控制与token速率控制；但通用转发不支持自定义秘钥.
 
 - **场景2：**
   可通过 [LiteLLM](https://github.com/BerriAI/litellm) 可以将 众多云模型的 API 格式转换为 openai
-  的api格式，然后使用openai风格转发(即`OPENAI_BASE_URL`)
+  的api格式，然后使用openai风格转发
 
 (更多)
 
-### 代理ChatGPT
-
-[参考](./deploy.md)
 
 
 <a>
@@ -275,10 +272,6 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 
 ### 智能缓存
 
-缓存可选择数据库后端，需安装相应的环境：
-
-- 配置环境变量中`CACHE_BACKEND`以使用相应的数据库后端进行存储。 可选值`LMDB`、`LEVELDB`
-- 配置`CACHE_CHAT_COMPLETION`为`true`以缓存/v1/chat/completions 结果。
 
 **Python**
 
@@ -316,12 +309,7 @@ curl https://smart.openai.com/v1/chat/completions \
 <details open>
   <summary>Click for more details</summary>
 
-需要配置 OPENAI_API_KEY 和 FORWARD_KEY, 如
-
-```bash
-OPENAI_API_KEY=sk-*******
-FORWARD_KEY=fk-****** # 这里fk-token由我们自己定义
-```
+见.env文件
 
 **用例:**
 
@@ -341,7 +329,6 @@ FORWARD_KEY=fk-****** # 这里fk-token由我们自己定义
 
 ### 对话日志
 
-默认不记录对话日志，若要开启需设置环境变量`LOG_CHAT=true`
 <details open>
   <summary>Click for more details</summary>
 
@@ -386,11 +373,6 @@ aifd convert
 
 欢迎通过提交拉取请求或在仓库中提出问题来为此项目做出贡献。
 
-## 赞助者与支持者
-
-<a href="https://www.jetbrains.com/?from=KenyonY/openai-forward" target="_blank">
-<img src="https://raw.githubusercontent.com/KenyonY/openai-forward/e7da8de4a48611b84430ca3ea44d355578134b85/.github/images/jetbrains.svg" width="100px" height="100px">
-</a>
 
 ## 许可证
 

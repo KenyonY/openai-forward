@@ -63,7 +63,7 @@ class Cli:
             while True:
                 message = socket.recv()
                 env_dict: dict = pickle.loads(message)
-                logger.debug(f"{env_dict=}")
+                # logger.debug(f"{env_dict=}")
 
                 for key, value in env_dict.items():
                     os.environ[key] = value
