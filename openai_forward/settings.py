@@ -114,9 +114,9 @@ if CACHE_GENERAL:
 IP_WHITELIST = env2list("IP_WHITELIST", sep=ENV_VAR_SEP)
 IP_BLACKLIST = env2list("IP_BLACKLIST", sep=ENV_VAR_SEP)
 
-# TODO: API KEY permission system
-OPENAI_API_KEY = list(env2dict("OPENAI_API_KEY").keys())
-FWD_KEY = list(env2dict("FORWARD_KEY").keys())
+OPENAI_API_KEY = env2dict("OPENAI_API_KEY")
+FWD_KEY = env2dict("FORWARD_KEY")
+LEVEL_MODELS = {int(key): value for key, value in env2dict("LEVEL_MODELS").items()}
 
 PROXY = os.environ.get("PROXY", "").strip() or None
 
@@ -167,7 +167,6 @@ styles = itertools.cycle(
 
 def show_startup():
     for base_url, route_prefix in zip(OPENAI_BASE_URL, OPENAI_ROUTE_PREFIX):
-        print(f"{openai_additional_start_info=}")
         print_startup_info(
             base_url,
             route_prefix,

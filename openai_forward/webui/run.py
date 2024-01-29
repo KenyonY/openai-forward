@@ -43,7 +43,8 @@ def get_global_vars():
 
     q = SimpleQueue(maxsize=200)
     threading.Thread(target=worker, args=(log_socket, q)).start()
-    config = Config()
+    config = Config().come_from_env()
+    print(f"{config=}")
     chat_data = ChatData(200, render_chat_log_message)
     return {
         "socket": socket,
@@ -57,7 +58,6 @@ def get_global_vars():
 if 'socket' not in st.session_state:
     st.session_state.update(get_global_vars())
 
-
 config = st.session_state['config']
 
 with st.sidebar:
@@ -65,7 +65,7 @@ with st.sidebar:
         "Select a configuration section",
         (
             "Forward",
-            "API Key",
+            "API Key && Level",
             "Cache",
             "Rate Limit",
             "Other",
@@ -138,53 +138,106 @@ def display_forward_configuration():
 def display_api_key_configuration():
     st.header("WIP: level 部分尚在开发中")
     st.write(
-        """\
+        """#### 为你的转发key精确定义可访问的每一个模型
 > **说明**  
-> - 不同level对应不同权限，可以定义不同权限可以访问哪些模型。 例如, level为0，全权限，可访问任何模型; level为1，只可访问gpt-3.5-turbo。
-> - 对于api key而言，level的意义是区分该api key自身是否有权限访问哪些模型。每个api key可对应多个level。
+> - 不同level对应不同权限，可以定义不同权限可以访问哪些模型。 例如, level为0，全权限，可访问任何模型; level为1，只可访问gpt-3.5-turbo；level为2，可访问embedding 和tts等等。。
+> - 对于api key而言，level的意义是区分该api key自身是否有权限访问哪些模型。每个api key可对应多个level，因为这些level不必是从属关系。
 > - 对于forward key而言，每个key对应一个level，level表示它可以访问该level对应的所有api key。
 
 """
     )
+
+    # check openai models:
+    from openai import OpenAI
+
+    # client = OpenAI(api_key=)
+    # openai_model_list = [i.id for i in client.models.list()]
+    # openai_model_list.sort()
+
+    openai_model_list = [
+        'babbage-002',
+        'dall-e-2',
+        'dall-e-3',
+        'davinci-002',
+        'gpt-3.5-turbo',
+        'gpt-3.5-turbo-0301',
+        'gpt-3.5-turbo-0613',
+        'gpt-3.5-turbo-1106',
+        'gpt-3.5-turbo-16k',
+        'gpt-3.5-turbo-16k-0613',
+        'gpt-3.5-turbo-instruct',
+        'gpt-3.5-turbo-instruct-0914',
+        'gpt-4',
+        'gpt-4-0125-preview',
+        'gpt-4-0613',
+        'gpt-4-1106-preview',
+        'gpt-4-turbo-preview',
+        'gpt-4-vision-preview',
+        'text-embedding-3-large',
+        'text-embedding-3-small',
+        'text-embedding-ada-002',
+        'tts-1',
+        'tts-1-1106',
+        'tts-1-hd',
+        'tts-1-hd-1106',
+        'whisper-1',
+    ]
+
     api_key = config.api_key
+
+    st.subheader("Key Level")
+
+    level_model_map = {}
+    levels = list(api_key.level.keys())
+    models_list = list(api_key.level.values())
+    num_levels = st.number_input(
+        '请选择你需定义几个level (不包含level 0,它是全权限)', 0, 1000, len(levels), 1
+    )
+    for level in range(num_levels):
+        level += 1
+        models = st.multiselect(
+            f'请选择该`{level=}`可访问的模型',
+            openai_model_list,
+            default=models_list[min(level - 1, len(levels) - 1)],
+            key=f"level_{level}",
+        )
+        level_model_map[level] = models
+
     with st.form("api_key_form", border=False):
         st.subheader("OpenAI API Key")
-        df = pd.DataFrame([i.to_dict() for i in api_key.openai_key])
+        df = pd.DataFrame(
+            [
+                {'api_key': key, 'level': value}
+                for key, value in api_key.openai_key.items()
+            ]
+        )
         edited_df = st.data_editor(
             df, num_rows="dynamic", key="editor1", use_container_width=True
         )
 
         st.subheader("Forward Key")
-        df2 = pd.DataFrame([i.to_dict() for i in api_key.forward_key])
+        df2 = pd.DataFrame(
+            [
+                {'api_key': key, 'level': value}
+                for key, value in api_key.forward_key.items()
+            ]
+        )
         edited_df2 = st.data_editor(
             df2, num_rows="dynamic", key="editor2", use_container_width=True
         )
 
-        st.subheader("Key Level")
-        df3 = pd.DataFrame([i.to_dict() for i in api_key.level])
-        edited_df3 = st.data_editor(
-            df3,
-            num_rows="dynamic",
-            key="editor3",
-            use_container_width=True,
-        )
-
         submitted = st.form_submit_button("Save", use_container_width=True)
         if submitted:
-            api_key.openai_key = [
-                ApiKeyItem(row["api_key"], row["level"])
-                for i, row in edited_df.iterrows()
-            ]
+            api_key.openai_key = {
+                row["api_key"]: row["level"] for i, row in edited_df.iterrows()
+            }
 
-            api_key.forward_key = [
-                ApiKeyItem(row["api_key"], row["level"])
-                for i, row in edited_df2.iterrows()
-            ]
+            api_key.forward_key = {
+                row["api_key"]: row["level"] for i, row in edited_df2.iterrows()
+            }
 
-            api_key.level = [
-                ApiKeyLevel(level=row["level"], models=row["models"])
-                for i, row in edited_df3.iterrows()
-            ]
+            api_key.level = level_model_map
+
             print(api_key.convert_to_env())
 
 
@@ -222,7 +275,6 @@ def display_cache_configuration():
 
         submitted = st.button("Save", use_container_width=True)
         if submitted:
-
             cache.cache_openai = cache_openai
             cache.cache_general = cache_general
 
@@ -255,9 +307,9 @@ def display_rate_limit_configuration():
         )
         strategy = st.selectbox(
             "Rate Limit Strategy",
-            ['fixed_window', 'moving-window', 'fixed-window-elastic-expiry'],
+            ['fixed-window', 'moving-window', 'fixed-window-elastic-expiry'],
             index=[
-                'fixed_window',
+                'fixed-window',
                 'moving-window',
                 'fixed-window-elastic-expiry',
             ].index(rate_limit.strategy),
@@ -309,7 +361,7 @@ def display_other_configuration():
 
         timezone = st.text_input("Timezone", config.timezone)
         timeout = st.number_input(
-            "Timeout (seconds)", value=config.timeout, min_value=1, step=1
+            "Timeout (seconds)", value=int(config.timeout), min_value=1, step=1
         )
         proxy = st.text_input(
             "Proxy", config.proxy, placeholder="e.g. http://127.0.0.1:7890"
@@ -328,7 +380,7 @@ def display_other_configuration():
 if selected_section == "Forward":
     display_forward_configuration()
 
-elif selected_section == "API Key":
+elif selected_section == "API Key && Level":
     display_api_key_configuration()
 
 elif selected_section == "Cache":
