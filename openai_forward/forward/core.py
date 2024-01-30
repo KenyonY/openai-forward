@@ -4,7 +4,7 @@ import asyncio
 import traceback
 from asyncio import Queue
 from itertools import cycle
-from typing import Any, AsyncGenerator
+from typing import Any, AsyncGenerator, Iterable
 
 import aiohttp
 import anyio
@@ -26,7 +26,10 @@ from ..content.openai import (
     WhisperLogger,
 )
 from ..decorators import async_retry, async_token_rate_limit
+from ..helper import InfiniteSet
 from ..settings import *
+
+# from beartype import beartype
 
 
 class GenericForward:
@@ -39,12 +42,21 @@ class GenericForward:
     timeout = aiohttp.ClientTimeout(connect=TIMEOUT)
 
     def __init__(self, base_url: str, route_prefix: str, proxy=None):
+        """
+        Args:
+            base_url (str): The base URL to which requests will be forwarded.
+            route_prefix (str): The prefix of the route.
+            proxy (str, optional): The proxy to use for the requests. Defaults to None.
+        """
         self.BASE_URL = base_url
         self.PROXY = proxy
         self.ROUTE_PREFIX = route_prefix
         self.client: aiohttp.ClientSession | None = None
 
     async def build_client(self):
+        """
+        Asynchronously build the client for making requests.
+        """
         connector = TCPConnector(limit=500, limit_per_host=0, force_close=False)
         self.client = aiohttp.ClientSession(connector=connector, timeout=self.timeout)
 
@@ -79,6 +91,19 @@ class GenericForward:
         route_path: str,
         cache_key: str | None = None,
     ) -> AsyncGenerator[bytes, Any]:
+        """
+        Asynchronously iterates through the bytes in the given aiohttp.ClientResponse object
+        and yields each chunk while also caching the response if necessary.
+
+        Args:
+            r (aiohttp.ClientResponse): The aiohttp.ClientResponse object.
+            request (Request): The original FastAPI request object.
+            route_path (str): The API route path.
+            cache_key (str | None): The cache key. Defaults to None.
+
+        Returns:
+            AsyncGenerator[bytes, Any]: Each chunk of bytes from the server's response.
+        """
         chunk_list = []
         cache = True if route_path in CACHE_ROUTE_SET else False
 
@@ -87,7 +112,7 @@ class GenericForward:
                 chunk_list.append(chunk)
             yield chunk
 
-        if cache and cache_key:
+        if r.ok and cache and cache_key:
             cache_generic_response(cache_key, chunk_list, route_path)
 
         # Only log non-stream response:
@@ -110,6 +135,16 @@ class GenericForward:
         raise_handler_name="handle_exception",
     )
     async def send(self, client_config: dict, data=None):
+        """
+        Asynchronously send the request and return the response.
+
+        Args:
+            client_config (dict): The configuration for the client.
+            data (Any, optional): The data to send in the request. Defaults to None.
+
+        Returns:
+            aiohttp.ClientResponse: The response from the server.
+        """
 
         return await self.client.request(
             method=client_config["method"],
@@ -120,6 +155,15 @@ class GenericForward:
         )
 
     def handle_exception(self, e):
+        """
+        Handle exceptions that occur during the request.
+
+        Args:
+            e (Exception): The exception that occurred.
+
+        Raises:
+            HTTPException: An HTTPException with the appropriate status code and detail.
+        """
         if isinstance(
             e,
             (
@@ -147,6 +191,16 @@ class GenericForward:
         raise HTTPException(status_code=status_code, detail=error_info)
 
     def prepare_client(self, request: Request, return_origin_header=False) -> dict:
+        """
+        Prepare the client for making a request.
+
+        Args:
+            request (Request): The original FastAPI request object.
+            return_origin_header (bool, optional): Whether to return the original header. Defaults to False.
+
+        Returns:
+            dict: The configuration for the client.
+        """
         assert self.BASE_URL and self.ROUTE_PREFIX
         if self.validate_host:
             ip = get_client_ip(request)
@@ -198,6 +252,15 @@ class GenericForward:
         }
 
     async def reverse_proxy(self, request: Request):
+        """
+        Asynchronously handle reverse proxying the incoming request.
+
+        Args:
+            request (Request): The incoming FastAPI request object.
+
+        Returns:
+            StreamingResponse: A FastAPI StreamingResponse containing the server's response.
+        """
         assert self.client
         data = await request.body()
 
@@ -227,18 +290,57 @@ class GenericForward:
 class OpenaiForward(GenericForward):
     """
     Derived class for handling request forwarding specifically for the OpenAI (Style) API.
+    Inherits from the GenericForward class and adds specific functionality for the OpenAI API.
     """
 
-    _cycle_api_key = cycle(OPENAI_API_KEY)
-    _no_auth_mode = OPENAI_API_KEY != [] and FWD_KEY == []
+    _fk_to_level = FWD_KEY
+    _sk_to_levels = OPENAI_API_KEY
+    _level_to_model_set = {level: set(models) for level, models in LEVEL_MODELS.items()}
+
+    _zero_level_model_set = InfiniteSet()
+
+    _level_to_sks = {}
+    for sk, levels in _sk_to_levels.items():
+        for level in levels:
+            _level_to_sks[level] = _level_to_sks.get(level, []) + [sk]
+
+    _level_to_sk = {}
+    for level, sks in _level_to_sks.items():
+        _level_to_sk[level] = cycle(sks)
 
     def __init__(self, base_url: str, route_prefix: str, proxy=None):
+        """
+        Initialize the OpenaiForward class.
+
+        Args:
+            base_url (str): The base URL to which requests will be forwarded.
+            route_prefix (str): The prefix of the route.
+            proxy (str, optional): The proxy to use for the requests. Defaults to None.
+        """
         super().__init__(base_url, route_prefix, proxy)
         if LOG_OPENAI or PRINT_CHAT:
             self.chat_logger = ChatLogger(self.ROUTE_PREFIX)
             self.completion_logger = CompletionLogger(self.ROUTE_PREFIX)
             self.whisper_logger = WhisperLogger(self.ROUTE_PREFIX)
             self.embedding_logger = EmbeddingLogger(self.ROUTE_PREFIX)
+
+    @classmethod
+    def fk_to_sk(cls, forward_key: str):
+        """
+        Convert a forward key to a secret key.
+
+        Args:
+            forward_key (str): The forward key to convert.
+
+        Returns:
+            str: The corresponding secret key, if it exists. Otherwise, None.
+        """
+        level = cls._fk_to_level.get(forward_key)
+        if level is not None:
+            sk = cls._level_to_sk.get(level)
+            if sk:
+                return next(sk), level
+        return None, level
 
     def _handle_result(
         self, buffer: bytearray, uid: str, route_path: str, request_method: str
@@ -294,13 +396,14 @@ class OpenaiForward(GenericForward):
                 return self.embedding_logger
         return None
 
-    async def _handle_payload(self, request: Request, route_path: str):
+    async def _handle_payload(self, request: Request, route_path: str, model_set):
         """
         Asynchronously logs the payload of the API call.
 
         Args:
             request (Request): The original FastAPI request object.
             route_path (str): The API route path.
+            model_set (set): The set of models that can be accessed.
 
         Returns:
             valid, payload_info, payload
@@ -343,10 +446,30 @@ class OpenaiForward(GenericForward):
             )
 
         valid = True if payload_log_info['uid'] is not None else False
+
+        if valid:
+            if payload_log_info["model"] not in model_set:
+                print(f"{model_set=}")
+                logger.warning(
+                    f"[Auth Warning] model: {payload_log_info['model']} is not allowed"
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"model: {payload_log_info['model']} is not allowed",
+                )
+
         return valid, payload_log_info, payload
 
     @staticmethod
     async def read_chunks(r: aiohttp.ClientResponse, queue):
+        """
+        Read chunks of data from the response.
+
+        Args:
+            r (aiohttp.ClientResponse): The aiohttp.ClientResponse object.
+            queue (Queue): The queue to put the chunks into.
+
+        """
         buffer = bytearray()
 
         # Efficiency Mode
@@ -429,11 +552,30 @@ class OpenaiForward(GenericForward):
                 logger.warning(f'uid: {uid}\n' f'{r.status}')
 
     def handle_authorization(self, client_config):
+        """
+        Handle the authorization for the client.
+
+        Args:
+            client_config (dict): The configuration for the client.
+
+        Returns:
+            str: The authorization string.
+            set: The set of models can be accessed.
+        """
         auth, auth_prefix = client_config["auth"], "Bearer "
-        if self._no_auth_mode or auth and auth[len(auth_prefix) :] in FWD_KEY:
-            auth = auth_prefix + next(self._cycle_api_key)
-            client_config["headers"]["Authorization"] = auth
-        return auth
+        model_set = self._zero_level_model_set
+
+        if auth:
+            fk = auth[len(auth_prefix) :]
+            if fk in FWD_KEY:
+                sk, level = self.fk_to_sk(fk)
+                assert level is not None
+                if level != 0:
+                    model_set = self._level_to_model_set[level]
+                if sk:
+                    auth = auth_prefix + sk
+                    client_config["headers"]["Authorization"] = auth
+        return auth, model_set
 
     async def reverse_proxy(self, request: Request):
         """
@@ -448,9 +590,9 @@ class OpenaiForward(GenericForward):
         client_config = self.prepare_client(request, return_origin_header=False)
         route_path = client_config["route_path"]
 
-        self.handle_authorization(client_config)
+        _, model_set = self.handle_authorization(client_config)
         valid_payload, payload_info, payload = await self._handle_payload(
-            request, route_path
+            request, route_path, model_set
         )
         uid = payload_info["uid"]
 

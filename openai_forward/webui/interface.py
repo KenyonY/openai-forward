@@ -4,6 +4,8 @@ from typing import Dict, List, Literal, Optional, Tuple, Union
 
 from attrs import asdict, define, field, filters
 
+from openai_forward.settings import *
+
 
 class Base:
     def to_dict(self, drop_none=True):
@@ -34,8 +36,7 @@ class Forward(Base):
         env_dict = {'FORWARD_CONFIG': json.dumps([i.to_dict() for i in self.forward])}
 
         if set_env:
-            for key, value in env_dict.items():
-                os.environ[key] = value
+            os.environ.update(env_dict)
         return env_dict
 
 
@@ -63,8 +64,7 @@ class CacheConfig(Base):
         env_dict['CACHE_ROUTES'] = json.dumps(self.cache_routes)
 
         if set_env:
-            for key, value in env_dict.items():
-                os.environ[key] = value
+            os.environ.update(env_dict)
         return env_dict
 
 
@@ -76,6 +76,7 @@ class RateLimitType(Base):
 
 @define(slots=True)
 class RateLimit(Base):
+    backend: str = ''
     global_rate_limit: str = 'inf'
     token_rate_limit: List[RateLimitType] = [
         RateLimitType(route="/v1/chat/completions", value="60/second"),
@@ -103,53 +104,28 @@ class RateLimit(Base):
         )
         env_dict['ITER_CHUNK_TYPE'] = self.iter_chunk
         if set_env:
-            for key, value in env_dict.items():
-                os.environ[key] = value
+            os.environ.update(env_dict)
         return env_dict
 
 
 @define(slots=True)
-class ApiKeyItem(Base):
-    api_key: Optional[str] = None
-    level: Optional[int] = None
-
-
-@define(slots=True)
-class ApiKeyLevel(Base):
-    level: int = 0
-    models: str = '*'
-
-
-@define(slots=True)
 class ApiKey(Base):
-    openai_key: List[ApiKeyItem] = [ApiKeyItem("", 0)]
-    forward_key: List[ApiKeyItem] = [ApiKeyItem("", 0)]
-    level: List[ApiKeyLevel] = [
-        ApiKeyLevel(),
-        ApiKeyLevel(level=1, models="gpt-3.5-turbo"),
-    ]
-
-    @staticmethod
-    def format(keys: List[ApiKeyItem]):
-        target_dict = {}
-        for i in keys:
-            try:
-                if i.api_key is None or i.level is None:
-                    continue
-                if not i.api_key.strip():
-                    continue
-                target_dict[i.api_key.strip()] = int(i.level)
-            except Exception:
-                continue
-        return target_dict
+    openai_key: Dict = {"": "0"}
+    forward_key: Dict = {"": 0}
+    level: Dict = {1: ["gpt-3.5-turbo"]}
 
     def convert_to_env(self, set_env=False):
         env_dict = {}
-        env_dict['OPENAI_API_KEY'] = json.dumps(self.format(self.openai_key))
-        env_dict['FORWARD_KEY'] = json.dumps(self.format(self.forward_key))
+        openai_key_dict = {}
+        for key, value in self.openai_key.items():
+            value: str
+            values = value.strip().replace('，', ',').split(',')
+            openai_key_dict[key] = [int(i) for i in values]
+        env_dict['OPENAI_API_KEY'] = json.dumps(openai_key_dict)
+        env_dict['FORWARD_KEY'] = json.dumps(self.forward_key)
+        env_dict['LEVEL_MODELS'] = json.dumps(self.level)
         if set_env:
-            for key, value in env_dict.items():
-                os.environ[key] = value
+            os.environ.update(env_dict)
         return env_dict
 
 
@@ -158,13 +134,12 @@ class Log(Base):
     LOG_GENERAL: bool = True
     LOG_OPENAI: bool = True
 
-    def convert_to_env(self):
+    def convert_to_env(self, set_env=False):
         env_dict = {}
         env_dict['LOG_GENERAL'] = str(self.LOG_GENERAL)
         env_dict['LOG_OPENAI'] = str(self.LOG_OPENAI)
-
-        for key, value in env_dict.items():
-            os.environ[key] = value
+        if set_env:
+            os.environ.update(env_dict)
         return env_dict
 
 
@@ -196,9 +171,45 @@ class Config(Base):
         env_dict['TZ'] = self.timezone
         env_dict['TIMEOUT'] = str(self.timeout)
         env_dict['BENCHMARK_MODE'] = str(self.benchmark_mode)
-        env_dict['PROXY'] = self.proxy
+        if self.proxy:
+            env_dict['PROXY'] = self.proxy
 
         if set_env:
-            for key, value in env_dict.items():
-                os.environ[key] = value
+            os.environ.update(env_dict)
         return env_dict
+
+    def come_from_env(self):
+
+        self.timeout = TIMEOUT
+        self.timezone = os.environ.get('TZ', 'Asia/Shanghai')
+        self.benchmark_mode = BENCHMARK_MODE
+        self.proxy = PROXY or ""
+        self.log.LOG_OPENAI = LOG_OPENAI
+        self.log.LOG_GENERAL = LOG_GENERAL
+
+        self.rate_limit.strategy = RATE_LIMIT_STRATEGY
+        self.rate_limit.global_rate_limit = GLOBAL_RATE_LIMIT
+        self.rate_limit.iter_chunk = ITER_CHUNK_TYPE
+        self.rate_limit.backend = RATE_LIMIT_BACKEND or self.rate_limit.backend
+        self.rate_limit.req_rate_limit = [
+            RateLimitType(key, value) for key, value in req_rate_limit_dict.items()
+        ] or self.rate_limit.req_rate_limit
+        self.rate_limit.token_rate_limit = [
+            RateLimitType(key, value) for key, value in token_rate_limit_conf.items()
+        ] or self.rate_limit.token_rate_limit
+
+        self.cache.backend = CACHE_BACKEND
+        self.cache.root_path_or_url = CACHE_ROOT_PATH_OR_URL
+        self.cache.default_request_caching_value = DEFAULT_REQUEST_CACHING_VALUE
+        self.cache.cache_openai = CACHE_OPENAI or self.cache.cache_openai
+        self.cache.cache_general = CACHE_GENERAL or self.cache.cache_general
+        self.cache.cache_routes = list(CACHE_ROUTE_SET) or self.cache.cache_routes
+        self.api_key.level = LEVEL_MODELS or self.api_key.level
+        self.api_key.openai_key = {
+            key: ','.join([str(i) for i in value])
+            for key, value in OPENAI_API_KEY.items()
+        } or self.api_key.openai_key
+        self.api_key.forward_key = FWD_KEY or self.api_key.forward_key
+        self.forward.forward = [ForwardItem(**i) for i in FORWARD_CONFIG]
+
+        return self

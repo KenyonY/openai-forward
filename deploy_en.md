@@ -79,8 +79,7 @@ docker run -d -p 8000:8000 beidongjiedeguang/openai-forward:latest
 This will map the host's 8000 port. Access the service via `http://{ip}:8000`.  
 The log path inside the container is `/home/openai-forward/Log/`. It can be mapped when starting up.
 
-Note: Similarly, the default API key can be passed in as an environment variable OPENAI_API_KEY=sk-xxx during startup using the -e flag.  
-For SSL setup, refer to the above. Environment variable configuration can be found [here](README_EN.md#configuration).
+Note: For SSL setup, refer to the above. Environment variable configuration can be found [here](README_EN.md#configuration).
 
 ## Source Code Deployment
 
