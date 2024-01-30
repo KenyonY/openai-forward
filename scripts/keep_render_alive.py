@@ -1,4 +1,3 @@
-import time
 from urllib.parse import urljoin
 
 import httpx
@@ -18,7 +17,6 @@ def job(url: str = "https://render.openai-forward.com"):
 
 if __name__ == "__main__":
     job()
-    schedule.every(10).minutes.do(job)
+    schedule.every(12).minutes.do(job)
     while True:
         schedule.run_pending()
-        time.sleep(60)
