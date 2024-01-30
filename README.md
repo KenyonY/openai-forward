@@ -202,8 +202,8 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 
 - **如何操作：**
   以LocalAI为例，如果已在 http://localhost:8080 部署了LocalAI服务，仅需在环境变量或 .env
-  文件中设置 `OPENAI_BASE_URL=http://localhost:8080`。
-  然后即可通过访问 http://localhost:8000 使用LocalAI。
+  文件中设置 `FORWARD_CONFIG=[{"base_url":"http://localhost:8080","route":"/localai","type":"openai"}]`。
+  然后即可通过访问 http://localhost:8000/localai 使用LocalAI。
 
 (更多)
 
