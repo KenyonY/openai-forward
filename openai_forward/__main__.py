@@ -120,6 +120,8 @@ class Cli:
                 'true',
                 '--theme.base',
                 'light',
+                '--browser.gatherUsageStats',
+                'false',
             ]
         )
 
