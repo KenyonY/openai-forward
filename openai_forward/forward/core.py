@@ -112,7 +112,7 @@ class GenericForward:
                 chunk_list.append(chunk)
             yield chunk
 
-        if cache and cache_key:
+        if r.ok and cache and cache_key:
             cache_generic_response(cache_key, chunk_list, route_path)
 
         # Only log non-stream response:
