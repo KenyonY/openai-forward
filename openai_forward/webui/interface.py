@@ -36,8 +36,7 @@ class Forward(Base):
         env_dict = {'FORWARD_CONFIG': json.dumps([i.to_dict() for i in self.forward])}
 
         if set_env:
-            for key, value in env_dict.items():
-                os.environ[key] = value
+            os.environ.update(env_dict)
         return env_dict
 
 
@@ -65,8 +64,7 @@ class CacheConfig(Base):
         env_dict['CACHE_ROUTES'] = json.dumps(self.cache_routes)
 
         if set_env:
-            for key, value in env_dict.items():
-                os.environ[key] = value
+            os.environ.update(env_dict)
         return env_dict
 
 
@@ -106,8 +104,7 @@ class RateLimit(Base):
         )
         env_dict['ITER_CHUNK_TYPE'] = self.iter_chunk
         if set_env:
-            for key, value in env_dict.items():
-                os.environ[key] = value
+            os.environ.update(env_dict)
         return env_dict
 
 
@@ -128,8 +125,7 @@ class ApiKey(Base):
         env_dict['FORWARD_KEY'] = json.dumps(self.forward_key)
         env_dict['LEVEL_MODELS'] = json.dumps(self.level)
         if set_env:
-            for key, value in env_dict.items():
-                os.environ[key] = value
+            os.environ.update(env_dict)
         return env_dict
 
 
@@ -138,13 +134,12 @@ class Log(Base):
     LOG_GENERAL: bool = True
     LOG_OPENAI: bool = True
 
-    def convert_to_env(self):
+    def convert_to_env(self, set_env=False):
         env_dict = {}
         env_dict['LOG_GENERAL'] = str(self.LOG_GENERAL)
         env_dict['LOG_OPENAI'] = str(self.LOG_OPENAI)
-
-        for key, value in env_dict.items():
-            os.environ[key] = value
+        if set_env:
+            os.environ.update(env_dict)
         return env_dict
 
 
@@ -176,11 +171,11 @@ class Config(Base):
         env_dict['TZ'] = self.timezone
         env_dict['TIMEOUT'] = str(self.timeout)
         env_dict['BENCHMARK_MODE'] = str(self.benchmark_mode)
-        env_dict['PROXY'] = self.proxy
+        if self.proxy:
+            env_dict['PROXY'] = self.proxy
 
         if set_env:
-            for key, value in env_dict.items():
-                os.environ[key] = value
+            os.environ.update(env_dict)
         return env_dict
 
     def come_from_env(self):
@@ -215,6 +210,6 @@ class Config(Base):
             for key, value in OPENAI_API_KEY.items()
         } or self.api_key.openai_key
         self.api_key.forward_key = FWD_KEY or self.api_key.forward_key
-        # self.forward.forward =
+        self.forward.forward = [ForwardItem(**i) for i in FORWARD_CONFIG]
 
         return self

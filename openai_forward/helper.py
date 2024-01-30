@@ -12,6 +12,11 @@ from fastapi import Request
 from rich import print
 
 
+class InfiniteSet:
+    def __contains__(self, item):
+        return True
+
+
 def urljoin(base_url, *relative_urls):
     """
     This function concatenates a base URL with any number of relative URL segments, producing a complete URL string.

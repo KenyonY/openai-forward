@@ -15,7 +15,7 @@ TIMEOUT = float(os.environ.get("TIMEOUT", "").strip() or "10")
 
 ITER_CHUNK_TYPE = (
     os.environ.get("ITER_CHUNK_TYPE", "").strip() or "efficiency"
-)  # Options: efficiency, precision
+)  # Options: efficiency, one-by-one
 
 CHAT_COMPLETION_ROUTE = "/v1/chat/completions"
 COMPLETION_ROUTE = "/v1/completions"

@@ -9,6 +9,7 @@ import zmq
 from flaxkv.helper import SimpleQueue
 
 from openai_forward.webui.chat import ChatData, render_chat_log_message
+from openai_forward.webui.helper import mermaid
 from openai_forward.webui.interface import *
 
 st.set_page_config(
@@ -44,7 +45,7 @@ def get_global_vars():
     q = SimpleQueue(maxsize=200)
     threading.Thread(target=worker, args=(log_socket, q)).start()
     config = Config().come_from_env()
-    print(f"{config=}")
+    # print(f"{config=}")
     chat_data = ChatData(200, render_chat_log_message)
     return {
         "socket": socket,
@@ -107,21 +108,38 @@ with st.sidebar:
 def display_forward_configuration():
     forward_config = config.forward
 
+    st.subheader("AI Forward")
     with st.form("forward_configuration", border=False):
-        st.subheader("AI Forward")
         df = pd.DataFrame([i.to_dict() for i in forward_config.forward])
         edited_df = st.data_editor(
             df, num_rows="dynamic", key="editor1", use_container_width=True
         )
-        st.write(
-            "> 在以上默认设置下:  \n"
-            "> - openai转发地址为： http://localhost:8000/  \n"
-            "> - type=openai转发下的服务需要满足openai api 格式才能被正确解析  \n\n"
-            "> - gemini转发地址为： http://localhost:8000/gemini  \n"
-            "> - type=general转发下的服务可以是任何服务（暂不支持websocket)"
-        )
 
-        st.write("#")
+        with st.expander("See explanation"):
+            df_demo = pd.DataFrame(
+                [
+                    {
+                        'base_url': 'https://api.openai.com',
+                        'route': '/',
+                        'type': 'openai',
+                    },
+                    {
+                        "base_url": "https://generativelanguage.googleapis.com",
+                        "route": "/gemini",
+                        "type": "general",
+                    },
+                ]
+            )
+
+            st.write(df_demo)
+            st.write(
+                "> 在以上设置下:  \n"
+                "> - openai转发地址为： http://localhost:8000/  \n"
+                "> - type=openai转发下的服务需要满足openai api 格式才能被正确解析  \n\n"
+                "> - gemini转发地址为： http://localhost:8000/gemini  \n"
+                "> - type=general转发下的服务可以是任何服务（暂不支持websocket)"
+            )
+
         st.write("#")
 
         submitted = st.form_submit_button("Save", use_container_width=True)
@@ -136,20 +154,35 @@ def display_forward_configuration():
 
 
 def display_api_key_configuration():
-    st.header("WIP: level 部分尚在开发中")
-    st.write(
-        """#### 为你的转发key精确定义可访问的每一个模型
-> **说明**  
-> - 不同level对应不同权限，可以定义不同权限可以访问哪些模型。 例如, level为0，全权限，可访问任何模型; level为1，只可访问gpt-3.5-turbo；level为2，可访问embedding 和tts等等。。
+
+    with st.expander("See explanation"):
+        st.write(
+            """
+> - 不同level对应不同权限，可以定义不同权限可以访问哪些模型。 例如, level为1，只可访问gpt-3.5-turbo；level为2，可访问embedding 和tts等等。(level为0，全权限，可访问任何模型，不可更改)
 > - 对于api key而言，level的意义是区分该api key自身是否有权限访问哪些模型。每个api key可对应多个level，因为这些level不必是从属关系。
 > - 对于forward key而言，每个key对应一个level，level表示它可以访问该level对应的所有api key。
-
 """
-    )
+        )
+        mermaid(
+            """
+graph TD
+fk1(FK1) --> level0(Level 0)
+fk2(FK2) --> level0
+level0 --> sk1(SK1)
+level0 --> sk2(SK2)
+level0 --> sk3(SK3)
+
+fk3(FK3) --> level1(Level 1)
+level1 --> sk4(SK4)
+level1 --> sk3(SK3)
+
+fk(FK_x) --> level_n(Level n)
+level_n --> sk_n(SK_n)
+"""
+        )
 
     # check openai models:
-    from openai import OpenAI
-
+    # from openai import OpenAI
     # client = OpenAI(api_key=)
     # openai_model_list = [i.id for i in client.models.list()]
     # openai_model_list.sort()
@@ -188,8 +221,11 @@ def display_api_key_configuration():
     st.subheader("Key Level")
 
     level_model_map = {}
-    levels = list(api_key.level.keys())
-    models_list = list(api_key.level.values())
+    api_key.level: dict
+    # sort api_key.level by key, so that level 1 is always the first one
+    sorted_list = sorted(api_key.level.items(), key=lambda x: x[0], reverse=False)
+    levels = [i[0] for i in sorted_list]
+    models_list = [i[1] for i in sorted_list]
     num_levels = st.number_input(
         '请选择你需定义几个level (不包含level 0,它是全权限)', 0, 1000, len(levels), 1
     )

@@ -26,6 +26,7 @@ from ..content.openai import (
     WhisperLogger,
 )
 from ..decorators import async_retry, async_token_rate_limit
+from ..helper import InfiniteSet
 from ..settings import *
 
 # from beartype import beartype
@@ -294,6 +295,9 @@ class OpenaiForward(GenericForward):
 
     _fk_to_level = FWD_KEY
     _sk_to_levels = OPENAI_API_KEY
+    _level_to_model_set = {level: set(models) for level, models in LEVEL_MODELS.items()}
+
+    _zero_level_model_set = InfiniteSet()
 
     _level_to_sks = {}
     for sk, levels in _sk_to_levels.items():
@@ -303,8 +307,6 @@ class OpenaiForward(GenericForward):
     _level_to_sk = {}
     for level, sks in _level_to_sks.items():
         _level_to_sk[level] = cycle(sks)
-
-    print(_level_to_sks)
 
     def __init__(self, base_url: str, route_prefix: str, proxy=None):
         """
@@ -337,8 +339,8 @@ class OpenaiForward(GenericForward):
         if level is not None:
             sk = cls._level_to_sk.get(level)
             if sk:
-                return next(sk)
-        return None
+                return next(sk), level
+        return None, level
 
     def _handle_result(
         self, buffer: bytearray, uid: str, route_path: str, request_method: str
@@ -394,13 +396,14 @@ class OpenaiForward(GenericForward):
                 return self.embedding_logger
         return None
 
-    async def _handle_payload(self, request: Request, route_path: str):
+    async def _handle_payload(self, request: Request, route_path: str, model_set):
         """
         Asynchronously logs the payload of the API call.
 
         Args:
             request (Request): The original FastAPI request object.
             route_path (str): The API route path.
+            model_set (set): The set of models that can be accessed.
 
         Returns:
             valid, payload_info, payload
@@ -443,6 +446,18 @@ class OpenaiForward(GenericForward):
             )
 
         valid = True if payload_log_info['uid'] is not None else False
+
+        if valid:
+            if payload_log_info["model"] not in model_set:
+                print(f"{model_set=}")
+                logger.warning(
+                    f"[Auth Warning] model: {payload_log_info['model']} is not allowed"
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"model: {payload_log_info['model']} is not allowed",
+                )
+
         return valid, payload_log_info, payload
 
     @staticmethod
@@ -545,15 +560,22 @@ class OpenaiForward(GenericForward):
 
         Returns:
             str: The authorization string.
+            set: The set of models can be accessed.
         """
         auth, auth_prefix = client_config["auth"], "Bearer "
+        model_set = self._zero_level_model_set
 
-        if auth and auth[len(auth_prefix) :] in FWD_KEY:
-            sk = self.fk_to_sk(auth[len(auth_prefix) :])
-            if sk:
-                auth = auth_prefix + sk
-                client_config["headers"]["Authorization"] = auth
-        return auth
+        if auth:
+            fk = auth[len(auth_prefix) :]
+            if fk in FWD_KEY:
+                sk, level = self.fk_to_sk(fk)
+                assert level is not None
+                if level != 0:
+                    model_set = self._level_to_model_set[level]
+                if sk:
+                    auth = auth_prefix + sk
+                    client_config["headers"]["Authorization"] = auth
+        return auth, model_set
 
     async def reverse_proxy(self, request: Request):
         """
@@ -568,9 +590,9 @@ class OpenaiForward(GenericForward):
         client_config = self.prepare_client(request, return_origin_header=False)
         route_path = client_config["route_path"]
 
-        self.handle_authorization(client_config)
+        _, model_set = self.handle_authorization(client_config)
         valid_payload, payload_info, payload = await self._handle_payload(
-            request, route_path
+            request, route_path, model_set
         )
         uid = payload_info["uid"]
 
