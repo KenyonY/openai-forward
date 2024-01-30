@@ -64,7 +64,6 @@
 
 ## 主要特性
 
-OpenAI-Forward 提供以下核心功能：
 
 - **全能转发**：可转发几乎所有类型的请求
 - **性能优先**：出色的异步性能
@@ -73,6 +72,7 @@ OpenAI-Forward 提供以下核心功能：
 - **实时响应日志**：提升LLMs可观察性
 - **自定义秘钥**：替代原始API密钥
 - **多目标路由**：转发多个服务地址至同一服务下的不同路由
+- **黑白名单**：可对指定IP进行黑白名单限制
 - **自动重试**：确保服务的稳定性，请求失败时将自动重试
 - **快速部署**：支持通过pip和docker在本地或云端进行快速部署
 
@@ -220,56 +220,25 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 (更多)
 
 
-
 <a>
    <img src="https://raw.githubusercontent.com/KenyonY/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">
 </a>
 
 ## 配置
 
-### 命令行参数
 
-执行 `aifd run --help` 获取参数详情
+执行 `aifd run --webui` 进入配置页面 (默认服务地址 http://localhost:8001)
 
-<details open>
-  <summary>Click for more details</summary>
-
-| 配置项       | 说明    | 默认值  |
-|-----------|-------|:----:|
-| --port    | 服务端口号 | 8000 |
-| --workers | 工作进程数 |  1   |
-
-</details>
-
-### 环境变量详情
 
 你可以在项目的运行目录下创建 .env 文件来定制各项配置。参考配置可见根目录下的
 [.env.example](.env.example)文件
 
-| 环境变量                          | 说明                                                                   |                                 默认值                                 |
-|-------------------------------|----------------------------------------------------------------------|:-------------------------------------------------------------------:|
-| FORWARD_CONFIG                | 配置转发base url与 转发路由                                                   | [{"base_url":"https://api.openai.com","route":"/","type":"openai"}] |
-| OPENAI_API_KEY                | 配置OpenAI 接口风格的API密钥，支持使用多个密钥，通过逗号分隔                                  |                                  无                                  |
-| FORWARD_KEY                   | 设定用于代理的自定义密钥，多个密钥可用逗号分隔。如果未设置(不建议)，将直接使用 `OPENAI_API_KEY`            |                                  无                                  |
-| EXTRA_BASE_URL                | 用于配置额外代理服务的基础URL                                                     |                                  无                                  |
-| EXTRA_ROUTE_PREFIX            | 定义额外代理服务的路由前缀                                                        |                                  无                                  |
-| REQ_RATE_LIMIT                | 设置特定路由的用户请求速率限制 (区分用户)                                               |                                  无                                  |
-| GLOBAL_RATE_LIMIT             | 配置全局请求速率限制，适用于未在 `REQ_RATE_LIMIT` 中指定的路由                             |                                  无                                  |
-| RATE_LIMIT_STRATEGY           | 选择速率限制策略，选项包括：fixed-window、fixed-window-elastic-expiry、moving-window |                                  无                                  |
-| TOKEN_RATE_LIMIT              | 限制流式响应中每个token（或SSE chunk）的输出速率                                      |                                  无                                  |
-| PROXY                         | 设置HTTP代理地址                                                           |                                  无                                  |
-| LOG_CHAT                      | 开关聊天内容的日志记录，用于调试和监控                                                  |                               `false`                               |
-| CACHE_BACKEND                 | cache后端，支持内存后端和数据库后端，默认为内存后端，可选lmdb、leveldb数据库后端                     |                               `lmdb`                                |
-| CACHE_CHAT_COMPLETION         | 是否缓存/v1/chat/completions 结果                                          |                               `false`                               |
-| DEFAULT_REQUEST_CACHING_VALUE | 是否默认开启缓存                                                             |                               `false`                               |
-
-详细配置说明可参见 [.env.example](.env.example) 文件。(待完善)
-
-> 注意：如果你设置了 OPENAI_API_KEY 但未设置 FORWARD_KEY，客户端在调用时将不需要提供密钥。由于这可能存在安全风险，除非有明确需求，否则不推荐将
-> FORWARD_KEY 置空。
 
 ### 智能缓存
 
+开启缓存后，将会对指定路由的内容进行缓存，其中转发类型分别为`openai`与`general`两者行为略有不同，
+使用`general`转发时，默认会将相同的请求一律使用缓存返回，  
+使用`openai`转发时，在开启缓存后，可以通过OpenAI 的`extra_body`参数来控制缓存的行为，如
 
 **Python**
 

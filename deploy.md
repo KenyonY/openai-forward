@@ -90,7 +90,6 @@ docker run --env-file .env -d -p 8000:8000 beidongjiedeguang/openai-forward:late
 将映射宿主机的8000端口，通过`http://{ip}:8000`访问服务。  
 容器内日志路径为`/home/openai-forward/Log/`, 可在启动时将其映射出来。  
 
-注：同样可以在启动命令中通过-e传入环境变量OPENAI_API_KEY=sk-xxx作为默认api key  
 启用SSL同上.
 环境变量配置见[环境变量配置](README.md#配置)
 

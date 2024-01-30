@@ -77,6 +77,7 @@ OpenAI-Forward offers the following capabilities:
 - **User Traffic Control**: Customize request and Token rates.
 - **Real-time Response Logs**: Enhances observability of the call chain.
 - **Custom Secret Keys**: Replaces the original API keys.
+- **Black and White List**: IP-based black and white list restrictions can be implemented.
 - **Multi-target Routing**: Forwards to multiple service addresses under a single service to different routes.
 - **Automatic Retries**: Ensures service stability; will automatically retry on failed requests.
 - **Quick Deployment**: Supports fast deployment locally or on the cloud via pip and docker.
@@ -233,46 +234,16 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 
 ## Configuration
 
-### Command Line Arguments
-
-Execute `aifd run --help` to get details on arguments.
-
-<details open>
-  <summary>Click for more details</summary>
-
-| Configuration | Description | Default Value |
-|---------------|-------------|:-------------:|
-| --port       | Service port | 8000         |
-| --workers    | Number of working processes | 1 |
-
-</details>
-
-### Environment Variable Details
-
-You can create a .env file in the project's run directory to customize configurations. For a reference configuration, see the [.env.example](.env.example) file in the root directory.
-
-| Environment Variable  | Description                                                                                      |     Default Value      |
-|-----------------------|-------------------------------------------------------------------------------------------------|:----------------------:|
-| FORWARD_CONFIG                |                                                    | [{"base_url":"https://api.openai.com","route":"/","type":"openai"}] |
-| OPENAI_API_KEY        | Configure API key in OpenAI style, supports using multiple keys separated by commas              |          None          |
-| FORWARD_KEY           | Set a custom key for proxying, multiple keys can be separated by commas. If not set (not recommended), it will directly use `OPENAI_API_KEY` |          None          |
-| EXTRA_BASE_URL        | Configure the base URL for additional proxy services                                             |          None          |
-| EXTRA_ROUTE_PREFIX    | Define the route prefix for additional proxy services                                           |          None          |
-| REQ_RATE_LIMIT        | Set the user request rate limit for specific routes (user distinguished)                         |          None          |
-| GLOBAL_RATE_LIMIT     | Configure a global request rate limit applicable to routes not specified in `REQ_RATE_LIMIT`    |          None          |
-| RATE_LIMIT_STRATEGY   | Choose a rate limit strategy, options include: fixed-window, fixed-window-elastic-expiry, moving-window |          None          |
-| TOKEN_RATE_LIMIT      | Limit the output rate of each token (or SSE chunk) in a streaming response                      |          None          |
-| PROXY                 | Set HTTP proxy address                                                                           |          None          |
-| LOG_CHAT              | Toggle chat content logging for debugging and monitoring                                        |        `false`         |
-| CACHE_BACKEND         | Cache backend, supports memory backend and database backend. By default, it's memory backend, optional database backends are lmdb, and leveldb |         `lmdb`         |
-| CACHE_CHAT_COMPLETION | Whether to cache /v1/chat/completions results                                                    |        `false`         |
+Execute `aifd run --webui` to enter the configuration page (default service address http://localhost:8001).
 
 Detailed configuration descriptions can be seen in the [.env.example](.env.example) file. (To be completed)
 
-> Note: If you set OPENAI_API_KEY but did not set FORWARD_KEY, clients will not need to provide a key when calling. As this may pose a security risk, it's not recommended to leave FORWARD_KEY unset unless there's a specific need.
 
 ### Caching
 
+After enabling caching, the content of specified routes will be cached. The forwarding types are divided into `openai` and `general`, with slightly different behaviors for each.
+When using `general` forwarding, by default, the same requests will all be responded to using the cache.
+When using `openai` forwarding, after enabling caching, the caching behavior can be controlled through OpenAI's `extra_body` parameter, such as
 
 **Python**
 ```diff
@@ -302,7 +273,7 @@ curl https://smart.openai.com/v1/chat/completions \
 
 ```
 
-### Custom Keys
+### Custom Api Keys
 
 <details open>
   <summary>Click for more details</summary>
