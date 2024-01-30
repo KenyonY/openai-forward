@@ -1,4 +1,4 @@
-FROM python:3.10
+FROM python:3.10-slim
 
 LABEL maintainer="kunyuan"
 
@@ -19,13 +19,12 @@ WORKDIR /home/openai-forward
 
 RUN apt-get update && \
     apt-get install -y patch g++ gcc libstdc++6 libtcmalloc-minimal4 libleveldb-dev cmake make build-essential && \
-    pip install -e .[webui] --no-cache-dir && \
-    pip install "lmdb>=1.4.1" "plyvel>=1.5.0" --no-cache-dir && \
-    apt-get remove -y patch g++ gcc cmake make && \
+    pip3 install -e .[webui] --no-cache-dir && \
+    apt-get remove -y patch g++ gcc cmake make build-essential && \
     apt-get autoremove -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 
 EXPOSE 8000 8001
-ENTRYPOINT ["python", "-m", "openai_forward.__main__", "run", "--webui"]
+ENTRYPOINT ["python3", "-m", "openai_forward.__main__", "run", "--webui"]
