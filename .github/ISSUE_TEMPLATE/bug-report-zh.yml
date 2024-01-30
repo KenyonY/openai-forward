@@ -14,7 +14,7 @@ body:
       description: |
         请确认以下所有项均被满足
       options:
-        - label: 我运行的`openai-forward`版本不低于v0.6.0
+        - label: 我运行的`openai-forward`版本不低于v0.7.0
           required: true
 
   - type: textarea
