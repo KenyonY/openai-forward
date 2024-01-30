@@ -441,7 +441,6 @@ elif selected_section == "Real-time Logs":
             uid, msg = q.get()
             uid: bytes
             print(f"{uid=}")
-            time.sleep(0.01)
             item = orjson.loads(msg)
             if uid.startswith(b"0"):
                 item['user_role'] = True
