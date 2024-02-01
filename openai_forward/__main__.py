@@ -7,7 +7,6 @@ import subprocess
 
 import fire
 import uvicorn
-from loguru import logger
 
 
 class Cli:
@@ -39,6 +38,7 @@ class Cli:
             port (int): The port number on which to run the server.
             workers (int): The number of worker processes to run.
             webui (bool): Whether to run the web UI. Default is False.
+            start_ui (bool): Whether to start the web UI.
             ui_port (int): The port number on which to run streamlit.
 
         Returns:
@@ -65,9 +65,6 @@ class Cli:
             import threading
 
             import zmq
-            from flaxkv.helper import SimpleQueue
-
-            from openai_forward.helper import get_inner_ip
 
             mq_port = 15555
 
