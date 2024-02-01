@@ -11,15 +11,35 @@ from loguru import logger
 
 
 class Cli:
-    def run(self, port=8000, workers=1, webui=False, ui_port=8001):
+    def run_web(self, port=8001, openai_forward_host='localhost', wait=True):
+        """
+        Runs the web UI using the Streamlit server.
+
+        Args:
+            port (int): The port number on which to run the server.
+            openai_forward_host (str): The host of the OpenAI Forward server.
+            wait (bool): Whether to wait for the server to stop. Default is True.
+
+        Returns:
+            None
+        """
+        os.environ['OPENAI_FORWARD_HOST'] = openai_forward_host
+        try:
+            self._start_streamlit(port=port, wait=wait)
+        except KeyboardInterrupt:
+            ...
+        except Exception as e:
+            raise
+
+    def run(self, port=8000, workers=1, webui=False, start_ui=True, ui_port=8001):
         """
         Runs the application using the Uvicorn server.
 
         Args:
-            port (int): The port number on which to run the server. Default is 8000.
-            workers (int): The number of worker processes to run. Default is 1.
+            port (int): The port number on which to run the server.
+            workers (int): The number of worker processes to run.
             webui (bool): Whether to run the web UI. Default is False.
-            ui_port (int): The port number on which to run streamlit. Default is 17860.
+            ui_port (int): The port number on which to run streamlit.
 
         Returns:
             None
@@ -42,14 +62,38 @@ class Cli:
                 ssl_certfile=ssl_certfile,
             )
         else:
-            os.environ['OPENAI_FORWARD_WEBUI'] = 'true'
+            import threading
 
             import zmq
+            from flaxkv.helper import SimpleQueue
+
+            from openai_forward.helper import get_inner_ip
 
             mq_port = 15555
+
+            os.environ['OPENAI_FORWARD_WEBUI'] = 'true'
+
             context = zmq.Context()
             socket = context.socket(zmq.REP)
             socket.bind(f"tcp://*:{mq_port}")
+            log_socket = context.socket(zmq.ROUTER)
+            log_socket.bind(f"tcp://*:{15556}")
+            subscriber_info = {}
+
+            def mq_worker(log_socket: zmq.Socket):
+
+                while True:
+                    identity, uid, message = log_socket.recv_multipart()
+                    if uid == b"/subscribe":
+                        subscriber_info[identity] = True
+                        continue
+                    else:
+                        for subscriber, _ in subscriber_info.items():
+                            log_socket.send_multipart([subscriber, uid, message])
+
+            thread = threading.Thread(target=mq_worker, args=(log_socket,))
+            thread.daemon = True
+            thread.start()
 
             self._start_uvicorn(
                 port=port,
@@ -57,13 +101,15 @@ class Cli:
                 ssl_keyfile=ssl_keyfile,
                 ssl_certfile=ssl_certfile,
             )
-            self._start_streamlit(port=ui_port)
-            atexit.register(self._stop)
+
+            if start_ui:
+                self._start_streamlit(port=ui_port, wait=False)
+
+            atexit.register(self._stop_uvicorn)
 
             while True:
                 message = socket.recv()
                 env_dict: dict = pickle.loads(message)
-                # logger.debug(f"{env_dict=}")
 
                 for key, value in env_dict.items():
                     os.environ[key] = value
@@ -102,7 +148,7 @@ class Cli:
             suppress_exception=suppress_exception,
         )
 
-    def _start_streamlit(self, port):
+    def _start_streamlit(self, port, wait=False):
         from openai_forward.helper import relp
 
         self.streamlit_proc = subprocess.Popen(
@@ -125,9 +171,19 @@ class Cli:
             ]
         )
 
+        atexit.register(self._stop_streamlit)
+        if wait:
+            self.streamlit_proc.wait()
+
     def _restart_uvicorn(self, **kwargs):
-        self._stop(streamlit=False)
+        self._stop_uvicorn()
         self._start_uvicorn(**kwargs)
+
+    def _stop_streamlit(self):
+        self._stop(uvicorn=False)
+
+    def _stop_uvicorn(self):
+        self._stop(streamlit=False)
 
     def _stop(self, uvicorn=True, streamlit=True):
         if uvicorn and self.uvicorn_proc.poll() is None:

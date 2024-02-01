@@ -21,7 +21,7 @@ class LoggerBase(ABC):
         self.logger = logger.bind(**kwargs)
 
         self.webui = False
-        if os.environ.get("OPENAI_FORWARD_WEBUI"):
+        if os.environ.get("OPENAI_FORWARD_WEBUI", "false").strip().lower() == 'true':
             self.webui = True
 
             import zmq
@@ -29,7 +29,7 @@ class LoggerBase(ABC):
 
             context = zmq.Context()
             socket = context.socket(zmq.DEALER)
-            socket.connect(f"tcp://localhost:15556")
+            socket.connect("tcp://localhost:15556")
 
             self.q = SimpleQueue(maxsize=200)
 

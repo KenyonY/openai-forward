@@ -10,7 +10,9 @@ def render_chat_log_message(msg: Dict):
         with st.chat_message(name="human"):
             messages = msg.pop('messages')
             for msg_item in messages:
-                st.write(f"`{msg_item['role']}`: {msg_item['content']}")
+                # https://github.com/streamlit/streamlit/issues/7978
+                # st.write(f"`{msg_item['role']}`: {msg_item['content']}")
+                st.text(f"`{msg_item['role']}`: {msg_item['content']}")
             st.write(msg)
     elif msg.get("assistant_role"):
         with st.chat_message(name="ai"):
