@@ -21,7 +21,7 @@ class LoggerBase(ABC):
         self.logger = logger.bind(**kwargs)
 
         self.webui = False
-        if os.environ.get("OPENAI_FORWARD_WEBUI").strip().lower() == 'true':
+        if os.environ.get("OPENAI_FORWARD_WEBUI", "false").strip().lower() == 'true':
             self.webui = True
 
             import zmq
