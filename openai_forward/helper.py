@@ -3,7 +3,6 @@ import hashlib
 import inspect
 import os
 import re
-import socket
 import time
 from pathlib import Path
 from typing import Dict, List, Union
@@ -19,6 +18,8 @@ class InfiniteSet:
 
 
 def get_inner_ip():
+    import socket
+
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
         s.connect(('8.8.8.8', 80))
         return s.getsockname()[0]
