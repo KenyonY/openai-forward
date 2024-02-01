@@ -1,3 +1,4 @@
+import os
 import pickle
 import threading
 import time
@@ -30,23 +31,23 @@ def get_global_vars():
     context = zmq.Context()
     socket = context.socket(zmq.REQ)
     # socket.setsockopt(zmq.CONNECT_TIMEOUT, 20000) # 20s
-    log_socket = context.socket(zmq.ROUTER)
+    openai_forward_host = os.environ.get("OPENAI_FORWARD_HOST", "localhost")
+    socket.connect(f"tcp://{openai_forward_host}:15555")
 
-    socket.connect("tcp://localhost:15555")
-    log_socket.bind("tcp://*:15556")
+    log_socket = context.socket(zmq.DEALER)
+    log_socket.connect(f"tcp://{openai_forward_host}:15556")
+    log_socket.send_multipart([b"/subscribe", b"0"])
 
     def worker(log_socket: zmq.Socket, q: SimpleQueue):
         while True:
             message = log_socket.recv_multipart()
-            # print(f"{message=}")
-            identify, uid, msg = message
+            uid, msg = message
             q.put((uid, msg))
 
-    q = SimpleQueue(maxsize=200)
+    q = SimpleQueue(maxsize=100)
     threading.Thread(target=worker, args=(log_socket, q)).start()
     config = Config().come_from_env()
-    # print(f"{config=}")
-    chat_data = ChatData(200, render_chat_log_message)
+    chat_data = ChatData(100, render_chat_log_message)
     return {
         "socket": socket,
         "log_socket": log_socket,
