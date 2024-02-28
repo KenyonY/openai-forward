@@ -27,7 +27,7 @@ dependencies = [
     "rich",
     "fire",
     "pytz",
-    "slowapi==0.1.8",
+    "slowapi==0.1.9",
     "aiohttp>=3.8.5",
     "flaxkv[client]>=0.2.7",
     "httpx[http2]>=0.26.0",
