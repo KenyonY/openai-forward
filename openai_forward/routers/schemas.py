@@ -58,22 +58,16 @@ class OpenAIV1ChatCompletion(BaseModel):
             }
         }
 
-class AnthropicChatCompletion(BaseModel):
-    """Creates a completion for the chat message"""
+class AnthropicTextCompletion(BaseModel):
+    """Creates a completion for the prompt"""
 
     model: str = Field(
         ..., description="The model to use for the completion", example="claude-v1"
     )
-    messages: Optional[List[Dict[str, Any]]] = Field(
-        description="The message to complete",
-        example=[{"role": "user", "content": "hi"}],
-    )
-    prompt: Optional[str] = Field(
+    prompt: str = Field(
+        ...,
         description="The prompt to complete",
         example="Hi! How are you?",
-    )
-    system: Optional[str] = Field(
-        description="System prompt.", example="Respond only in Spanish."
     )
     temperature: float = Field(default=1, description="0会导致更确定的结果，1会导致更随机的结果")
     top_p: float = Field(default=1, description="0会导致更确定的结果，1会导致更随机的结果")
@@ -81,6 +75,31 @@ class AnthropicChatCompletion(BaseModel):
     max_tokens_to_sample: Optional[int] = Field(
         default=None,
         description="max_tokens_to_sample.",
+    )
+    stream: bool = Field(default=False)
+
+class AnthropicMessagesCompletion(BaseModel):
+    """Creates a completion for the chat messages"""
+
+    model: str = Field(
+        ..., description="The model to use for the completion", example="claude-3-opus-20240229"
+    )
+    messages: List[Dict[str, Any]] = Field(
+        ...,
+        description="The message to complete",
+        example=[{"role": "user", "content": "hi"}],
+    )
+    system: Optional[str] = Field(
+        default=None,
+        description="System prompt.",
+        example="Respond only in Spanish.",
+    )
+    temperature: float = Field(default=1, description="0会导致更确定的结果，1会导致更随机的结果")
+    top_p: float = Field(default=1, description="0会导致更确定的结果，1会导致更随机的结果")
+    top_k: float = Field(default=50, description="0会导致更确定的结果，1会导致更随机的结果")
+    max_tokens: Optional[int] = Field(
+        default=None,
+        description="The maximum number of tokens to generate before stopping.",
     )
     stream: bool = Field(default=False)
 

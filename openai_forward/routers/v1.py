@@ -3,7 +3,7 @@ from fastapi import APIRouter, Request
 from ..nai import NovelAI
 from ..anthropic import Anthropic
 from ..openai import Openai
-from .schemas import OpenAIV1ChatCompletion, AnthropicChatCompletion, NAICompletion
+from .schemas import OpenAIV1ChatCompletion, AnthropicTextCompletion, AnthropicMessagesCompletion, NAICompletion
 
 openai = Openai()
 anthropic = Anthropic()
@@ -22,11 +22,11 @@ async def models_list(request: Request):
     return await openai.reverse_proxy(request)
 
 @router.post("/v1/complete")
-async def anthropic_completions(params: AnthropicChatCompletion, request: Request):
+async def anthropic_text_completions(params: AnthropicTextCompletion, request: Request):
     return await anthropic.reverse_proxy(request)
 
 @router.post("/v1/messages")
-async def anthropic_completions(params: AnthropicChatCompletion, request: Request):
+async def anthropic_messages_completions(params: AnthropicMessagesCompletion, request: Request):
     return await anthropic.reverse_proxy(request)
 
 @router.get("/user/subscription")
