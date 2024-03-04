@@ -64,10 +64,18 @@ class AnthropicChatCompletion(BaseModel):
     model: str = Field(
         ..., description="The model to use for the completion", example="claude-v1"
     )
+    messages: List[Dict[str, Any]] = Field(
+        ...,
+        description="The message to complete",
+        example=[{"role": "user", "content": "hi"}],
+    )
     prompt: str = Field(
         ...,
         description="The prompt to complete",
         example="Hi! How are you?",
+    )
+    system: str = Field(
+        ..., description="System prompt.", example="Respond only in Spanish."
     )
     temperature: float = Field(default=1, description="0会导致更确定的结果，1会导致更随机的结果")
     top_p: float = Field(default=1, description="0会导致更确定的结果，1会导致更随机的结果")
