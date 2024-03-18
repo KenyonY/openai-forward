@@ -495,6 +495,7 @@ class OpenaiForward(GenericForward):
         route_path: str,
         uid: str,
         cache_key: str | None = None,
+        stream: bool | None = None,
     ):
         """
         Asynchronously iterates through the bytes in the given aiohttp.ClientResponse object
@@ -512,29 +513,41 @@ class OpenaiForward(GenericForward):
         """
 
         queue_is_complete = False
-
-        queue = Queue()
-        # todo:
-        task = asyncio.create_task(self.read_chunks(r, queue))
         chunk_list = []
-        try:
-            while True:
-                chunk = await queue.get()
-                if not isinstance(chunk, bytes):
-                    queue.task_done()
-                    queue_is_complete = True
-                    break
-                if CACHE_OPENAI:
-                    chunk_list.append(chunk)
+        if stream:
+            queue = Queue()
+            # todo:
+            task = asyncio.create_task(self.read_chunks(r, queue))
+            try:
+                while True:
+                    chunk = await queue.get()
+                    if not isinstance(chunk, bytes):
+                        queue.task_done()
+                        queue_is_complete = True
+                        break
+                    if CACHE_OPENAI:
+                        chunk_list.append(chunk)
+                    yield chunk
+            except Exception:
+                logger.warning(
+                    f"aiter_bytes error:\nhost:{request.client.host} method:{request.method}: {traceback.format_exc()}"
+                )
+            finally:
+                if not task.done():
+                    task.cancel()
+        else:
+            try:
+                chunk = await r.read()
                 yield chunk
-        except Exception:
-            logger.warning(
-                f"aiter_bytes error:\nhost:{request.client.host} method:{request.method}: {traceback.format_exc()}"
-            )
-        finally:
-            if not task.done():
-                task.cancel()
-            r.release()
+            except Exception:
+                logger.warning(
+                    f"aiter_bytes error:\nhost:{request.client.host} method:{request.method}: {traceback.format_exc()}"
+                )
+            chunk_list.append(chunk)
+            chunk = bytearray(chunk)
+            queue_is_complete = True
+
+        r.release()
 
         if uid:
             if r.ok and queue_is_complete:
@@ -595,6 +608,7 @@ class OpenaiForward(GenericForward):
             request, route_path, model_set
         )
         uid = payload_info["uid"]
+        stream = payload_info['stream']
 
         cached_response, cache_key = get_cached_response(
             payload,
@@ -610,7 +624,7 @@ class OpenaiForward(GenericForward):
 
         r = await self.send(client_config, data=payload)
         return StreamingResponse(
-            self.aiter_bytes(r, request, route_path, uid, cache_key),
+            self.aiter_bytes(r, request, route_path, uid, cache_key, stream),
             status_code=r.status,
             media_type=r.headers.get("content-type"),
         )
