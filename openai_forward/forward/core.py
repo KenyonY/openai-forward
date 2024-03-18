@@ -507,13 +507,15 @@ class OpenaiForward(GenericForward):
             route_path (str): The API route path.
             uid (str): Unique identifier for the request.
             cache_key (bytes): The cache key.
+            stream (bool): Whether the response is a stream.
 
         Returns:
              AsyncGenerator[bytes]: Each chunk of bytes from the server's response.
         """
 
-        queue_is_complete = False
+        yield_completed = False
         chunk_list = []
+        chunk = None
         if stream:
             queue = Queue()
             # todo:
@@ -523,14 +525,15 @@ class OpenaiForward(GenericForward):
                     chunk = await queue.get()
                     if not isinstance(chunk, bytes):
                         queue.task_done()
-                        queue_is_complete = True
+                        yield_completed = True
                         break
                     if CACHE_OPENAI:
                         chunk_list.append(chunk)
                     yield chunk
-            except Exception:
+            except Exception as e:
                 logger.warning(
-                    f"aiter_bytes error:\nhost:{request.client.host} method:{request.method}: {traceback.format_exc()}"
+                    f"aiter_bytes error:{e}\nhost:{request.client.host} method:{request.method}: "
+                    f"{traceback.format_exc()}"
                 )
             finally:
                 if not task.done():
@@ -539,18 +542,19 @@ class OpenaiForward(GenericForward):
             try:
                 chunk = await r.read()
                 yield chunk
-            except Exception:
+                chunk_list.append(chunk)
+                chunk = bytearray(chunk)
+                yield_completed = True
+            except Exception as e:
                 logger.warning(
-                    f"aiter_bytes error:\nhost:{request.client.host} method:{request.method}: {traceback.format_exc()}"
+                    f"aiter_bytes error:{e}\nhost:{request.client.host} method:{request.method}: "
+                    f"{traceback.format_exc()}"
                 )
-            chunk_list.append(chunk)
-            chunk = bytearray(chunk)
-            queue_is_complete = True
 
         r.release()
 
         if uid:
-            if r.ok and queue_is_complete:
+            if r.ok and yield_completed:
                 target_info = self._handle_result(
                     chunk, uid, route_path, request.method
                 )
@@ -608,7 +612,7 @@ class OpenaiForward(GenericForward):
             request, route_path, model_set
         )
         uid = payload_info["uid"]
-        stream = payload_info['stream']
+        stream = payload_info.get('stream', None)
 
         cached_response, cache_key = get_cached_response(
             payload,
