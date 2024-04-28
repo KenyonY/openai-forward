@@ -1,6 +1,6 @@
 services:
   - name: openai-forward
     type: web
-    env: docker
+    runtime: docker
     region: oregon
     plan: free
