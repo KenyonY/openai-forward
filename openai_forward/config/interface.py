@@ -4,7 +4,7 @@ from typing import Dict, List, Literal, Optional, Tuple, Union
 
 from attrs import asdict, define, field, filters
 
-from openai_forward.settings import *
+from ..settings import *
 
 
 class Base:
@@ -12,6 +12,9 @@ class Base:
         if drop_none:
             return asdict(self, filter=filters.exclude(type(None)))
         return asdict(self)
+
+    def to_dict_str(self):
+        return {k: str(v) for k, v in self.to_dict(drop_none=True).items()}
 
 
 @define(slots=True)
@@ -71,7 +74,7 @@ class CacheConfig(Base):
 @define(slots=True)
 class RateLimitType(Base):
     route: str
-    value: str
+    value: List[Dict[str, str]]
 
 
 @define(slots=True)
@@ -79,13 +82,25 @@ class RateLimit(Base):
     backend: str = ''
     global_rate_limit: str = 'inf'
     token_rate_limit: List[RateLimitType] = [
-        RateLimitType(route="/v1/chat/completions", value="60/second"),
-        RateLimitType(route="/v1/completions", value="60/second"),
+        RateLimitType(
+            route="/v1/chat/completions",
+            value=[{"level": '0', "rate_limit": "60/second"}],
+        ),
+        RateLimitType(
+            route="/v1/completions", value=[{"level": '0', "rate_limit": "60/second"}]
+        ),
     ]
     req_rate_limit: List[RateLimitType] = [
-        RateLimitType(route="/v1/chat/completions", value="100/2minutes"),
-        RateLimitType(route="/v1/completions", value="60/minute"),
-        RateLimitType(route="/v1/embeddings", value="100/2minutes"),
+        RateLimitType(
+            route="/v1/chat/completions",
+            value=[{"level": '0', "rate_limit": "100/2minutes"}],
+        ),
+        RateLimitType(
+            route="/v1/completions", value=[{"level": '0', "rate_limit": "60/minute"}]
+        ),
+        RateLimitType(
+            route="/v1/embeddings", value=[{"level": '0', "rate_limit": "100/2minutes"}]
+        ),
     ]
     iter_chunk: Literal['one-by-one', 'efficiency'] = 'one-by-one'
     strategy: Literal[
@@ -159,6 +174,9 @@ class Config(Base):
     timeout: int = 6
     benchmark_mode: bool = False
     proxy: str = ''
+    webui_restart_port: int = 15555
+    webui_log_port: int = 15556
+    default_stream_response: bool = True
 
     def convert_to_env(self, set_env=False):
         env_dict = {}
@@ -171,6 +189,10 @@ class Config(Base):
         env_dict['TZ'] = self.timezone
         env_dict['TIMEOUT'] = str(self.timeout)
         env_dict['BENCHMARK_MODE'] = str(self.benchmark_mode)
+        env_dict['WEBUI_RESTART_PORT'] = str(self.webui_restart_port)
+        env_dict['WEBUI_LOG_PORT'] = str(self.webui_log_port)
+        env_dict['DEFAULT_STREAM_RESPONSE'] = str(self.default_stream_response)
+
         if self.proxy:
             env_dict['PROXY'] = self.proxy
 

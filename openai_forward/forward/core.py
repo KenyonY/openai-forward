@@ -25,7 +25,7 @@ from ..content.openai import (
     EmbeddingLogger,
     WhisperLogger,
 )
-from ..decorators import async_retry, async_token_rate_limit
+from ..decorators import async_retry, async_token_rate_limit_auth_level
 from ..helper import InfiniteSet
 from ..settings import *
 
@@ -84,7 +84,7 @@ class GenericForward:
             )
 
     @staticmethod
-    @async_token_rate_limit(token_interval_conf)
+    @async_token_rate_limit_auth_level(token_interval_conf, FWD_KEY)
     async def aiter_bytes(
         r: aiohttp.ClientResponse,
         request: Request,
@@ -449,7 +449,6 @@ class OpenaiForward(GenericForward):
 
         if valid:
             if payload_log_info["model"] not in model_set:
-                print(f"{model_set=}")
                 logger.warning(
                     f"[Auth Warning] model: {payload_log_info['model']} is not allowed"
                 )
@@ -487,7 +486,7 @@ class OpenaiForward(GenericForward):
 
         await queue.put(buffer)  # add all information when the stream ends
 
-    @async_token_rate_limit(token_interval_conf)
+    @async_token_rate_limit_auth_level(token_interval_conf, FWD_KEY)
     async def aiter_bytes(
         self,
         r: aiohttp.ClientResponse,
@@ -612,7 +611,7 @@ class OpenaiForward(GenericForward):
             request, route_path, model_set
         )
         uid = payload_info["uid"]
-        stream = payload_info.get('stream', None)
+        stream = payload_info.get('stream', DEFAULT_STREAM_RESPONSE)
 
         cached_response, cache_key = get_cached_response(
             payload,

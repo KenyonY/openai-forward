@@ -7,10 +7,10 @@ from fastapi.responses import Response, StreamingResponse
 from flaxkv.pack import encode
 from loguru import logger
 
-from ...settings import CACHE_OPENAI
+from ...settings import CACHE_OPENAI, FWD_KEY
 from ..database import db_dict
 from .chat_completions import (
-    async_token_rate_limit,
+    async_token_rate_limit_auth_level,
     generate,
     stream_generate_efficient,
     token_interval_conf,
@@ -116,7 +116,7 @@ def get_cached_chat_response(payload_info, valid_payload, request, **kwargs):
     return None, cache_key
 
 
-@async_token_rate_limit(token_interval_conf)
+@async_token_rate_limit_auth_level(token_interval_conf, FWD_KEY)
 async def stream_generate(buffer_list: List, request):
     for buffer in buffer_list:
         yield buffer

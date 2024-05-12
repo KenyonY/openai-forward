@@ -66,15 +66,15 @@ class Cli:
 
             import zmq
 
-            mq_port = 15555
-
             os.environ['OPENAI_FORWARD_WEBUI'] = 'true'
 
             context = zmq.Context()
             socket = context.socket(zmq.REP)
-            socket.bind(f"tcp://*:{mq_port}")
+            restart_port = int(os.environ.get('WEBUI_RESTART_PORT', 15555))
+            socket.bind(f"tcp://*:{restart_port}")
             log_socket = context.socket(zmq.ROUTER)
-            log_socket.bind(f"tcp://*:{15556}")
+            log_port = int(os.environ.get("WEBUI_LOG_PORT", 15556))
+            log_socket.bind(f"tcp://*:{log_port}")
             subscriber_info = {}
 
             def mq_worker(log_socket: zmq.Socket):
@@ -226,6 +226,25 @@ class Cli:
             print(f"Convert {log_folder}/*.log to {target_path}")
             convert_folder_to_jsonl(log_folder, target_path)
             print(60 * '-')
+
+    @staticmethod
+    def gen_config(dir: str = "."):
+        """
+        Generates a .env file in the specified directory.
+        """
+        from pathlib import Path
+
+        from openai_forward.config.interface import Config
+
+        config = Config()
+        env_dict = config.convert_to_env(set_env=False)
+        dir = Path(dir)
+
+        with open(dir / ".env", "w") as f:
+            env_content = "\n".join(
+                [f"{key}={value}" for key, value in env_dict.items()]
+            )
+            f.write(env_content)
 
 
 def main():
