@@ -26,7 +26,7 @@ from ..content.openai import (
     WhisperLogger,
 )
 from ..decorators import async_retry, async_token_rate_limit_auth_level
-from ..helper import InfiniteSet
+from ..helper import InfiniteSet, get_client_ip, get_unique_id
 from ..settings import *
 
 # from beartype import beartype
@@ -41,6 +41,21 @@ class GenericForward:
     validate_host = bool(IP_BLACKLIST or IP_WHITELIST)
     timeout = aiohttp.ClientTimeout(connect=TIMEOUT)
 
+    _fk_to_level = FWD_KEY
+    _sk_to_levels = OPENAI_API_KEY
+    _level_to_model_set = {level: set(models) for level, models in LEVEL_MODELS.items()}
+
+    _zero_level_model_set = InfiniteSet()
+
+    _level_to_sks = {}
+    for sk, levels in _sk_to_levels.items():
+        for level in levels:
+            _level_to_sks[level] = _level_to_sks.get(level, []) + [sk]
+
+    _level_to_sk = {}
+    for level, sks in _level_to_sks.items():
+        _level_to_sk[level] = cycle(sks)
+
     def __init__(self, base_url: str, route_prefix: str, proxy=None):
         """
         Args:
@@ -52,6 +67,51 @@ class GenericForward:
         self.PROXY = proxy
         self.ROUTE_PREFIX = route_prefix
         self.client: aiohttp.ClientSession | None = None
+
+    @classmethod
+    def fk_to_sk(cls, forward_key: str):
+        """
+        Convert a forward key to a secret key.
+
+        Args:
+            forward_key (str): The forward key to convert.
+
+        Returns:
+            str: The corresponding secret key, if it exists. Otherwise, None.
+        """
+        level = cls._fk_to_level.get(forward_key)
+        if level is not None:
+            sk = cls._level_to_sk.get(level)
+            if sk:
+                return next(sk), level
+        return None, level
+
+    @classmethod
+    def handle_authorization(cls, client_config):
+        """
+        Handle the authorization for the client.
+
+        Args:
+            client_config (dict): The configuration for the client.
+
+        Returns:
+            str: The authorization string.
+            set: The set of models can be accessed.
+        """
+        auth, auth_prefix = client_config["auth"], "Bearer "
+        model_set = cls._zero_level_model_set
+
+        if auth:
+            fk = auth[len(auth_prefix) :]
+            if fk in FWD_KEY:
+                sk, level = cls.fk_to_sk(fk)
+                assert level is not None
+                if level != 0:
+                    model_set = cls._level_to_model_set[level]
+                if sk:
+                    auth = auth_prefix + sk
+                    client_config["headers"]["Authorization"] = auth
+        return auth, model_set
 
     async def build_client(self):
         """
@@ -202,8 +262,8 @@ class GenericForward:
             dict: The configuration for the client.
         """
         assert self.BASE_URL and self.ROUTE_PREFIX
+        ip = get_client_ip(request)
         if self.validate_host:
-            ip = get_client_ip(request)
             self.validate_request_host(ip)
 
         _url_path = f"{request.scope.get('root_path')}{request.scope.get('path')}"
@@ -248,8 +308,30 @@ class GenericForward:
             'headers': headers,
             "method": request.method,
             'url': url,
+            'ip': ip,
             'route_path': route_path,
         }
+
+    async def _handle_payload(self, request: Request, route_path: str, model_set):
+
+        if not request.method == "POST":
+            return
+
+        if route_path in (
+            CHAT_COMPLETION_ROUTE,
+            COMPLETION_ROUTE,
+            EMBEDDING_ROUTE,
+            CUSTOM_GENERAL_ROUTE,
+        ):
+            payload = await request.json()
+            model = payload.get("model", None)
+
+            if model is not None and model not in model_set:
+                logger.warning(f"[Auth Warning] model: {model} is not allowed")
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"model: {model} is not allowed",
+                )
 
     async def reverse_proxy(self, request: Request):
         """
@@ -267,8 +349,10 @@ class GenericForward:
         if LOG_GENERAL:
             logger.debug(f"payload: {data}")
         client_config = self.prepare_client(request, return_origin_header=True)
-
         route_path = client_config["route_path"]
+
+        _, model_set = self.handle_authorization(client_config)
+        payload = await self._handle_payload(request, route_path, model_set)
 
         cached_response, cache_key = get_cached_generic_response(
             data, request, route_path
@@ -293,21 +377,6 @@ class OpenaiForward(GenericForward):
     Inherits from the GenericForward class and adds specific functionality for the OpenAI API.
     """
 
-    _fk_to_level = FWD_KEY
-    _sk_to_levels = OPENAI_API_KEY
-    _level_to_model_set = {level: set(models) for level, models in LEVEL_MODELS.items()}
-
-    _zero_level_model_set = InfiniteSet()
-
-    _level_to_sks = {}
-    for sk, levels in _sk_to_levels.items():
-        for level in levels:
-            _level_to_sks[level] = _level_to_sks.get(level, []) + [sk]
-
-    _level_to_sk = {}
-    for level, sks in _level_to_sks.items():
-        _level_to_sk[level] = cycle(sks)
-
     def __init__(self, base_url: str, route_prefix: str, proxy=None):
         """
         Initialize the OpenaiForward class.
@@ -323,24 +392,6 @@ class OpenaiForward(GenericForward):
             self.completion_logger = CompletionLogger(self.ROUTE_PREFIX)
             self.whisper_logger = WhisperLogger(self.ROUTE_PREFIX)
             self.embedding_logger = EmbeddingLogger(self.ROUTE_PREFIX)
-
-    @classmethod
-    def fk_to_sk(cls, forward_key: str):
-        """
-        Convert a forward key to a secret key.
-
-        Args:
-            forward_key (str): The forward key to convert.
-
-        Returns:
-            str: The corresponding secret key, if it exists. Otherwise, None.
-        """
-        level = cls._fk_to_level.get(forward_key)
-        if level is not None:
-            sk = cls._level_to_sk.get(level)
-            if sk:
-                return next(sk), level
-        return None, level
 
     def _handle_result(
         self, buffer: bytearray, uid: str, route_path: str, request_method: str
@@ -566,32 +617,6 @@ class OpenaiForward(GenericForward):
                 )
             else:
                 logger.warning(f'uid: {uid}\n' f'{r.status}')
-
-    def handle_authorization(self, client_config):
-        """
-        Handle the authorization for the client.
-
-        Args:
-            client_config (dict): The configuration for the client.
-
-        Returns:
-            str: The authorization string.
-            set: The set of models can be accessed.
-        """
-        auth, auth_prefix = client_config["auth"], "Bearer "
-        model_set = self._zero_level_model_set
-
-        if auth:
-            fk = auth[len(auth_prefix) :]
-            if fk in FWD_KEY:
-                sk, level = self.fk_to_sk(fk)
-                assert level is not None
-                if level != 0:
-                    model_set = self._level_to_model_set[level]
-                if sk:
-                    auth = auth_prefix + sk
-                    client_config["headers"]["Authorization"] = auth
-        return auth, model_set
 
     async def reverse_proxy(self, request: Request):
         """

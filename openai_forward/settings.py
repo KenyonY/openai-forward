@@ -25,6 +25,7 @@ CHAT_COMPLETION_ROUTE = (
 )
 COMPLETION_ROUTE = os.environ.get("COMPLETION_ROUTE", "/v1/completions").strip().lower()
 EMBEDDING_ROUTE = os.environ.get("EMBEDDING_ROUTE", "/v1/embeddings").strip().lower()
+CUSTOM_GENERAL_ROUTE = os.environ.get("CUSTOM_GENERAL_ROUTE", "").strip().lower()
 
 CACHE_ROUTE_SET = set(env2dict("CACHE_ROUTES", []))
 

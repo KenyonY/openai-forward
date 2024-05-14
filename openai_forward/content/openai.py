@@ -78,7 +78,6 @@ class CompletionLogger(LoggerBase):
     def parse_payload(request: Request, raw_payload):
         uid = get_unique_id()
         payload = orjson.loads(raw_payload)
-        print(f"{payload=}")
 
         content = {
             "prompt": payload['prompt'],

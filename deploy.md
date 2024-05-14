@@ -46,6 +46,10 @@ pip install openai-forward
 ```bash
 aifd run   
 ```
+或运行webui
+```bash
+aifd run --webui
+```
 服务就搭建完成了。  
 配置见[配置](README.md#配置)
 

@@ -296,7 +296,7 @@ async def stream_generate_efficient(
     yield b'data: [DONE]\n\n'
 
 
-@random_sleep(min_time=2, max_time=3)
+@random_sleep(min_time=1, max_time=2)
 def generate(model: str, content: str | None, tool_calls: list | None, usage: dict):
     created = int(time.time())
     id = f"chatcmpl-{get_unique_id()}"
