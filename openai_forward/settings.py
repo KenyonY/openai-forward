@@ -12,15 +12,20 @@ openai_additional_start_info = {}
 general_additional_start_info = {}
 
 TIMEOUT = float(os.environ.get("TIMEOUT", "").strip() or "10")
+DEFAULT_STREAM_RESPONSE = (
+    os.environ.get("DEFAULT_STREAM_RESPONSE", "True").strip().lower() == "true"
+)
 
 ITER_CHUNK_TYPE = (
     os.environ.get("ITER_CHUNK_TYPE", "").strip() or "efficiency"
 )  # Options: efficiency, one-by-one
 
-CHAT_COMPLETION_ROUTE = "/v1/chat/completions"
-COMPLETION_ROUTE = "/v1/completions"
-EMBEDDING_ROUTE = "/v1/embeddings"
-
+CHAT_COMPLETION_ROUTE = (
+    os.environ.get("CHAT_COMPLETION_ROUTE", "/v1/chat/completions").strip().lower()
+)
+COMPLETION_ROUTE = os.environ.get("COMPLETION_ROUTE", "/v1/completions").strip().lower()
+EMBEDDING_ROUTE = os.environ.get("EMBEDDING_ROUTE", "/v1/embeddings").strip().lower()
+CUSTOM_GENERAL_ROUTE = os.environ.get("CUSTOM_GENERAL_ROUTE", "").strip().lower()
 
 CACHE_ROUTE_SET = set(env2dict("CACHE_ROUTES", []))
 
@@ -133,14 +138,21 @@ req_rate_limit_dict = env2dict('REQ_RATE_LIMIT')
 
 def get_limiter_key(request: Request):
     limiter_prefix = f"{request.scope.get('root_path')}{request.scope.get('path')}"
-    key = f"{limiter_prefix}-{get_client_ip(request)}"
+    fk_or_sk = request.headers.get("Authorization", "default")
+    key = f"{limiter_prefix},{fk_or_sk}"
     return key
 
 
 def dynamic_request_rate_limit(key: str):
+    limite_prefix, fk_or_sk = key.split(',')
+    key_level = FWD_KEY.get(fk_or_sk, 0)
     for route in req_rate_limit_dict:
         if key.startswith(route):
-            return req_rate_limit_dict[route]
+            for level_dict in req_rate_limit_dict[route]:
+                if level_dict['level'] == key_level:
+                    return level_dict['limit']
+
+            break
     return GLOBAL_RATE_LIMIT
 
 
@@ -157,8 +169,12 @@ def cvt_token_rate_to_interval(token_rate_limit: str):
 
 token_rate_limit_conf = env2dict("TOKEN_RATE_LIMIT")
 token_interval_conf = {}
-for route, rate_limit in token_rate_limit_conf.items():
-    token_interval_conf[route] = cvt_token_rate_to_interval(rate_limit)
+for route, rate_limit_list in token_rate_limit_conf.items():
+    token_interval_conf.setdefault(route, {})
+    for level_dict in rate_limit_list:
+        token_interval_conf[route][level_dict['level']] = cvt_token_rate_to_interval(
+            level_dict['limit']
+        )
 
 styles = itertools.cycle(
     ["#7CD9FF", "#BDADFF", "#9EFFE3", "#f1b8e4", "#F5A88E", "#BBCA89"]

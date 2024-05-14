@@ -1,7 +1,6 @@
-import os
+import ast
 import pickle
 import threading
-import time
 
 import orjson
 import pandas as pd
@@ -9,9 +8,9 @@ import streamlit as st
 import zmq
 from flaxkv.helper import SimpleQueue
 
-from openai_forward.webui.chat import ChatData, render_chat_log_message
+from openai_forward.config.interface import *
+from openai_forward.webui.chat import ChatData
 from openai_forward.webui.helper import mermaid
-from openai_forward.webui.interface import *
 
 st.set_page_config(
     page_title="Openai Forward ",
@@ -32,10 +31,12 @@ def get_global_vars():
     socket = context.socket(zmq.REQ)
     # socket.setsockopt(zmq.CONNECT_TIMEOUT, 20000) # 20s
     openai_forward_host = os.environ.get("OPENAI_FORWARD_HOST", "localhost")
-    socket.connect(f"tcp://{openai_forward_host}:15555")
+    restart_port = int(os.environ.get('WEBUI_RESTART_PORT', 15555))
+    socket.connect(f"tcp://{openai_forward_host}:{restart_port}")
 
     log_socket = context.socket(zmq.DEALER)
-    log_socket.connect(f"tcp://{openai_forward_host}:15556")
+    webui_log_port = int(os.environ.get("WEBUI_LOG_PORT", 15556))
+    log_socket.connect(f"tcp://{openai_forward_host}:{webui_log_port}")
     log_socket.send_multipart([b"/subscribe", b"0"])
 
     def worker(log_socket: zmq.Socket, q: SimpleQueue):
@@ -47,7 +48,7 @@ def get_global_vars():
     q = SimpleQueue(maxsize=100)
     threading.Thread(target=worker, args=(log_socket, q)).start()
     config = Config().come_from_env()
-    chat_data = ChatData(100, render_chat_log_message)
+    chat_data = ChatData(100)
     return {
         "socket": socket,
         "log_socket": log_socket,
@@ -155,7 +156,6 @@ def display_forward_configuration():
 
 
 def display_api_key_configuration():
-
     with st.expander("See explanation"):
         st.write(
             """
@@ -184,9 +184,12 @@ level_n --> sk_n(SK_n)
 
     # check openai models:
     # from openai import OpenAI
-    # client = OpenAI(api_key=)
+    # from rich import print
+    # client = OpenAI(api_key="sk-")
     # openai_model_list = [i.id for i in client.models.list()]
     # openai_model_list.sort()
+    # print(openai_model_list)
+    # print(len(openai_model_list))
 
     openai_model_list = [
         'babbage-002',
@@ -194,6 +197,7 @@ level_n --> sk_n(SK_n)
         'dall-e-3',
         'davinci-002',
         'gpt-3.5-turbo',
+        'gpt-3.5-turbo-0125',
         'gpt-3.5-turbo-0301',
         'gpt-3.5-turbo-0613',
         'gpt-3.5-turbo-1106',
@@ -205,8 +209,13 @@ level_n --> sk_n(SK_n)
         'gpt-4-0125-preview',
         'gpt-4-0613',
         'gpt-4-1106-preview',
+        'gpt-4-1106-vision-preview',
+        'gpt-4-turbo',
+        'gpt-4-turbo-2024-04-09',
         'gpt-4-turbo-preview',
         'gpt-4-vision-preview',
+        'gpt-4o',
+        'gpt-4o-2024-05-13',
         'text-embedding-3-large',
         'text-embedding-3-small',
         'text-embedding-ada-002',
@@ -354,7 +363,7 @@ def display_rate_limit_configuration():
 
         st.subheader("Token Rate Limit")
         token_rate_limit_df = pd.DataFrame(
-            [i.to_dict() for i in rate_limit.token_rate_limit]
+            [i.to_dict_str() for i in rate_limit.token_rate_limit]
         )
         edited_token_rate_limit_df = st.data_editor(
             token_rate_limit_df,
@@ -365,7 +374,7 @@ def display_rate_limit_configuration():
 
         st.subheader("Request Rate Limit")
         req_rate_limit_df = pd.DataFrame(
-            [i.to_dict() for i in rate_limit.req_rate_limit]
+            [i.to_dict_str() for i in rate_limit.req_rate_limit]
         )
         edited_req_rate_limit_df = st.data_editor(
             req_rate_limit_df,
@@ -380,12 +389,12 @@ def display_rate_limit_configuration():
             rate_limit.strategy = strategy
 
             rate_limit.token_rate_limit = [
-                RateLimitType(row["route"], row["value"])
+                RateLimitType(row["route"], ast.literal_eval(row["value"]))
                 for _, row in edited_token_rate_limit_df.iterrows()
             ]
 
             rate_limit.req_rate_limit = [
-                RateLimitType(row["route"], row["value"])
+                RateLimitType(row["route"], ast.literal_eval(row["value"]))
                 for _, row in edited_req_rate_limit_df.iterrows()
             ]
 
@@ -432,23 +441,23 @@ elif selected_section == "Other":
 elif selected_section == "Real-time Logs":
     st.write("### Real-time Logs")
     st.write("\n")
+    render_with_markdown = st.toggle("Using Markdown to render", value=True)
+    st.write("\n")
 
-    with st.container():
+    q = st.session_state['q']
+    chat_data: ChatData = st.session_state['chat_data']
+    chat_data.render_all_messages(markdown=render_with_markdown)
+    while True:
+        uid, msg = q.get()
+        uid: bytes
+        item = orjson.loads(msg)
+        item['uid'] = uid[1:].decode()
+        if uid.startswith(b"0"):
+            item['user_role'] = True
+        else:
+            item['assistant_role'] = True
 
-        q = st.session_state['q']
-        chat_data: ChatData = st.session_state['chat_data']
-        chat_data.render_all_messages()
-        while True:
-            uid, msg = q.get()
-            uid: bytes
-            print(f"{uid=}")
-            item = orjson.loads(msg)
-            if uid.startswith(b"0"):
-                item['user_role'] = True
-            else:
-                item['assistant_role'] = True
-
-            chat_data.add_message(item)
+        chat_data.add_message(item, markdown=render_with_markdown)
 
 elif selected_section == "Playground":
     st.write("## todo")

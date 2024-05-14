@@ -9,9 +9,13 @@ import orjson
 from fastapi import Request
 from fastapi.responses import Response, StreamingResponse
 
-from ...decorators import async_random_sleep, async_token_rate_limit
+from ...decorators import (
+    async_random_sleep,
+    async_token_rate_limit_auth_level,
+    random_sleep,
+)
 from ...helper import get_unique_id
-from ...settings import token_interval_conf
+from ...settings import FWD_KEY, token_interval_conf
 from .tokenizer import TIKTOKEN_VALID, count_tokens, encode_as_pieces
 
 
@@ -118,7 +122,7 @@ corpus = [
 sentences = cycle(corpus)
 
 
-@async_token_rate_limit(token_interval_conf)
+@async_token_rate_limit_auth_level(token_interval_conf, FWD_KEY)
 async def stream_generate(
     model: str, content: str | None, tool_calls: list | None, request: Request
 ):
@@ -206,7 +210,7 @@ async def stream_generate(
     yield b'data: [DONE]\n\n'
 
 
-@async_token_rate_limit(token_interval_conf)
+@async_token_rate_limit_auth_level(token_interval_conf, FWD_KEY)
 async def stream_generate_efficient(
     model: str, content: str | None, tool_calls: list | None, request: Request
 ):
@@ -292,6 +296,7 @@ async def stream_generate_efficient(
     yield b'data: [DONE]\n\n'
 
 
+@random_sleep(min_time=1, max_time=2)
 def generate(model: str, content: str | None, tool_calls: list | None, usage: dict):
     created = int(time.time())
     id = f"chatcmpl-{get_unique_id()}"
@@ -336,7 +341,6 @@ def model_inference(model: str, messages: List):
     return ModelInferResult(content=sentence, usage=usage)
 
 
-@async_random_sleep(min_time=0, max_time=1)
 async def chat_completions_benchmark(request: Request):
     payload = await request.json()
     model = payload.get("model", 'robot')

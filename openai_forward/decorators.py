@@ -169,6 +169,59 @@ def async_token_rate_limit(token_rate_limit: dict):
     return decorator
 
 
+def async_token_rate_limit_auth_level(token_rate_limit: dict, key_level_map: dict):
+    """
+    A decorator for rate-limiting requests based on tokens. It limits the rate at which tokens can be consumed
+    for a particular route path.
+
+    Args:
+        token_rate_limit (dict): A dictionary mapping route paths to their respective token intervals (in seconds).
+
+    Yields:
+        value: The value from the wrapped asynchronous generator.
+
+    Note:
+        The 'request' object should be passed either as a keyword argument or as a positional argument to the
+        decorated function.
+    """
+
+    def decorator(async_gen_func):
+        @wraps(async_gen_func)
+        async def wrapper(*args, **kwargs):
+            request: Request = kwargs.get('request')
+            if not request:
+                # Try to find the request argument by position
+                func_argspec = inspect.getfullargspec(async_gen_func)
+                request_index = func_argspec.args.index('request')
+                request = args[request_index]
+
+            route_path = f"{request.scope.get('root_path')}{request.scope.get('path')}"
+            fk_or_sk = request.headers.get("Authorization", "default")
+            level = key_level_map.get(fk_or_sk, 0)
+            default_interval = 0
+            token_level_dict = token_rate_limit.get(
+                route_path, {level: default_interval}
+            )
+            token_interval = token_level_dict[level]
+
+            async_gen = async_gen_func(*args, **kwargs)
+
+            start_time = time.perf_counter()
+            async for value in async_gen:
+                if token_interval > 0:
+                    current_time = time.perf_counter()
+                    delta = current_time - start_time
+                    delay = token_interval - delta
+                    if delay > 0:
+                        await asyncio.sleep(delay)
+                    start_time = time.perf_counter()
+                yield value
+
+        return wrapper
+
+    return decorator
+
+
 def async_random_sleep(min_time=0, max_time=1):
     """
     Decorator that adds a random sleep time between min_time and max_time.
@@ -186,6 +239,29 @@ def async_random_sleep(min_time=0, max_time=1):
             sleep_time = random.uniform(min_time, max_time)
             await asyncio.sleep(sleep_time)
             return await func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+def random_sleep(min_time=0, max_time=1):
+    """
+    Decorator that adds a random sleep time between min_time and max_time.
+
+    Args:
+        min_time (float, optional): The minimum sleep time in seconds.
+        max_time (float, optional): The maximum sleep time in seconds.
+    """
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if max_time == 0:
+                return func(*args, **kwargs)
+            sleep_time = random.uniform(min_time, max_time)
+            time.sleep(sleep_time)
+            return func(*args, **kwargs)
 
         return wrapper
 

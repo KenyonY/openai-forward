@@ -1,0 +1,49 @@
+name: website
+
+# build the documentation whenever there are new commits on main
+on:
+  push:
+    branches:
+      - main
+    # Alternative: only build for tags.
+    # tags:
+    #   - '*'
+
+# security: restrict permissions for CI jobs.
+permissions:
+  contents: read
+
+jobs:
+  # Build the documentation and upload the static HTML files as an artifact.
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      # ADJUST THIS: install all dependencies (including pdoc)
+      - run: pip install -e .
+      # ADJUST THIS: build your documentation into docs/.
+      # We use a custom build script for pdoc itself, ideally you just run `pdoc -o docs/ ...` here.
+      - run: python docs/make.py
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/
+
+  # Deploy the artifact to GitHub pages.
+  # This is a separate job so that only actions/deploy-pages has the necessary permissions.
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

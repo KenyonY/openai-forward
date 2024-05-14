@@ -29,7 +29,8 @@ class LoggerBase(ABC):
 
             context = zmq.Context()
             socket = context.socket(zmq.DEALER)
-            socket.connect("tcp://localhost:15556")
+            webui_log_port = int(os.environ.get("WEBUI_LOG_PORT", 15556))
+            socket.connect(f"tcp://localhost:{webui_log_port}")
 
             self.q = SimpleQueue(maxsize=200)
 
@@ -77,7 +78,6 @@ class CompletionLogger(LoggerBase):
     def parse_payload(request: Request, raw_payload):
         uid = get_unique_id()
         payload = orjson.loads(raw_payload)
-        print(f"{payload=}")
 
         content = {
             "prompt": payload['prompt'],

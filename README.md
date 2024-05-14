@@ -163,37 +163,6 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
   )
 ```
 
-<details >
-   <summary> 更多</summary>  
-
-#### 在三方应用中使用
-
-基于开源项目[ChatGPT-Next-Web](https://github.com/Yidadaa/ChatGPT-Next-Web)中接入:   
-替换docker启动命令中的 `BASE_URL`为自己搭建的代理服务地址
-
-```bash 
-docker run -d \
-    -p 3000:3000 \
-    -e OPENAI_API_KEY="sk-******" \
-    -e BASE_URL="https://api.openai-forward.com" \
-    -e CODE="******" \
-    yidadaa/chatgpt-next-web 
-``` 
-
-**Image Generation (DALL-E)**
-
-```bash
-curl --location 'https://api.openai-forward.com/v1/images/generations' \
---header 'Authorization: Bearer sk-******' \
---header 'Content-Type: application/json' \
---data '{
-    "prompt": "A photo of a cat",
-    "n": 1,
-    "size": "512x512"
-}'
-```
-
-</details>
 
 ### 代理本地模型
 
@@ -207,7 +176,15 @@ curl --location 'https://api.openai-forward.com/v1/images/generations' \
 
 (更多)
 
-### 代理其它云端模型
+### 代理任意云端模型
+
+#### 代理[gemini pro](https://ai.google.dev/)
+配置环境变量或 .env 文件如下：
+```env
+FORWARD_CONFIG=[{"base_url":"https://generativelanguage.googleapis.com","route":"/gemini","type":"general"}]
+```
+说明：`aidf run`启动后，即可通过访问 http://localhost:8000/gemini 使用gemini pro。
+
 
 - **场景1:**
   使用通用转发,可对任意来源服务进行转发，
