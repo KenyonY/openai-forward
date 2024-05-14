@@ -214,6 +214,8 @@ level_n --> sk_n(SK_n)
         'gpt-4-turbo-2024-04-09',
         'gpt-4-turbo-preview',
         'gpt-4-vision-preview',
+        'gpt-4o',
+        'gpt-4o-2024-05-13',
         'text-embedding-3-large',
         'text-embedding-3-small',
         'text-embedding-ada-002',
