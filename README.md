@@ -1,7 +1,7 @@
 **简体中文** | [**English**](https://github.com/KenyonY/openai-forward/blob/main/README_EN.md)
 
 <h1 align="center">
-    <a href="https://github.com/KenyonY/openai-forward"> 🌠 OpenAI Forward </a>
+    <a href="https://github.com/KenyonY/openai-forward">  OpenAI Forward </a>
     <br>
     <br>
 </h1>
@@ -25,8 +25,6 @@
 </p>
 
 <div align="center">
-
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/KenyonY/openai-forward)
 
 [特点](#主要特性) |
 [部署指南](deploy.md) |
