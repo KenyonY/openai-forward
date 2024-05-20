@@ -1,4 +1,5 @@
 import itertools
+from json import JSONDecodeError
 import os
 
 import limits
@@ -119,7 +120,12 @@ if CACHE_GENERAL:
 IP_WHITELIST = env2list("IP_WHITELIST", sep=ENV_VAR_SEP)
 IP_BLACKLIST = env2list("IP_BLACKLIST", sep=ENV_VAR_SEP)
 
-OPENAI_API_KEY = env2dict("OPENAI_API_KEY")
+OPENAI_API_KEY = "" #兼容大部分框架的key，和本框架需要的json格式
+try:    
+    OPENAI_API_KEY = env2dict("OPENAI_API_KEY")
+except JSONDecodeError:
+    OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+    
 FWD_KEY = env2dict("FORWARD_KEY")
 LEVEL_MODELS = {int(key): value for key, value in env2dict("LEVEL_MODELS").items()}
 
