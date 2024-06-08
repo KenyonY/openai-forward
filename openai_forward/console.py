@@ -68,7 +68,7 @@ def print_rate_limit_info(
     """
     Print rate limit information.
     """
-    table = Table(title="", box=None, width=61)
+    table = Table(title="", box=None)
     table.add_column("")
     table.add_column("", justify='left')
     backend = backend or "memory"

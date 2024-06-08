@@ -1,5 +1,6 @@
 import ast
 import pickle
+import secrets
 import threading
 
 import orjson
@@ -78,6 +79,8 @@ with st.sidebar:
         ),
     )
 
+    st.write("---")
+
     if st.button(
         "Apply and Restart", help="Saving configuration and reloading openai forward"
     ):
@@ -93,6 +96,12 @@ with st.sidebar:
         env_dict = config.convert_to_env(set_env=False)
         env_content = "\n".join([f"{key}={value}" for key, value in env_dict.items()])
         return env_content
+
+    if st.button("Save to .env", help="Saving configuration to .env file"):
+        with st.spinner("Saving configuration to .env file."):
+            with open(".env", "w") as f:
+                f.write(generate_env_content())
+            st.success("Configuration saved to .env file")
 
     if st.button(
         "Export to .env file",
@@ -142,7 +151,7 @@ def display_forward_configuration():
                 "> - type=general转发下的服务可以是任何服务（暂不支持websocket)"
             )
 
-        st.write("#")
+        # st.write("#")
 
         submitted = st.form_submit_button("Save", use_container_width=True)
         if submitted:
@@ -152,7 +161,7 @@ def display_forward_configuration():
                 if row["route"] is not None and row["base_url"] is not None
             ]
 
-            print(forward_config.convert_to_env())
+            print("save forward config success")
 
 
 def display_api_key_configuration():
@@ -284,7 +293,7 @@ level_n --> sk_n(SK_n)
 
             api_key.level = level_model_map
 
-            print(api_key.convert_to_env())
+            print("save api key success")
 
 
 def display_cache_configuration():
@@ -334,7 +343,7 @@ def display_cache_configuration():
                 if row["cache_route"] is not None
             ]
 
-            print(cache.convert_to_env())
+            print("save cache success")
 
 
 def display_rate_limit_configuration():
@@ -398,7 +407,7 @@ def display_rate_limit_configuration():
                 for _, row in edited_req_rate_limit_df.iterrows()
             ]
 
-            print(rate_limit.convert_to_env())
+            print("save rate limit success")
 
 
 def display_other_configuration():
@@ -420,7 +429,7 @@ def display_other_configuration():
             config.proxy = proxy
             config.benchmark_mode = benchmark_mode
 
-            print(config.convert_to_env())
+            print("save other config success")
 
 
 if selected_section == "Forward":
