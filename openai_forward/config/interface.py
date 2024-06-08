@@ -84,22 +84,22 @@ class RateLimit(Base):
     token_rate_limit: List[RateLimitType] = [
         RateLimitType(
             route="/v1/chat/completions",
-            value=[{"level": '0', "rate_limit": "60/second"}],
+            value=[{"level": '0', "limit": "60/second"}],
         ),
         RateLimitType(
-            route="/v1/completions", value=[{"level": '0', "rate_limit": "60/second"}]
+            route="/v1/completions", value=[{"level": '0', "limit": "60/second"}]
         ),
     ]
     req_rate_limit: List[RateLimitType] = [
         RateLimitType(
             route="/v1/chat/completions",
-            value=[{"level": '0', "rate_limit": "100/2minutes"}],
+            value=[{"level": '0', "limit": "100/2minutes"}],
         ),
         RateLimitType(
-            route="/v1/completions", value=[{"level": '0', "rate_limit": "60/minute"}]
+            route="/v1/completions", value=[{"level": '0', "limit": "60/minute"}]
         ),
         RateLimitType(
-            route="/v1/embeddings", value=[{"level": '0', "rate_limit": "100/2minutes"}]
+            route="/v1/embeddings", value=[{"level": '0', "limit": "100/2minutes"}]
         ),
     ]
     iter_chunk: Literal['one-by-one', 'efficiency'] = 'one-by-one'
@@ -136,8 +136,8 @@ class ApiKey(Base):
             value: str
             values = value.strip().replace('，', ',').split(',')
             openai_key_dict[key] = [int(i) for i in values]
-        env_dict['OPENAI_API_KEY'] = json.dumps(openai_key_dict)
-        env_dict['FORWARD_KEY'] = json.dumps(self.forward_key)
+        env_dict['OPENAI_API_KEY_CONFIG'] = json.dumps(openai_key_dict)
+        env_dict['FORWARD_KEY_CONFIG'] = json.dumps(self.forward_key)
         env_dict['LEVEL_MODELS'] = json.dumps(self.level)
         if set_env:
             os.environ.update(env_dict)
