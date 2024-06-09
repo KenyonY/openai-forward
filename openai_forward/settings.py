@@ -37,6 +37,8 @@ FORWARD_CONFIG = env2dict(
     [{"base_url": "https://api.openai.com", "route": "/", "type": "openai"}],
 )
 
+CUSTOM_MODEL_CONFIG = env2dict("CUSTOM_MODEL_CONFIG", {})
+
 ENV_VAR_SEP = ","
 
 OPENAI_BASE_URL = [

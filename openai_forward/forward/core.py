@@ -363,42 +363,45 @@ class GenericForward:
         if cached_response:
             return cached_response
 
-        if route_path in (
-            CHAT_COMPLETION_ROUTE,
-            COMPLETION_ROUTE,
-        ):
-            payload['model'] = "ollama/qwen2:7b"
-            logger.debug(f"{payload['model']=}")
+        if CUSTOM_MODEL_CONFIG and route_path in (CHAT_COMPLETION_ROUTE,):
+            prev_model = payload['model']
+            custom_model_map = CUSTOM_MODEL_CONFIG['model_map']
+            current_model = custom_model_map.get(prev_model, prev_model)
+            if current_model in custom_model_map.values():
+                if CUSTOM_MODEL_CONFIG['backend'] == "ollama":
+                    api_base = CUSTOM_MODEL_CONFIG['api_base']
+                    prev_model = payload['model']
+                    payload['model'] = f"ollama_chat/{current_model}"
+                    logger.debug(f"{prev_model} -> {payload['model']=}")
 
-            async def stream():
-                if payload.get("stream", True):
                     r = await litellm.acompletion(
                         **payload,
-                        api_base="http://localhost:11434",
+                        api_base=api_base,
                     )
-                    async for chunk in r:
-                        yield b'data: ' + orjson.dumps(chunk.to_dict()) + b'\n\n'
-                else:
-                    r = await litellm.acompletion(
-                        **payload,
-                        api_base="http://localhost:11434",
+
+                    @async_token_rate_limit_auth_level(token_interval_conf, FWD_KEY)
+                    async def stream(request: Request):
+                        if payload.get("stream", True):
+                            async for chunk in r:
+                                yield b'data: ' + orjson.dumps(
+                                    chunk.to_dict()
+                                ) + b'\n\n'
+                        else:
+                            yield orjson.dumps(r.to_dict())
+
+                    return StreamingResponse(
+                        stream(request),
+                        status_code=200,
+                        media_type="text/event-stream",
                     )
-                    yield orjson.dumps(r.to_dict())
+        r = await self.send(client_config, data=data)
 
-            return StreamingResponse(
-                stream(),
-                status_code=200,
-                media_type="text/event-stream",
-            )
-        else:
-            r = await self.send(client_config, data=data)
-
-            return StreamingResponse(
-                self.aiter_bytes(r, request, cache_key),
-                status_code=r.status,
-                media_type=r.headers.get("content-type"),
-                background=BackgroundTask(r.release),
-            )
+        return StreamingResponse(
+            self.aiter_bytes(r, request, cache_key),
+            status_code=r.status,
+            media_type=r.headers.get("content-type"),
+            background=BackgroundTask(r.release),
+        )
 
 
 class OpenaiForward(GenericForward):
