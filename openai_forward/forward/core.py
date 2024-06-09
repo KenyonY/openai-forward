@@ -8,6 +8,8 @@ from typing import Any, AsyncGenerator, Iterable
 
 import aiohttp
 import anyio
+import litellm
+import orjson
 from aiohttp import TCPConnector
 from fastapi import HTTPException, Request, status
 from loguru import logger
@@ -312,9 +314,9 @@ class GenericForward:
             'route_path': route_path,
         }
 
-    async def _handle_payload(self, request: Request, route_path: str, model_set):
+    def _handle_payload(self, method: str, payload, route_path: str, model_set):
 
-        if not request.method == "POST":
+        if method != "POST":
             return
 
         if route_path in (
@@ -323,7 +325,6 @@ class GenericForward:
             EMBEDDING_ROUTE,
             CUSTOM_GENERAL_ROUTE,
         ):
-            payload = await request.json()
             model = payload.get("model", None)
 
             if model is not None and model not in model_set:
@@ -345,14 +346,15 @@ class GenericForward:
         """
         assert self.client
         data = await request.body()
+        payload = orjson.loads(data)
 
         if LOG_GENERAL:
-            logger.debug(f"payload: {data}")
+            logger.debug(f"payload: {payload}")
         client_config = self.prepare_client(request, return_origin_header=True)
         route_path = client_config["route_path"]
 
         _, model_set = self.handle_authorization(client_config)
-        payload = await self._handle_payload(request, route_path, model_set)
+        self._handle_payload(request.method, payload, route_path, model_set)
 
         cached_response, cache_key = get_cached_generic_response(
             data, request, route_path
@@ -361,14 +363,42 @@ class GenericForward:
         if cached_response:
             return cached_response
 
-        r = await self.send(client_config, data=data)
+        if route_path in (
+            CHAT_COMPLETION_ROUTE,
+            COMPLETION_ROUTE,
+        ):
+            payload['model'] = "ollama/qwen2:7b"
+            logger.debug(f"{payload['model']=}")
 
-        return StreamingResponse(
-            self.aiter_bytes(r, request, cache_key),
-            status_code=r.status,
-            media_type=r.headers.get("content-type"),
-            background=BackgroundTask(r.release),
-        )
+            async def stream():
+                if payload.get("stream", True):
+                    r = await litellm.acompletion(
+                        **payload,
+                        api_base="http://localhost:11434",
+                    )
+                    async for chunk in r:
+                        yield b'data: ' + orjson.dumps(chunk.to_dict()) + b'\n\n'
+                else:
+                    r = await litellm.acompletion(
+                        **payload,
+                        api_base="http://localhost:11434",
+                    )
+                    yield orjson.dumps(r.to_dict())
+
+            return StreamingResponse(
+                stream(),
+                status_code=200,
+                media_type="text/event-stream",
+            )
+        else:
+            r = await self.send(client_config, data=data)
+
+            return StreamingResponse(
+                self.aiter_bytes(r, request, cache_key),
+                status_code=r.status,
+                media_type=r.headers.get("content-type"),
+                background=BackgroundTask(r.release),
+            )
 
 
 class OpenaiForward(GenericForward):
