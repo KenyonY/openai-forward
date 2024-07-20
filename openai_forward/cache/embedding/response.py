@@ -4,7 +4,8 @@ from fastapi.responses import Response
 from flaxkv.pack import encode
 from loguru import logger
 
-from ...settings import CACHE_OPENAI
+from openai_forward.config.settings import CACHE_OPENAI
+
 from ..database import db_dict
 
 

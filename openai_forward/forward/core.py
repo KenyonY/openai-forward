@@ -4,7 +4,7 @@ import asyncio
 import traceback
 from asyncio import Queue
 from itertools import cycle
-from typing import Any, AsyncGenerator, Iterable
+from typing import AsyncGenerator
 
 import aiohttp
 import anyio
@@ -14,6 +14,8 @@ from aiohttp import TCPConnector
 from fastapi import HTTPException, Request, status
 from loguru import logger
 from starlette.responses import BackgroundTask, StreamingResponse
+
+from openai_forward.config.settings import *
 
 from ..cache import (
     cache_generic_response,
@@ -28,8 +30,7 @@ from ..content.openai import (
     WhisperLogger,
 )
 from ..decorators import async_retry, async_token_rate_limit_auth_level
-from ..helper import InfiniteSet, get_client_ip, get_unique_id
-from ..settings import *
+from ..helper import InfiniteSet
 
 # from beartype import beartype
 
@@ -346,7 +347,10 @@ class GenericForward:
         """
         assert self.client
         data = await request.body()
-        payload = orjson.loads(data)
+        if data:
+            payload = orjson.loads(data)
+        else:
+            payload = {}
 
         if LOG_GENERAL:
             logger.debug(f"payload: {payload}")

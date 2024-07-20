@@ -6,14 +6,10 @@
 </h1>
 <div align="center">
 
-一键部署至render   
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/KenyonY/openai-forward)
-
 
 
 [pip部署](#pip部署) |
-[docker部署](#docker部署) |
-[render一键部署](#render-一键部署) 
+[docker部署](#docker部署) 
 
 </div>
 
@@ -22,14 +18,14 @@
 1. [pip 安装部署](deploy.md#pip部署)
 2. [Docker部署](deploy.md#docker部署)
 
-**一键免费云平台部署**
+**~~一键免费云平台部署~~**
 
-1. [Render一键部署](deploy.md#render-一键部署)
-2. 更多部署： https://github.com/KenyonY/openai-forward/blob/0.5.x/deploy.md
+1. ~~[Render一键部署](deploy.md#render-一键部署)~~
+2. ~~更多部署： https://github.com/KenyonY/openai-forward/blob/0.5.x/deploy.md~~
 
 **其它反代**  
 [CloudFlare AI Gateway](https://developers.cloudflare.com/ai-gateway/get-started/creating-gateway/)  
-[ChatGPT](https://github.com/pandora-next/deploy)  
+~~[ChatGPT](https://github.com/pandora-next/deploy)~~
 
 
 ---
@@ -108,8 +104,8 @@ aifd run
    <img src="https://raw.githubusercontent.com/KenyonY/openai-forward/main/.github/images/separators/aqua.png" height=8px width="100%">
 </a>
 
-## Render 一键部署
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/KenyonY/openai-forward)
+## ~~Render 一键部署~~
+~~[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/KenyonY/openai-forward)~~
 
 Render应该算是所有部署中最简易的一种, 并且它生成的域名国内可以直接访问！
 

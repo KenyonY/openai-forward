@@ -1,12 +1,10 @@
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, Request, WebSocket, status
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
-from . import __version__, custom_slowapi
-from .forward import ForwardManager
-from .helper import normalize_route as normalize_route_path
-from .settings import (
+from . import __version__
+from .config.settings import (
     BENCHMARK_MODE,
     RATE_LIMIT_BACKEND,
     RATE_LIMIT_STRATEGY,
@@ -14,6 +12,8 @@ from .settings import (
     get_limiter_key,
     show_startup,
 )
+from .forward import ForwardManager
+from .helper import normalize_route as normalize_route_path
 
 forward_manager = ForwardManager()
 
@@ -74,14 +74,36 @@ async def shutdown():
     await forward_manager.shutdown()
 
 
+@app.websocket("/{path:path}")
+async def websocket_endpoint(websocket: WebSocket, path: str):
+    await websocket.accept()
+    while True:
+        data = await websocket.receive_bytes()
+        response_data = await forward_to_websocket(data, path)
+        await websocket.send_bytes(response_data)
+
+
 add_route = lambda obj: app.add_route(
     obj.ROUTE_PREFIX + "{api_path:path}",
     route=limiter.limit(dynamic_request_rate_limit)(obj.reverse_proxy),
     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH", "TRACE"],
 )
-[add_route(obj) for obj in forward_manager.openai_objs]
-[add_route(obj) for obj in forward_manager.generic_objs]
-[add_route(obj) for obj in forward_manager.root_objs]
+# [add_route(obj) for obj in forward_manager.openai_objs]
+# [add_route(obj) for obj in forward_manager.generic_objs]
+# [add_route(obj) for obj in forward_manager.root_objs]
+
+import websockets
+
+
+async def forward_to_websocket(data, route):
+    url = f"ws://localhost:3000/{route}"
+    print("-" * 100)
+    print(url)
+    print("-" * 100)
+    async with websockets.connect(url) as websocket:
+        await websocket.send(data)
+        response = await websocket.recv()
+        return response
 
 
 show_startup()

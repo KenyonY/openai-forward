@@ -1,0 +1,92 @@
+log:
+  general: true
+  openai: true
+
+cache:
+  general: true
+  openai: true
+  routes:
+    - "/v1/chat/completions"
+    - "/v1/embeddings"
+  # `CACHE_BACKEND`: Options (MEMORY, LMDB, LevelDB)
+  backend: MEMORY
+  root_path_or_url: "./FLAXKV_DB"
+  default_request_caching_value: false
+
+chat_completion_route: "/v1/chat/completions"
+# custom_general_route: "/v1/models/gemini-pro"
+
+benchmark_mode: true
+
+forward:
+  - base_url: "https://api.openai.com"
+    route: "/"
+    type: "openai"
+
+  - base_url: "https://generativelanguage.googleapis.com"
+    route: "/gemini"
+    type: "general"
+
+# custom_model_config:
+#   backend: "ollama"
+#   model_map:
+#     gpt-3.5-turbo: "qwen2:7b"
+#   api_base: "http://localhost:11434"
+
+api_key:
+  level:
+    1: ["gpt-4"]
+    2: ["gpt-3.5-turbo"]
+
+  openai_key:
+    "sk-xxx1": [0]
+    "sk-xxx2": [1]
+    "sk-xxx3": [1, 2]
+
+  forward_key:
+    0: ["fk-0"]
+    1: ["fk-1", "fk-11"]
+    2: ["fk-2"]
+
+rate_limit:
+  global_rate_limit: "200/minute"
+  strategy: "moving-window"
+  iter_chunk: "one-by-one"
+  req_rate_limit:
+    - route: "/v1/chat/completions"
+      value:
+      - level: 0
+        limit: "100/2minutes"
+
+    - route: "/v1/completions"
+      value:
+      - level: 0
+        limit: "60/minute;600/hour"
+  req_rate_limit_backend: "redis://localhost:6379"
+
+  token_rate_limit:
+    - route: "/v1/chat/completions"
+      value:
+      - level: 0
+        limit: "100/second"
+    - route: "/v1/completions"
+      value:
+      - level: 0
+        limit: "60/second"
+    - route: "/benchmark/v1/chat/completions"
+      value:
+      - level: 0
+        limit: "20/second"
+
+timeout: 6
+
+ip_blacklist:
+ip_whitelist:
+
+webui_restart_port: 15555
+webui_log_port: 15556
+
+proxy:
+default_stream_response: true
+
+tz: Asia/Shanghai
