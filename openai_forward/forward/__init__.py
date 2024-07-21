@@ -1,12 +1,13 @@
 from typing import List
 
-from ..settings import (
+from openai_forward.config.settings import (
     GENERAL_BASE_URL,
     GENERAL_ROUTE_PREFIX,
     OPENAI_BASE_URL,
     OPENAI_ROUTE_PREFIX,
     PROXY,
 )
+
 from .core import GenericForward, OpenaiForward
 
 

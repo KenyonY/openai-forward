@@ -1,12 +1,20 @@
 import atexit
+import datetime
 import os
 import pickle
 import platform
 import signal
 import subprocess
+from pathlib import Path
 
 import fire
 import uvicorn
+import yaml
+
+
+def save_yaml(path: Path, data: dict):
+    with open(path, 'w') as f:
+        yaml.dump(data, f)
 
 
 class Cli:
@@ -106,10 +114,16 @@ class Cli:
 
             while True:
                 message = socket.recv()
-                env_dict: dict = pickle.loads(message)
+                config_dict: dict = pickle.loads(message)
+                config_path = Path("openai-forward-config.yaml")
+                # backup
+                time_str = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+                backup_path = Path(f"openai-forward-config.yaml.{time_str}.bak")
+                if config_path.exists():
+                    # rename openai-forward-config.yaml to openai-forward-config.yaml.bak
+                    config_path.rename(backup_path)
 
-                for key, value in env_dict.items():
-                    os.environ[key] = value
+                save_yaml(config_path, config_dict)
 
                 self._restart_uvicorn(
                     port=port,
@@ -208,8 +222,8 @@ class Cli:
         Returns:
             None
         """
+        from openai_forward.config.settings import OPENAI_ROUTE_PREFIX
         from openai_forward.helper import convert_folder_to_jsonl, route_prefix_to_str
-        from openai_forward.settings import OPENAI_ROUTE_PREFIX
 
         print(60 * '-')
         if log_folder is None:

@@ -9,8 +9,9 @@ from fastapi import Request
 from loguru import logger
 from orjson import JSONDecodeError
 
+from openai_forward.config.settings import DEFAULT_REQUEST_CACHING_VALUE
+
 from ..helper import get_client_ip, get_unique_id, route_prefix_to_str
-from ..settings import DEFAULT_REQUEST_CACHING_VALUE
 from .helper import markdown_print, parse_sse_buffer, print
 
 
@@ -173,7 +174,10 @@ class ChatLogger(LoggerBase):
         if self.webui:
             self.q.put({"uid": uid, "payload": raw_payload})
 
-        payload = orjson.loads(raw_payload)
+        if raw_payload:
+            payload = orjson.loads(raw_payload)
+        else:
+            payload = {}
         caching = payload.pop("caching", None)
         if caching is None:
             caching = DEFAULT_REQUEST_CACHING_VALUE

@@ -1,16 +1,21 @@
 import json
-import os
-from typing import Dict, List, Literal, Optional, Tuple, Union
+from typing import Literal
 
-from attrs import asdict, define, field, filters
+from attrs import asdict, define, field
 
-from ..settings import *
+from openai_forward.config.settings import *
 
 
 class Base:
     def to_dict(self, drop_none=True):
         if drop_none:
-            return asdict(self, filter=filters.exclude(type(None)))
+
+            def custom_filter(attribute, value):
+                if drop_none:
+                    return value is not None
+                return True
+
+            return asdict(self, filter=custom_filter)
         return asdict(self)
 
     def to_dict_str(self):
@@ -48,23 +53,22 @@ class CacheConfig(Base):
     backend: str = 'LevelDB'
     root_path_or_url: str = './FLAXKV_DB'
     default_request_caching_value: bool = True
-    cache_openai: bool = False
-    cache_general: bool = False
-    cache_routes: List = ['/v1/chat/completions']
+    openai: bool = False
+    general: bool = False
+    routes: List = ['/v1/chat/completions']
 
     def convert_to_env(self, set_env=False):
-
         env_dict = {}
 
-        env_dict['CACHE_OPENAI'] = str(self.cache_openai)
-        env_dict['CACHE_GENERAL'] = str(self.cache_general)
+        env_dict['CACHE_OPENAI'] = str(self.openai)
+        env_dict['CACHE_GENERAL'] = str(self.general)
 
         env_dict['CACHE_BACKEND'] = self.backend
         env_dict['CACHE_ROOT_PATH_OR_URL'] = self.root_path_or_url
         env_dict['DEFAULT_REQUEST_CACHING_VALUE'] = str(
             self.default_request_caching_value
         )
-        env_dict['CACHE_ROUTES'] = json.dumps(self.cache_routes)
+        env_dict['CACHE_ROUTES'] = json.dumps(self.routes)
 
         if set_env:
             os.environ.update(env_dict)
@@ -84,22 +88,22 @@ class RateLimit(Base):
     token_rate_limit: List[RateLimitType] = [
         RateLimitType(
             route="/v1/chat/completions",
-            value=[{"level": '0', "limit": "60/second"}],
+            value=[{"level": 0, "limit": "60/second"}],
         ),
         RateLimitType(
-            route="/v1/completions", value=[{"level": '0', "limit": "60/second"}]
+            route="/v1/completions", value=[{"level": 0, "limit": "60/second"}]
         ),
     ]
     req_rate_limit: List[RateLimitType] = [
         RateLimitType(
             route="/v1/chat/completions",
-            value=[{"level": '0', "limit": "100/2minutes"}],
+            value=[{"level": 0, "limit": "100/2minutes"}],
         ),
         RateLimitType(
-            route="/v1/completions", value=[{"level": '0', "limit": "60/minute"}]
+            route="/v1/completions", value=[{"level": 0, "limit": "60/minute"}]
         ),
         RateLimitType(
-            route="/v1/embeddings", value=[{"level": '0', "limit": "100/2minutes"}]
+            route="/v1/embeddings", value=[{"level": 0, "limit": "100/2minutes"}]
         ),
     ]
     iter_chunk: Literal['one-by-one', 'efficiency'] = 'one-by-one'
@@ -125,8 +129,8 @@ class RateLimit(Base):
 
 @define(slots=True)
 class ApiKey(Base):
-    openai_key: Dict = {"": "0"}
-    forward_key: Dict = {"": 0}
+    openai_key: Dict = {"sk-xx1": [0]}
+    forward_key: Dict = {0: ["fk-1"]}
     level: Dict = {1: ["gpt-3.5-turbo"]}
 
     def convert_to_env(self, set_env=False):
@@ -146,13 +150,13 @@ class ApiKey(Base):
 
 @define(slots=True)
 class Log(Base):
-    LOG_GENERAL: bool = True
-    LOG_OPENAI: bool = True
+    general: bool = True
+    openai: bool = True
 
     def convert_to_env(self, set_env=False):
         env_dict = {}
-        env_dict['LOG_GENERAL'] = str(self.LOG_GENERAL)
-        env_dict['LOG_OPENAI'] = str(self.LOG_OPENAI)
+        env_dict['LOG_GENERAL'] = str(self.general)
+        env_dict['LOG_OPENAI'] = str(self.openai)
         if set_env:
             os.environ.update(env_dict)
         return env_dict
@@ -160,7 +164,15 @@ class Log(Base):
 
 @define(slots=True)
 class Config(Base):
-    forward: Forward = Forward()
+    # forward: Forward = Forward()
+    forward: List[ForwardItem] = [
+        ForwardItem(base_url="https://api.openai.com", route="/", type="openai"),
+        ForwardItem(
+            base_url="https://generativelanguage.googleapis.com",
+            route="/gemini",
+            type="general",
+        ),
+    ]
 
     api_key: ApiKey = ApiKey()
 
@@ -179,8 +191,9 @@ class Config(Base):
     default_stream_response: bool = True
 
     def convert_to_env(self, set_env=False):
-        env_dict = {}
-        env_dict.update(self.forward.convert_to_env())
+        # env_dict = {}
+        # env_dict.update(self.forward.convert_to_env())
+        env_dict = {'FORWARD_CONFIG': json.dumps([i.to_dict() for i in self.forward])}
         env_dict.update(self.api_key.convert_to_env())
         env_dict.update(self.cache.convert_to_env())
         env_dict.update(self.rate_limit.convert_to_env())
@@ -206,8 +219,8 @@ class Config(Base):
         self.timezone = os.environ.get('TZ', 'Asia/Shanghai')
         self.benchmark_mode = BENCHMARK_MODE
         self.proxy = PROXY or ""
-        self.log.LOG_OPENAI = LOG_OPENAI
-        self.log.LOG_GENERAL = LOG_GENERAL
+        self.log.openai = LOG_OPENAI
+        self.log.general = LOG_GENERAL
 
         self.rate_limit.strategy = RATE_LIMIT_STRATEGY
         self.rate_limit.global_rate_limit = GLOBAL_RATE_LIMIT
@@ -223,15 +236,24 @@ class Config(Base):
         self.cache.backend = CACHE_BACKEND
         self.cache.root_path_or_url = CACHE_ROOT_PATH_OR_URL
         self.cache.default_request_caching_value = DEFAULT_REQUEST_CACHING_VALUE
-        self.cache.cache_openai = CACHE_OPENAI or self.cache.cache_openai
-        self.cache.cache_general = CACHE_GENERAL or self.cache.cache_general
-        self.cache.cache_routes = list(CACHE_ROUTE_SET) or self.cache.cache_routes
+        self.cache.openai = CACHE_OPENAI or self.cache.openai
+        self.cache.general = CACHE_GENERAL or self.cache.general
+        self.cache.routes = list(CACHE_ROUTE_SET) or self.cache.routes
         self.api_key.level = LEVEL_MODELS or self.api_key.level
-        self.api_key.openai_key = {
-            key: ','.join([str(i) for i in value])
-            for key, value in OPENAI_API_KEY.items()
-        } or self.api_key.openai_key
-        self.api_key.forward_key = FWD_KEY or self.api_key.forward_key
-        self.forward.forward = [ForwardItem(**i) for i in FORWARD_CONFIG]
+        self.api_key.openai_key = OPENAI_API_KEY or self.api_key.openai_key
+        self.api_key.forward_key = LEVEL_TO_FWD_KEY or self.api_key.forward_key
+        self.forward = [ForwardItem(**i) for i in FORWARD_CONFIG]
 
         return self
+
+
+if __name__ == "__main__":
+    import yaml
+
+    def save_dict_to_yaml(data, file_path):
+        with open(file_path, 'w') as file:
+            yaml.dump(data, file, default_flow_style=False)
+
+    config = Config()
+    print(config.to_dict())
+    save_dict_to_yaml(config.to_dict(), 'config.yaml')

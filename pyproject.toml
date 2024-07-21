@@ -36,6 +36,7 @@ dependencies = [
     "tomli",
     "tomli-w",
     "pyzmq",
+    "pyyaml",
 ]
 
 dynamic = ["version"]
@@ -78,25 +79,35 @@ aifd = "openai_forward.__main__:main"
 [tool.hatch.version]
 path = "openai_forward/__init__.py"
 
-[tool.isort]
-profile = "black"
+#[tool.isort]
+#profile = "black"
+#
+#[tool.black]
+#line-length = 88
+#exclude = '''
+#/(
+#    \.git
+#    | \.hg
+#    | \.mypy_cache
+#    | \.tox
+#    | \.venv
+#    | _build
+#    | buck-out
+#    | build
+#    | dist
+#)/
+#'''
 
-[tool.black]
-line-length = 88
-exclude = '''
-/(
-    \.git
-    | \.hg
-    | \.mypy_cache
-    | \.tox
-    | \.venv
-    | _build
-    | buck-out
-    | build
-    | dist
-)/
-'''
-
+[tool.ruff]
+line-length = 100
+select = [         # 选择的规则
+    "F",
+    "E",
+    "W",
+    "UP",
+    "PERF",
+]
+ignore = ["F401"]  # 忽略的规则
 
 [tool.hatch.build]
 include = [
@@ -107,3 +118,7 @@ exclude = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["openai_forward"]
+
+[tool.rye]
+managed = true
+dev-dependencies = []

@@ -1,5 +1,5 @@
 import importlib
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 from fastapi import Request
@@ -11,6 +11,7 @@ from openai_forward.forward.core import GenericForward
     params=[
         {
             "FWD_KEY": {'fk0': 0, 'fk1': 1, 'fk2': 2},
+            # "FWD_KEY": {0:["fk-0"], 1:["fk-1"], 2: ["fk-2"]},
             "OPENAI_API_KEY": {'sk1': [0, 1], 'sk2': [1], 'sk3': [2], 'sk4': [0]},
             "LEVEL_MODELS": {
                 1: ['gpt-3.5-turbo', 'text-embedding-3-small'],
@@ -21,7 +22,7 @@ from openai_forward.forward.core import GenericForward
     ]
 )
 def openai_forward(request):
-    from openai_forward import settings
+    from openai_forward.config import settings
 
     settings.FWD_KEY = request.param['FWD_KEY']
     settings.OPENAI_API_KEY = request.param['OPENAI_API_KEY']

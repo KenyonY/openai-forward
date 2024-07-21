@@ -1,4 +1,4 @@
-from openai_forward.settings import (
+from openai_forward.config.settings import (
     CACHE_ROUTE_SET,
     FORWARD_CONFIG,
     FWD_KEY,

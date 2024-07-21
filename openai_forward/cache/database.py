@@ -1,6 +1,6 @@
 from flaxkv import FlaxKV
 
-from ..settings import CACHE_BACKEND, CACHE_ROOT_PATH_OR_URL, LOG_CACHE_DB_INFO
+from ..config.settings import CACHE_BACKEND, CACHE_ROOT_PATH_OR_URL, LOG_CACHE_DB_INFO
 
 if CACHE_BACKEND.upper() == "MEMORY":
     db_dict = {}

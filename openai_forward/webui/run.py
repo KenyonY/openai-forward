@@ -1,4 +1,5 @@
 import ast
+import os
 import pickle
 import secrets
 import threading
@@ -85,43 +86,31 @@ with st.sidebar:
         "Apply and Restart", help="Saving configuration and reloading openai forward"
     ):
         with st.spinner("Saving configuration and reloading openai forward..."):
-            env_dict = config.convert_to_env(set_env=False)
+            # env_dict = config.convert_to_env(set_env=False)
             socket = st.session_state['socket']
-            socket.send(pickle.dumps(env_dict))
+            socket.send(pickle.dumps(config.to_dict()))
             message: bytes = socket.recv()
 
         st.success(message.decode())
 
-    def generate_env_content():
-        env_dict = config.convert_to_env(set_env=False)
-        env_content = "\n".join([f"{key}={value}" for key, value in env_dict.items()])
-        return env_content
-
-    if st.button("Save to .env", help="Saving configuration to .env file"):
-        with st.spinner("Saving configuration to .env file."):
-            with open(".env", "w") as f:
-                f.write(generate_env_content())
-            st.success("Configuration saved to .env file")
-
     if st.button(
-        "Export to .env file",
+        "Export to config.yaml",
     ):
-        # Deferred data for download button: https://github.com/streamlit/streamlit/issues/5053
+        yaml_str = yaml.dump(config.to_dict(), default_flow_style=False)
+        yaml_bytes = yaml_str.encode('utf-8')
         download = st.download_button(
             use_container_width=True,
             label="Export",
-            data=generate_env_content(),
-            file_name="config.env",
+            data=yaml_bytes,
+            file_name="config.yaml",
             mime="text/plain",
         )
 
 
 def display_forward_configuration():
-    forward_config = config.forward
-
     st.subheader("AI Forward")
     with st.form("forward_configuration", border=False):
-        df = pd.DataFrame([i.to_dict() for i in forward_config.forward])
+        df = pd.DataFrame([i.to_dict() for i in config.forward])
         edited_df = st.data_editor(
             df, num_rows="dynamic", key="editor1", use_container_width=True
         )
@@ -155,7 +144,7 @@ def display_forward_configuration():
 
         submitted = st.form_submit_button("Save", use_container_width=True)
         if submitted:
-            forward_config.forward = [
+            config.forward = [
                 ForwardItem(row["base_url"], row["route"], row["type"])
                 for i, row in edited_df.iterrows()
                 if row["route"] is not None and row["base_url"] is not None
@@ -218,11 +207,9 @@ level_n --> sk_n(SK_n)
         'gpt-4-0125-preview',
         'gpt-4-0613',
         'gpt-4-1106-preview',
-        'gpt-4-1106-vision-preview',
         'gpt-4-turbo',
         'gpt-4-turbo-2024-04-09',
         'gpt-4-turbo-preview',
-        'gpt-4-vision-preview',
         'gpt-4o',
         'gpt-4o-2024-05-13',
         'gpt-4o-mini',
@@ -262,9 +249,26 @@ level_n --> sk_n(SK_n)
 
     with st.form("api_key_form", border=False):
         st.subheader("OpenAI API Key")
+
+        def to_list(x: str):
+            x = str(x).replace('，', ',').strip()
+            if x == '':
+                return []
+            try:
+                x = ast.literal_eval(x)
+                if isinstance(x, list):
+                    return x
+                if isinstance(x, tuple):
+                    return list(x)
+                else:
+                    return [x]
+            except:
+                return str(x).split(',')
+
+        to_int_list = lambda x: [int(i) for i in x]
         df = pd.DataFrame(
             [
-                {'api_key': key, 'level': value}
+                {'api_key': key, 'level': str(value)}
                 for key, value in api_key.openai_key.items()
             ]
         )
@@ -275,7 +279,7 @@ level_n --> sk_n(SK_n)
         st.subheader("Forward Key")
         df2 = pd.DataFrame(
             [
-                {'api_key': key, 'level': value}
+                {'level': int(key), 'api_key': str(value)}
                 for key, value in api_key.forward_key.items()
             ]
         )
@@ -286,11 +290,13 @@ level_n --> sk_n(SK_n)
         submitted = st.form_submit_button("Save", use_container_width=True)
         if submitted:
             api_key.openai_key = {
-                row["api_key"]: row["level"] for i, row in edited_df.iterrows()
+                row["api_key"]: to_int_list(to_list(row["level"]))
+                for i, row in edited_df.iterrows()
             }
 
             api_key.forward_key = {
-                row["api_key"]: row["level"] for i, row in edited_df2.iterrows()
+                int(row["level"]): to_list(row["api_key"])
+                for i, row in edited_df2.iterrows()
             }
 
             api_key.level = level_model_map
@@ -304,14 +310,14 @@ def display_cache_configuration():
     with st.container():
         st.subheader("Cache Configuration")
 
-        cache_openai = st.checkbox("Cache OpenAI route", cache.cache_openai)
+        cache_openai = st.checkbox("Cache OpenAI route", cache.openai)
         cache_default_request_caching_value = st.checkbox(
             "For OpenAI API, return using cache by default",
             cache.default_request_caching_value,
             disabled=not cache_openai,
         )
 
-        cache_general = st.checkbox("Cache General route", cache.cache_general)
+        cache_general = st.checkbox("Cache General route", cache.general)
 
         cache_backend = st.selectbox(
             "Cache Backend",
@@ -325,21 +331,21 @@ def display_cache_configuration():
             disabled=cache_backend == "MEMORY",
         )
 
-        df = pd.DataFrame([{"cache_route": i} for i in cache.cache_routes])
+        df = pd.DataFrame([{"cache_route": i} for i in cache.routes])
         edited_df = st.data_editor(
             df, num_rows="dynamic", key="editor1", use_container_width=True
         )
 
         submitted = st.button("Save", use_container_width=True)
         if submitted:
-            cache.cache_openai = cache_openai
-            cache.cache_general = cache_general
+            cache.openai = cache_openai
+            cache.general = cache_general
 
             cache.backend = cache_backend
             cache.root_path_or_url = cache_root_path_or_url
             cache.default_request_caching_value = cache_default_request_caching_value
 
-            cache.cache_routes = [
+            cache.routes = [
                 row['cache_route']
                 for i, row in edited_df.iterrows()
                 if row["cache_route"] is not None

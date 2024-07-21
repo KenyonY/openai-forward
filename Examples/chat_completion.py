@@ -18,14 +18,25 @@ debug = False
 
 max_tokens = None
 
-# user_content = """
-# 用c实现目前已知最快平方根算法
-# """
-# user_content = '最初有1000千克的蘑菇，其中99%的成分是水。经过几天的晴天晾晒后，蘑菇中的水分含量现在是98%，蘑菇中减少了多少水分？'
-# user_content = "Write down the most romantic sentence you can think of."
-user_content = "光散射中的Mie理论的理论公式是怎样的？请用latex语法表示它公式使用$$符号包裹。"
 
-model = "gpt-3.5-turbo"
+queries = {
+    0: "用c实现目前已知最快平方根导数算法",
+    1: "既然快递要 3 天才到，为什么不把所有的快递都提前 3 天发？",
+    2: "只切一刀，如何把四个橘子分给四个小朋友？",
+    3: "最初有1000千克的蘑菇，其中99%的成分是水。经过几天的晴天晾晒后，蘑菇中的水分含量现在是98%，蘑菇中减少了多少水分？",
+    4: "哥哥弟弟百米赛跑，第一次从同一起点起跑，哥哥到达终点时领先弟弟一米获胜，第二次哥哥从起点后退一米处开始起跑，问结果如何?",
+    5: "光散射中的Mie理论的理论公式是怎样的？请用latex语法表示它公式使用$$符号包裹。",
+    6: "Write down the most romantic sentence you can think of.",
+    7: "为什么我爸妈结婚的时候没邀请我参加婚礼？",
+    8: "一个人自杀了，这个世界上是多了一个自杀的人，还是少了一个自杀的人",
+}
+
+user_content = queries[8]
+
+# model = "gpt-3.5-turbo"
+model = "gpt-4o-mini"
+# model = "deepseek-chat"
+# model="gpt-4o"
 # model="gpt-4"
 
 mt = MeasureTime().start()
