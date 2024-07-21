@@ -13,6 +13,7 @@ run.sh
 ssl/
 chat.yaml
 chat_*.yaml
+openai-forward-config.yaml.*
 
 config.toml
 config_parser.py

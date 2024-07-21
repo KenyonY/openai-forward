@@ -4,10 +4,12 @@ import asyncio
 import traceback
 from asyncio import Queue
 from itertools import cycle
-from typing import Any, AsyncGenerator, Iterable
+from typing import AsyncGenerator
 
 import aiohttp
 import anyio
+import litellm
+import orjson
 from aiohttp import TCPConnector
 from fastapi import HTTPException, Request, status
 from loguru import logger
@@ -19,6 +21,7 @@ from ..cache import (
     get_cached_generic_response,
     get_cached_response,
 )
+from ..config.settings import *
 from ..content.openai import (
     ChatLogger,
     CompletionLogger,
@@ -26,8 +29,7 @@ from ..content.openai import (
     WhisperLogger,
 )
 from ..decorators import async_retry, async_token_rate_limit_auth_level
-from ..helper import InfiniteSet, get_client_ip, get_unique_id
-from ..settings import *
+from ..helper import InfiniteSet, get_client_ip
 
 # from beartype import beartype
 
@@ -140,7 +142,7 @@ class GenericForward:
             logger.warning(f"IP {ip} is unauthorized")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Forbidden Error",
+                detail="Forbidden Error",
             )
 
     @staticmethod
@@ -312,9 +314,9 @@ class GenericForward:
             'route_path': route_path,
         }
 
-    async def _handle_payload(self, request: Request, route_path: str, model_set):
+    def _handle_payload(self, method: str, payload, route_path: str, model_set):
 
-        if not request.method == "POST":
+        if method != "POST":
             return
 
         if route_path in (
@@ -323,7 +325,6 @@ class GenericForward:
             EMBEDDING_ROUTE,
             CUSTOM_GENERAL_ROUTE,
         ):
-            payload = await request.json()
             model = payload.get("model", None)
 
             if model is not None and model not in model_set:
@@ -345,14 +346,18 @@ class GenericForward:
         """
         assert self.client
         data = await request.body()
+        if data:
+            payload = orjson.loads(data)
+        else:
+            payload = {}
 
         if LOG_GENERAL:
-            logger.debug(f"payload: {data}")
+            logger.debug(f"payload: {payload}")
         client_config = self.prepare_client(request, return_origin_header=True)
         route_path = client_config["route_path"]
 
         _, model_set = self.handle_authorization(client_config)
-        payload = await self._handle_payload(request, route_path, model_set)
+        self._handle_payload(request.method, payload, route_path, model_set)
 
         cached_response, cache_key = get_cached_generic_response(
             data, request, route_path
@@ -361,6 +366,37 @@ class GenericForward:
         if cached_response:
             return cached_response
 
+        if CUSTOM_MODEL_CONFIG and route_path in (CHAT_COMPLETION_ROUTE,):
+            prev_model = payload['model']
+            custom_model_map = CUSTOM_MODEL_CONFIG['model_map']
+            current_model = custom_model_map.get(prev_model, prev_model)
+            if current_model in custom_model_map.values():
+                if CUSTOM_MODEL_CONFIG['backend'] == "ollama":
+                    api_base = CUSTOM_MODEL_CONFIG['api_base']
+                    prev_model = payload['model']
+                    payload['model'] = f"ollama_chat/{current_model}"
+                    logger.debug(f"{prev_model} -> {payload['model']=}")
+
+                    r = await litellm.acompletion(
+                        **payload,
+                        api_base=api_base,
+                    )
+
+                    @async_token_rate_limit_auth_level(token_interval_conf, FWD_KEY)
+                    async def stream(request: Request):
+                        if payload.get("stream", True):
+                            async for chunk in r:
+                                yield b'data: ' + orjson.dumps(
+                                    chunk.to_dict()
+                                ) + b'\n\n'
+                        else:
+                            yield orjson.dumps(r.to_dict())
+
+                    return StreamingResponse(
+                        stream(request),
+                        status_code=200,
+                        media_type="text/event-stream",
+                    )
         r = await self.send(client_config, data=data)
 
         return StreamingResponse(
@@ -491,7 +527,7 @@ class OpenaiForward(GenericForward):
             else:
                 ...
 
-        except Exception as e:
+        except Exception:
             logger.warning(
                 f"log chat error:\nhost:{request.client.host} method:{request.method}: {traceback.format_exc()}"
             )

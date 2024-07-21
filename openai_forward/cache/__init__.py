@@ -1,12 +1,13 @@
-from flaxkv.pack import decode, encode
+from flaxkv.pack import encode
 from loguru import logger
 
-from ..settings import (
+from openai_forward.config.settings import (
     CACHE_OPENAI,
     CACHE_ROUTE_SET,
     CHAT_COMPLETION_ROUTE,
     EMBEDDING_ROUTE,
 )
+
 from .chat.response import gen_response, get_cached_chat_response
 from .database import db_dict
 from .embedding.response import get_cached_embedding_response
