@@ -225,6 +225,8 @@ level_n --> sk_n(SK_n)
         'gpt-4-vision-preview',
         'gpt-4o',
         'gpt-4o-2024-05-13',
+        'gpt-4o-mini',
+        'gpt-4o-mini-2024-07-18',
         'text-embedding-3-large',
         'text-embedding-3-small',
         'text-embedding-ada-002',
