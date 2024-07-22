@@ -327,7 +327,7 @@ class ModelInferResult:
     usage: dict
 
 
-def model_inference(model: str, messages: List):
+def model_inference(model: str, messages: list):
     sentence = next(sentences)
 
     if TIKTOKEN_VALID:

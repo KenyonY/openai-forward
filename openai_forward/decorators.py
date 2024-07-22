@@ -79,9 +79,8 @@ def async_retry(
             current_delay = delay
             while retries <= max_retries:
                 try:
-                    result = await func(*args, **kwargs)
-                    return result
-                except exceptions as e:
+                    return await func(*args, **kwargs)
+                except exceptions as e:  # noqa: PERF203
 
                     if retries == max_retries:
                         # Experimental
