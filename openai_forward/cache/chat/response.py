@@ -1,14 +1,12 @@
 from __future__ import annotations
 
 import random
-from typing import List
 
 from fastapi.responses import Response, StreamingResponse
 from flaxkv.pack import encode
 from loguru import logger
 
-from openai_forward.config.settings import CACHE_OPENAI, FWD_KEY
-
+from ...config.settings import CACHE_OPENAI, FWD_KEY
 from ..database import db_dict
 from .chat_completions import (
     async_token_rate_limit_auth_level,
@@ -118,7 +116,7 @@ def get_cached_chat_response(payload_info, valid_payload, request, **kwargs):
 
 
 @async_token_rate_limit_auth_level(token_interval_conf, FWD_KEY)
-async def stream_generate(buffer_list: List, request):
+async def stream_generate(buffer_list: list, request):
     for buffer in buffer_list:
         yield buffer
 
@@ -134,5 +132,5 @@ def gen_response(buffer_list, request):
         return Response(
             buffer_list[0],
             status_code=200,
-            media_type="application/octet-stream",
+            media_type="application/json",
         )
