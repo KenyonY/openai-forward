@@ -31,9 +31,8 @@ queries = {
     8: "一个人自杀了，这个世界上是多了一个自杀的人，还是少了一个自杀的人",
 }
 
-user_content = queries[8]
+user_content = queries[5]
 
-# model = "gpt-3.5-turbo"
 model = "gpt-4o-mini"
 # model = "deepseek-chat"
 # model="gpt-4o"
@@ -61,8 +60,10 @@ if stream:
         for idx, chunk in enumerate(resp):
             chunk_message = chunk.choices[0].delta or ""
             if idx == 0:
-                mt.show_interval("tcp time:")
+                mt.show_interval("time to first token:")
+                content = chunk_message.content or ""
                 print(f"{chunk_message.role}: ")
+                print(content, end="")
                 continue
             content = chunk_message.content or ""
             print(content, end="")

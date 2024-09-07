@@ -13,7 +13,7 @@ import orjson
 from aiohttp import TCPConnector
 from fastapi import HTTPException, Request, status
 from loguru import logger
-from starlette.responses import BackgroundTask, StreamingResponse
+from starlette.responses import BackgroundTask, StreamingResponse, Response
 
 from ..cache import (
     cache_generic_response,
@@ -58,7 +58,7 @@ class GenericForward:
     for level, sks in _level_to_sks.items():
         _level_to_sk[level] = cycle(sks)
 
-    def __init__(self, base_url: str, route_prefix: str, proxy=None):
+    def __init__(self, base_url: str, route_prefix: str, proxy=None, **kwargs):
         """
         Args:
             base_url (str): The base URL to which requests will be forwarded.
@@ -323,7 +323,6 @@ class GenericForward:
             CHAT_COMPLETION_ROUTE,
             COMPLETION_ROUTE,
             EMBEDDING_ROUTE,
-            CUSTOM_GENERAL_ROUTE,
         ):
             model = payload.get("model", None)
 
@@ -366,37 +365,6 @@ class GenericForward:
         if cached_response:
             return cached_response
 
-        if CUSTOM_MODEL_CONFIG and route_path in (CHAT_COMPLETION_ROUTE,):
-            prev_model = payload['model']
-            custom_model_map = CUSTOM_MODEL_CONFIG['model_map']
-            current_model = custom_model_map.get(prev_model, prev_model)
-            if current_model in custom_model_map.values():
-                if CUSTOM_MODEL_CONFIG['backend'] == "ollama":
-                    api_base = CUSTOM_MODEL_CONFIG['api_base']
-                    prev_model = payload['model']
-                    payload['model'] = f"ollama_chat/{current_model}"
-                    logger.debug(f"{prev_model} -> {payload['model']=}")
-
-                    r = await litellm.acompletion(
-                        **payload,
-                        api_base=api_base,
-                    )
-
-                    @async_token_rate_limit_auth_level(token_interval_conf, FWD_KEY)
-                    async def stream(request: Request):
-                        if payload.get("stream", True):
-                            async for chunk in r:
-                                yield b'data: ' + orjson.dumps(
-                                    chunk.to_dict()
-                                ) + b'\n\n'
-                        else:
-                            yield orjson.dumps(r.to_dict())
-
-                    return StreamingResponse(
-                        stream(request),
-                        status_code=200,
-                        media_type="text/event-stream",
-                    )
         r = await self.send(client_config, data=data)
 
         return StreamingResponse(
@@ -413,7 +381,7 @@ class OpenaiForward(GenericForward):
     Inherits from the GenericForward class and adds specific functionality for the OpenAI API.
     """
 
-    def __init__(self, base_url: str, route_prefix: str, proxy=None):
+    def __init__(self, base_url: str, route_prefix: str, proxy=None, **kwargs):
         """
         Initialize the OpenaiForward class.
 
@@ -692,3 +660,87 @@ class OpenaiForward(GenericForward):
             status_code=r.status,
             media_type=r.headers.get("content-type"),
         )
+
+class CustomForward(GenericForward):
+    """
+    CustomForward
+    """
+    def __init__(self, base_url: str, route_prefix: str, proxy=None, custom_config=None):
+        """
+        """
+        super().__init__(base_url, route_prefix, proxy)
+        assert custom_config is not None
+        self.custom_config = custom_config
+
+    async def reverse_proxy(self, request: Request):
+        """
+        Asynchronously handle reverse proxying the incoming request.
+
+        Args:
+            request (Request): The incoming FastAPI request object.
+
+        Returns:
+            StreamingResponse: A FastAPI StreamingResponse containing the server's response.
+        """
+        assert self.client
+        data = await request.body()
+        if data:
+            payload = orjson.loads(data)
+        else:
+            payload = {}
+
+        if LOG_GENERAL:
+            logger.debug(f"payload: {payload}")
+        client_config = self.prepare_client(request, return_origin_header=True)
+        route_path = client_config["route_path"]
+
+        _, model_set = self.handle_authorization(client_config)
+        self._handle_payload(request.method, payload, route_path, model_set)
+
+        cached_response, cache_key = get_cached_generic_response(
+            data, request, route_path
+        )
+
+        if cached_response:
+            return cached_response
+
+        try:
+            # custom forward use litellm
+            prev_model = payload['model']
+            custom_model_map = self.custom_config['model_map']
+            current_model = custom_model_map.get(prev_model, prev_model)
+            if current_model in custom_model_map.values():
+                if self.custom_config['backend'] == "ollama":
+                    prev_model = payload['model']
+                    payload['model'] = f"ollama_chat/{current_model}"
+                    logger.debug(f"{prev_model} -> {payload['model']=}")
+
+                    r = await litellm.acompletion(
+                        **payload,
+                        api_base=self.BASE_URL,
+                    )
+
+                    @async_token_rate_limit_auth_level(token_interval_conf, FWD_KEY)
+                    async def stream(request: Request):
+                        if payload.get("stream", True):
+                            async for chunk in r:
+                                yield b'data: ' + orjson.dumps(
+                                    chunk.to_dict()
+                                ) + b'\n\n'
+                        else:
+                            yield orjson.dumps(r.to_dict())
+
+                    return StreamingResponse(
+                        stream(request),
+                        status_code=200,
+                        media_type="text/event-stream",
+                    )
+            else:
+                raise HTTPException(status_code=404, detail="Model not found")
+        except Exception as e:
+            # 返回错误类型和错误信息
+            return Response(
+                f"{type(e).__name__}: {e}",
+                media_type="text/plain",
+                status_code=500,
+            )

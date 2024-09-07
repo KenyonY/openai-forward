@@ -11,6 +11,7 @@ from openai_forward.console import print_rate_limit_info, print_startup_info
 from openai_forward.content.config import setting_log
 from openai_forward.helper import format_route_prefix
 
+from typing import Literal
 config_file_path = Path("openai-forward-config.yaml")
 if config_file_path.exists():
     with open(config_file_path) as file:
@@ -45,7 +46,6 @@ if not config:
     EMBEDDING_ROUTE = (
         os.environ.get("EMBEDDING_ROUTE", "/v1/embeddings").strip().lower()
     )
-    CUSTOM_GENERAL_ROUTE = os.environ.get("CUSTOM_GENERAL_ROUTE", "").strip().lower()
 
     CACHE_ROUTE_SET = set(env2dict("CACHE_ROUTES", []))
 
@@ -54,7 +54,7 @@ if not config:
         [{"base_url": "https://api.openai.com", "route": "/", "type": "openai"}],
     )
 
-    CUSTOM_MODEL_CONFIG = env2dict("CUSTOM_MODEL_CONFIG", {})
+    # CUSTOM_MODEL_CONFIG = env2dict("CUSTOM_MODEL_CONFIG", {})
 
     token_rate_limit_conf = env2dict("TOKEN_RATE_LIMIT")
     PRINT_CHAT = os.environ.get("PRINT_CHAT", "False").strip().lower() == "true"
@@ -104,19 +104,15 @@ else:
     ).lower()
     COMPLETION_ROUTE = config.get('completion_route', '/v1/completions').lower()
     EMBEDDING_ROUTE = config.get('embedding_route', '/v1/embeddings').lower()
-    CUSTOM_GENERAL_ROUTE = config.get('custom_general_route', '').lower()
 
     CACHE_ROUTE_SET: Set[str] = set(config.get('cache', {}).get('routes', []))
-
-    openai_additional_start_info = {'cache_routes': CACHE_ROUTE_SET}
-    general_additional_start_info = {'cache_routes': CACHE_ROUTE_SET}
 
     FORWARD_CONFIG = config.get(
         'forward',
         [{"base_url": "https://api.openai.com", "route": "/", "type": "openai"}],
     )
 
-    CUSTOM_MODEL_CONFIG = config.get('custom_model_config', {})
+    # CUSTOM_MODEL_CONFIG = config.get('custom_model_config', {})
 
     PRINT_CHAT = config.get('print_chat', False)
 
@@ -162,37 +158,57 @@ else:
 
 openai_additional_start_info = {}
 general_additional_start_info = {}
+custom_additional_start_info = {}
 
 openai_additional_start_info['cache_routes'] = CACHE_ROUTE_SET
 general_additional_start_info['cache_routes'] = CACHE_ROUTE_SET
+custom_additional_start_info['cache_routes'] = CACHE_ROUTE_SET
 
-OPENAI_BASE_URL = [
-    i['base_url'] for i in FORWARD_CONFIG if i and i.get('type') == 'openai'
-]
-OPENAI_ROUTE_PREFIX = [
-    format_route_prefix(i['route'])
-    for i in FORWARD_CONFIG
-    if i and i.get('type') == 'openai'
-]
 
-GENERAL_BASE_URL = [
-    i['base_url'] for i in FORWARD_CONFIG if i and i.get('type') == 'general'
-]
-GENERAL_ROUTE_PREFIX = [
-    format_route_prefix(i['route'])
-    for i in FORWARD_CONFIG
-    if i and i.get('type') == 'general'
-]
+def get_forward_config(type_name: Literal['openai', 'general', 'custom']):
+    """ get forward config """
+    # base_url_list = [
+    #     i['base_url'] for i in FORWARD_CONFIG if i and i.get('type') == type_name
+    # ]
+    # route_prefix = [
+    #     format_route_prefix(i['route'])
+    #     for i in FORWARD_CONFIG
+    #     if i and i.get('type') == type_name
+    # ]
 
-for openai_route, general_route in zip(OPENAI_ROUTE_PREFIX, GENERAL_ROUTE_PREFIX):
-    assert openai_route not in GENERAL_ROUTE_PREFIX
-    assert general_route not in OPENAI_ROUTE_PREFIX
+    custom_config_list = []
+    route_prefix_list = []
+    base_url_list = []
+
+    for _config in FORWARD_CONFIG:
+        if _config and _config.get('type') == type_name:
+            route_prefix_list.append(format_route_prefix(_config['route']))
+            base_url_list.append(_config['base_url'])
+
+            if type_name == 'custom':
+                custom_config_list.append({
+                    'backend': _config['backend'],
+                    'model_map': _config['model_map'],
+                })
+
+    return base_url_list, route_prefix_list, custom_config_list
+
+
+OPENAI_BASE_URL, OPENAI_ROUTE_PREFIX, _ = get_forward_config('openai')
+GENERAL_BASE_URL, GENERAL_ROUTE_PREFIX, _ = get_forward_config('general')
+CUSTOM_BASE_URL, CUSTOM_ROUTE_PREFIX, CUSTOM_CONFIG = get_forward_config('custom')
+
+for openai_route, general_route, custom_route in zip(OPENAI_ROUTE_PREFIX, GENERAL_ROUTE_PREFIX, CUSTOM_ROUTE_PREFIX):
+    assert openai_route not in GENERAL_ROUTE_PREFIX and openai_route not in CUSTOM_ROUTE_PREFIX
+    assert general_route not in OPENAI_ROUTE_PREFIX and general_route not in CUSTOM_ROUTE_PREFIX
+    assert custom_route not in OPENAI_ROUTE_PREFIX and custom_route not in GENERAL_ROUTE_PREFIX
 
 if BENCHMARK_MODE:
     openai_additional_start_info["benchmark_mode"] = BENCHMARK_MODE
 
 openai_additional_start_info["LOG_OPENAI"] = LOG_OPENAI
 general_additional_start_info["LOG_GENERAL"] = LOG_GENERAL
+custom_additional_start_info["LOG_CUSTOM"] = LOG_GENERAL
 
 if LOG_OPENAI:
     setting_log(openai_route_prefix=OPENAI_ROUTE_PREFIX, print_chat=PRINT_CHAT)
@@ -290,6 +306,15 @@ def show_startup():
             "",
             style=next(styles),
             **general_additional_start_info,
+        )
+    for base_url, route_prefix in zip(CUSTOM_BASE_URL, CUSTOM_ROUTE_PREFIX):
+        print_startup_info(
+            base_url,
+            route_prefix,
+            "",
+            "",
+            style=next(styles),
+            **custom_additional_start_info,
         )
 
     print_rate_limit_info(

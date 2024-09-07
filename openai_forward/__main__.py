@@ -263,7 +263,3 @@ class Cli:
 
 def main():
     fire.Fire(Cli)
-
-
-if __name__ == "__main__":
-    main()

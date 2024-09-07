@@ -3,8 +3,10 @@ log:
   openai: true
 
 cache:
-  general: true
-  openai: true
+  custom: false
+  general: false
+  openai: false
+
   routes:
     - "/v1/chat/completions"
     - "/v1/embeddings"
@@ -20,18 +22,33 @@ benchmark_mode: true
 
 forward:
   - base_url: "https://api.openai.com"
-    route: "/"
+    route: "/openai"
     type: "openai"
+
+#  - base_url: "http://localhost"
+#    route: "/"
+#    type: "general"
 
   - base_url: "https://generativelanguage.googleapis.com"
     route: "/gemini"
     type: "general"
 
-# custom_model_config:
-#   backend: "ollama"
-#   model_map:
-#     gpt-3.5-turbo: "qwen2:7b"
-#   api_base: "http://localhost:11434"
+  - base_url: "http://localhost:11434"
+    route: "/"
+    type: "custom"
+
+    backend: "ollama"
+    model_map:
+     gpt-4o-mini: "qwen2:latest"
+     qwen7b: "qwen2:latest"
+
+#  - base_url: "https://api.anthropic.com/v1/messages"
+#    route: "/anthropic/chat/completions"
+#    type: "custom"
+#
+#    backend: "anthropic"
+#    model_map:
+#     gpt-4o-mini: "claude-3-5-sonnet-20240620"
 
 api_key:
   level:
