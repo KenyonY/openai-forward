@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+import os
 import time
 
 import attrs
 import orjson
-from fastapi.responses import Response, StreamingResponse
 
 from openai_forward.cache.chat.chat_completions import (
     ChatCompletionChoice,
@@ -18,8 +18,7 @@ from ..cache.chat.tokenizer import TIKTOKEN_VALID, count_tokens, encode_as_piece
 from ..decorators import async_token_rate_limit_auth_level, random_sleep
 from ..helper import get_unique_id
 
-
-def generate(model: str, content: str, history_messages=None, tool_calls: list = None):
+def generate(model, content: str, history_messages=None, tool_calls: list = None):
     messages = [] if history_messages is None else history_messages
     usage = count_tokens(messages, content, model)
     created = int(time.time())
@@ -49,7 +48,7 @@ def generate(model: str, content: str, history_messages=None, tool_calls: list =
 
 
 @async_token_rate_limit_auth_level(token_interval_conf, FWD_KEY)
-async def stream_generate_efficient(model: str, model_infer, **kwargs):
+async def stream_generate_efficient(request, model, model_infer, **kwargs):
     """More efficient (use dict) version of stream_generate
     Args:
         model (str): The model to use.
@@ -91,14 +90,11 @@ async def stream_generate_efficient(model: str, model_infer, **kwargs):
 
     delta = {}
     for content in model_infer(**kwargs):
+        if not content:
+            continue
         yield serialize_delta(content=content)
 
     delta = {}
     yield serialize_delta(finish_reason="stop")
 
     yield b'data: [DONE]\n\n'
-
-
-class CustomModelManager:
-    def forward(self, gen_func, **kwargs):
-        yield from gen_func(**kwargs)

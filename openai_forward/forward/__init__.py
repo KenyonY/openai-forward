@@ -38,7 +38,6 @@ class ForwardManager:
             _objs (list): A list of Forward objects.
         """
 
-        print(base_urls, route_prefixes, custom_configs, Forward)
         root_forward_obj = None
         _objs = []
         for base_url, route_prefix, custom_config in zip(base_urls, route_prefixes, custom_configs):

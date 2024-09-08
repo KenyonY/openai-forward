@@ -49,6 +49,10 @@ Issues = "https://github.com/KenyonY/openai-forward/issues"
 Source = "https://github.com/KenyonY/openai-forward"
 
 [project.optional-dependencies]
+ml = [
+    
+]
+
 test = [
     "pytest",
     "pytest-aiohttp",

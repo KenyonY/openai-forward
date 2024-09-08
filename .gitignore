@@ -7,7 +7,9 @@ package.json
 .idea/
 .vscode/
 .DS_Store
+
 /models
+/AutoGPTQ
 third-party/
 FLAXKV_DB
 run.sh

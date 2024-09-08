@@ -18,6 +18,47 @@ def save_yaml(path: Path, data: dict):
 
 
 class Cli:
+    def serve(self, port: str=None, backend: str=None,
+              model_name_or_path: str=None,
+              call_model_name: str=None,
+              device: str=None,
+              dtype: str=None,
+              atten_impl: str=None,
+              ):
+        from openai_forward.config.settings import config
+        import os
+        serve_config = config['serve']
+
+        if port is None:
+            port = serve_config['port']
+        if backend is None:
+            backend = serve_config['backend']
+        if model_name_or_path is None:
+            model_name_or_path = serve_config['model_name_or_path']
+        if call_model_name is None:
+            call_model_name = serve_config['call_model_name']
+        if device is None:
+            device = serve_config['device']
+        if dtype is None:
+            dtype = serve_config['dtype']
+        if atten_impl is None:
+            atten_impl = serve_config['attn_impl']
+        os.environ['BACKEND'] = backend
+        os.environ['MODEL_NAME_OR_PATH'] = model_name_or_path
+        os.environ['CALL_MODEL_NAME'] = call_model_name
+        os.environ['DEVICE'] = device
+        os.environ['TORCH_DTYPE'] = dtype
+        os.environ['ATTN_IMPL'] = atten_impl
+
+        uvicorn.run(
+            app="openai_forward.model_serve.app:app",
+            host="0.0.0.0",
+            port=port,
+            workers=1,
+            app_dir="..",
+        )
+
+
     def run_web(self, port=8001, openai_forward_host='localhost', wait=True):
         """
         Runs the web UI using the Streamlit server.
@@ -133,13 +174,13 @@ class Cli:
                 )
                 socket.send(f"Restart success!".encode())
 
-    def _start_uvicorn(self, port, workers, ssl_keyfile=None, ssl_certfile=None):
+    def _start_uvicorn(self, port, workers, app: str='openai_forward.app:app', ssl_keyfile=None, ssl_certfile=None):
         from openai_forward.helper import wait_for_serve_start
 
         self.uvicorn_proc = subprocess.Popen(
             [
                 'uvicorn',
-                'openai_forward.app:app',
+                app,
                 '--host',
                 '0.0.0.0',
                 '--port',

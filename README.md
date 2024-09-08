@@ -52,8 +52,8 @@
 
 ### News
 
-- 🎉🎉🎉 v0.7.0版本后支持通过WebUI进行配置管理
-- gpt-1106版本已适配
+- 2024.09.08🔥 v0.9.0版本后支持对ollama转发; 配置文件切换为YAML, 见 [配置](openai-forward-config.yaml)
+- 🎉 v0.7.0版本后支持通过WebUI进行配置管理
 - 缓存后端切换为高性能数据库后端：[🗲 FlaxKV](https://github.com/KenyonY/flaxkv)
 
 <a>
@@ -79,9 +79,6 @@
 - 原始OpenAI 服务地址
   > https://api.openai-forward.com  
   > https://render.openai-forward.com
-
-- 开启缓存的服务地址（用户请求结果将被保存一段时间）
-  > https://smart.openai-forward.com
 
 <sub>
 注：此处部署的代理服务仅供个人学习和研究目的使用，勿用于任何商业用途。

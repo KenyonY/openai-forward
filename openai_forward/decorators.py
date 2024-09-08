@@ -32,7 +32,7 @@ def retry(max_retries=3, delay=1, backoff=2, exceptions=(Exception,)):
             while retries <= max_retries:
                 try:
                     return func(*args, **kwargs)
-                except exceptions as e:
+                except exceptions as e:  # noqa: PERF203
                     retries += 1
                     if retries == max_retries:
                         raise

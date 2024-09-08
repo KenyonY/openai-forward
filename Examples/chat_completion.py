@@ -33,7 +33,8 @@ queries = {
 
 user_content = queries[5]
 
-model = "gpt-4o-mini"
+# model = "gpt-4o-mini"
+model = "qwen7b"
 # model = "deepseek-chat"
 # model="gpt-4o"
 # model="gpt-4"
