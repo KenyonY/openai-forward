@@ -13,8 +13,8 @@ torch.manual_seed(0)
 device = "cuda"
 # path = '/home/kunyuan/models/openbmb/MiniCPM3-4B'
 # path = '/home/kunyuan/models/Qwen/Qwen2-7B-Instruct-GPTQ-Int8'
-# path = '/home/kunyuan/models/Qwen/Qwen2-VL-2B-Instruct'
-path = '/home/kunyuan/models/Qwen/Qwen2-VL-7B-Instruct-AWQ'
+path = '/home/kunyuan/models/Qwen/Qwen2-VL-2B-Instruct'
+# path = '/home/kunyuan/models/Qwen/Qwen2-VL-7B-Instruct-AWQ'
 
 # path = '/home/kunyuan/models/Qwen/Qwen2-VL-2B-Instruct'
 
@@ -23,8 +23,8 @@ tokenizer = AutoTokenizer.from_pretrained(path, trust_remote_code=True)
 model = Qwen2VLForConditionalGeneration.from_pretrained(
     path,
     attn_implementation="flash_attention_2",
-torch_dtype="auto", device_map='auto')
-processor = AutoProcessor.from_pretrained(path )
+    torch_dtype="auto", device_map='auto')
+processor = AutoProcessor.from_pretrained(path)
 messages = [
     {
         "role": "user",
@@ -78,16 +78,16 @@ model_inputs = inputs
 streamer = TextIteratorStreamer(processor, timeout=60.0, skip_prompt=True, skip_special_tokens=True)
 
 model_inputs.update(
-   dict(
-max_new_tokens = 1000,
-    do_sample = True,  # False if temperature == 0 else True,
-    top_p = 0.7,
-    temperature = 0.7,
+    dict(
+        max_new_tokens=1000,
+        do_sample=True,  # False if temperature == 0 else True,
+        top_p=0.7,
+        temperature=0.7,
         # temperature = temperature,
-    streamer = streamer,
+        streamer=streamer,
         # repetition_penalty=penalty,
-    # eos_token_id = [2, 73440],
-   )
+        # eos_token_id = [2, 73440],
+    )
 )
 generate_kwargs = dict(
     **model_inputs,
@@ -114,4 +114,3 @@ buffer = ""
 for new_text in streamer:
     buffer += new_text
     print(new_text, end="")
-

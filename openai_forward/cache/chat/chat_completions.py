@@ -121,7 +121,7 @@ sentences = cycle(corpus)
 
 @async_token_rate_limit_auth_level(token_interval_conf, FWD_KEY)
 async def stream_generate(
-    model: str, content: str | None, tool_calls: list | None, request: Request
+        model: str, content: str | None, tool_calls: list | None, request: Request
 ):
     created = int(time.time())
     id = f"chatcmpl-{get_unique_id()}"
@@ -148,7 +148,7 @@ async def stream_generate(
     )
 
     def serialize_delta(
-        role=None, content=None, delta_tool_calls=None, finish_reason=None
+            role=None, content=None, delta_tool_calls=None, finish_reason=None
     ):
         if role:
             delta.role = role
@@ -163,11 +163,11 @@ async def stream_generate(
         chunk.choices = [choice_data]
 
         return (
-            b'data: '
-            + orjson.dumps(
-                attrs.asdict(chunk, filter=attrs.filters.exclude(type(None)))
-            )
-            + b'\n\n'
+                b'data: '
+                + orjson.dumps(
+            attrs.asdict(chunk, filter=attrs.filters.exclude(type(None)))
+        )
+                + b'\n\n'
         )
 
     if tool_calls:
@@ -209,7 +209,7 @@ async def stream_generate(
 
 @async_token_rate_limit_auth_level(token_interval_conf, FWD_KEY)
 async def stream_generate_efficient(
-    model: str, content: str | None, tool_calls: list | None, request: Request
+        model: str, content: str | None, tool_calls: list | None, request: Request
 ):
     """More efficient (use dict) version of stream_generate
     Args:
@@ -239,7 +239,7 @@ async def stream_generate_efficient(
     }
 
     def serialize_delta(
-        role=None, content=None, delta_tool_calls=None, finish_reason=None
+            role=None, content=None, delta_tool_calls=None, finish_reason=None
     ):
         if role:
             delta['role'] = role

@@ -21,16 +21,27 @@ chat_completion_route: "/v1/chat/completions"
 benchmark_mode: true
 
 serve:
-  port: 8001
-  backend: transformers
-  model_name_or_path: "/home/kunyuan/models/openbmb/MiniCPM3-4B"
-#  model_name_or_path: "/home/kunyuan/models/Qwen/Qwen2-7B-Instruct"
+  backend: vllm
+  port: 18000
+#  model_name_or_path: "/home/kunyuan/models/openbmb/MiniCPM3-4B"
+  model_name_or_path: "/home/kunyuan/models/Qwen/Qwen2-0.5B-Instruct"
+#  model_name_or_path: "/home/kunyuan/models/Qwen/Qwen2.5-3B-Instruct"
   route: /v1/chat/completions
-  device: cuda
-  dtype: bfloat16
-  attn_impl: flash_attention_2
-#  attn_impl: sdpa
   call_model_name: "custom_model"
+
+  vllm:
+    quantization: null
+#    quantization: gptq
+    max_model_len: '16000'
+    enable_prefix_caching: False
+    max_num_seqs: '3'
+
+  transformers:
+    device: cuda
+    dtype: bfloat16
+    max_concurrent: '5'
+#    attn_impl: flash_attention_2
+    attn_impl: sdpa
 
 
 forward:

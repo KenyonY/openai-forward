@@ -1,24 +1,30 @@
 from __future__ import annotations
 
-import os
 import time
 
 import attrs
 import orjson
 
-from openai_forward.cache.chat.chat_completions import (
+from ...config.settings import FWD_KEY
+from ...cache.chat.tokenizer import count_tokens
+from ...cache.chat.chat_completions import (
     ChatCompletionChoice,
     ChatCompletionMessage,
     ChatCompletionsResponse,
     token_interval_conf,
 )
-from openai_forward.config.settings import CACHE_OPENAI, FWD_KEY
+from ...decorators import async_token_rate_limit_auth_level
+from ...helper import get_unique_id
 
-from ..cache.chat.tokenizer import TIKTOKEN_VALID, count_tokens, encode_as_pieces
-from ..decorators import async_token_rate_limit_auth_level, random_sleep
-from ..helper import get_unique_id
 
 def generate(model, content: str, history_messages=None, tool_calls: list = None):
+    """ Generate a completion for the given prompt and parameters.
+    Args:
+        model (str): The model to use.
+        content (str): content.
+        history_messages (list, optional): history_messages. Defaults to None.
+        tool_calls (list, optional): tool_calls. Defaults to None.
+    """
     messages = [] if history_messages is None else history_messages
     usage = count_tokens(messages, content, model)
     created = int(time.time())
@@ -69,7 +75,7 @@ async def stream_generate_efficient(request, model, model_infer, **kwargs):
     }
 
     def serialize_delta(
-        role=None, content=None, delta_tool_calls=None, finish_reason=None
+            role=None, content=None, delta_tool_calls=None, finish_reason=None
     ):
         if role:
             delta['role'] = role
@@ -89,10 +95,9 @@ async def stream_generate_efficient(request, model, model_infer, **kwargs):
     yield serialize_delta(role="assistant", content="")
 
     delta = {}
-    for content in model_infer(**kwargs):
-        if not content:
-            continue
-        yield serialize_delta(content=content)
+    async for content in model_infer(**kwargs):
+        if content:
+            yield serialize_delta(content=content)
 
     delta = {}
     yield serialize_delta(finish_reason="stop")

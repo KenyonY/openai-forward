@@ -31,7 +31,7 @@ queries = {
     8: "一个人自杀了，这个世界上是多了一个自杀的人，还是少了一个自杀的人",
 }
 
-user_content = queries[5]
+user_content = queries[0]
 
 # model = "gpt-4o-mini"
 model = "qwen7b"
@@ -70,7 +70,8 @@ if stream:
             print(content, end="")
         print()
 else:
-    print(resp)
+    if debug:
+        print(resp)
     assistant_content = resp.choices[0].message.content
     print(assistant_content)
     print(resp.usage)

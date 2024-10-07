@@ -5,6 +5,10 @@ from rich import print
 from sparrow import MeasureTime, yaml_load  # pip install sparrow-python
 
 config = yaml_load("config.yaml", rel_path=True)
+config = {
+    "api_key": "123",
+    "api_base": "http://localhost:8001/v1"
+}
 print(f"{config=}")
 
 client = AsyncOpenAI(
@@ -12,35 +16,28 @@ client = AsyncOpenAI(
     base_url=config['api_base'],
 )
 
-stream = True
-# stream = False
+# stream = True
+stream = False
 
-is_print = False
+is_print = True
 
 
 async def run(n):
     resp = await client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
-            {"role": "user", "content": '.'},
+            {"role": "user", "content": '用c实现目前已知最快平方根导数算法'},
         ],
         stream=stream,
         timeout=60,
     )
 
     if stream:
-        first_chunk = await anext(resp)
-        if first_chunk is not None:
-            if is_print:
-                chunk_message = first_chunk.choices[0].delta
-                print(f"{chunk_message['role']}: ")
-            async for chunk in resp:
-                if is_print:
-                    chunk_message = chunk.choices[0].delta
-                    content = chunk_message.content
-                    print(content, end="")
-            if is_print:
-                print()
+        async for chunk in resp:
+            chunk_message = chunk.choices[0].delta or ""
+            content = chunk_message.content or ""
+            print(content, end="")
+        print()
     else:
         if is_print:
             assistant_content = resp.choices[0].message.content
@@ -54,7 +51,7 @@ async def main():
     mt = MeasureTime().start()
     mean = 0
     epochs = 5
-    concurrency = 100
+    concurrency = 1
     for epoch in range(epochs):
         tasks = []
         for i in range(concurrency):  # 创建 concurrency 个并发任务

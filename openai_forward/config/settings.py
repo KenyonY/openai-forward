@@ -12,6 +12,7 @@ from openai_forward.content.config import setting_log
 from openai_forward.helper import format_route_prefix
 
 from typing import Literal
+
 config_file_path = Path("openai-forward-config.yaml")
 if config_file_path.exists():
     with open(config_file_path) as file:
@@ -30,11 +31,11 @@ if not config:
 
     TIMEOUT = float(os.environ.get("TIMEOUT", "").strip() or "10")
     DEFAULT_STREAM_RESPONSE = (
-        os.environ.get("DEFAULT_STREAM_RESPONSE", "True").strip().lower() == "true"
+            os.environ.get("DEFAULT_STREAM_RESPONSE", "True").strip().lower() == "true"
     )
 
     ITER_CHUNK_TYPE = (
-        os.environ.get("ITER_CHUNK_TYPE", "").strip() or "efficiency"
+            os.environ.get("ITER_CHUNK_TYPE", "").strip() or "efficiency"
     )  # Options: efficiency, one-by-one
 
     CHAT_COMPLETION_ROUTE = (
@@ -68,7 +69,7 @@ if not config:
     BENCHMARK_MODE = os.environ.get("BENCHMARK_MODE", "false").strip().lower() == "true"
 
     LOG_CACHE_DB_INFO = (
-        os.environ.get("LOG_CACHE_DB_INFO", "false").strip().lower() == "true"
+            os.environ.get("LOG_CACHE_DB_INFO", "false").strip().lower() == "true"
     )
     CACHE_BACKEND = os.environ.get("CACHE_BACKEND", "MEMORY").strip()
     CACHE_ROOT_PATH_OR_URL = os.environ.get("CACHE_ROOT_PATH_OR_URL", "..").strip()
@@ -77,13 +78,13 @@ if not config:
     GLOBAL_RATE_LIMIT = os.environ.get("GLOBAL_RATE_LIMIT", "").strip() or "inf"
     RATE_LIMIT_BACKEND = os.environ.get("REQ_RATE_LIMIT_BACKEND", "").strip() or None
     RATE_LIMIT_STRATEGY = (
-        os.environ.get("RATE_LIMIT_STRATEGY", "fixed-window").strip() or "fixed-window"
+            os.environ.get("RATE_LIMIT_STRATEGY", "fixed-window").strip() or "fixed-window"
     )
     req_rate_limit_dict = env2dict('REQ_RATE_LIMIT')
 
     DEFAULT_REQUEST_CACHING_VALUE = (
-        os.environ.get("DEFAULT_REQUEST_CACHING_VALUE", "false").strip().lower()
-        == "true"
+            os.environ.get("DEFAULT_REQUEST_CACHING_VALUE", "false").strip().lower()
+            == "true"
     )
 
     OPENAI_API_KEY = env2dict("OPENAI_API_KEY_CONFIG")
@@ -217,7 +218,7 @@ if PRINT_CHAT:
     openai_additional_start_info["print_chat"] = True
 
 DEFAULT_REQUEST_CACHING_VALUE = (DEFAULT_REQUEST_CACHING_VALUE and CACHE_OPENAI) or (
-    DEFAULT_REQUEST_CACHING_VALUE and CACHE_GENERAL
+        DEFAULT_REQUEST_CACHING_VALUE and CACHE_GENERAL
 )
 if CACHE_OPENAI:
     openai_additional_start_info["cache_backend"] = CACHE_BACKEND
@@ -252,7 +253,7 @@ def get_limiter_key(request: Request):
 
 
 def dynamic_request_rate_limit(key: str):
-    limite_prefix, fk_or_sk = key.split(',')
+    limit_prefix, fk_or_sk = key.split(',')
     key_level = FWD_KEY.get(fk_or_sk, 0)
     for route in req_rate_limit_dict:
         if key.startswith(route):
@@ -268,8 +269,8 @@ def cvt_token_rate_to_interval(token_rate_limit: str):
     if token_rate_limit:
         rate_limit_item = limits.parse(token_rate_limit)
         token_interval = (
-            rate_limit_item.multiples * rate_limit_item.GRANULARITY.seconds
-        ) / rate_limit_item.amount
+                                 rate_limit_item.multiples * rate_limit_item.GRANULARITY.seconds
+                         ) / rate_limit_item.amount
     else:
         token_interval = 0
     return token_interval

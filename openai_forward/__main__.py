@@ -18,46 +18,48 @@ def save_yaml(path: Path, data: dict):
 
 
 class Cli:
-    def serve(self, port: str=None, backend: str=None,
-              model_name_or_path: str=None,
-              call_model_name: str=None,
-              device: str=None,
-              dtype: str=None,
-              atten_impl: str=None,
-              ):
+    def serve(self, **kwargs):
+        """ Local LLM server. """
         from openai_forward.config.settings import config
         import os
-        serve_config = config['serve']
 
-        if port is None:
-            port = serve_config['port']
-        if backend is None:
-            backend = serve_config['backend']
-        if model_name_or_path is None:
-            model_name_or_path = serve_config['model_name_or_path']
-        if call_model_name is None:
-            call_model_name = serve_config['call_model_name']
-        if device is None:
-            device = serve_config['device']
-        if dtype is None:
-            dtype = serve_config['dtype']
-        if atten_impl is None:
-            atten_impl = serve_config['attn_impl']
-        os.environ['BACKEND'] = backend
-        os.environ['MODEL_NAME_OR_PATH'] = model_name_or_path
-        os.environ['CALL_MODEL_NAME'] = call_model_name
-        os.environ['DEVICE'] = device
-        os.environ['TORCH_DTYPE'] = dtype
-        os.environ['ATTN_IMPL'] = atten_impl
+        serve_config = config['serve']
+        backend = serve_config['backend']
+        backend_config: dict = serve_config[backend]
+        port = kwargs.get('port') or serve_config['port']
+        port = str(port)
+
+        os.environ.update({
+            'PORT': port,
+            'BACKEND': kwargs.get('backend') or serve_config['backend'],
+            'MODEL_NAME_OR_PATH': kwargs.get('model_name_or_path') or serve_config['model_name_or_path'],
+            'CALL_MODEL_NAME': kwargs.get('call_model_name') or serve_config['call_model_name'],
+        })
+
+        if backend == "transformers":
+            os.environ.update({
+                'MAX_CONCURRENT': kwargs.get('max_concurrent') or backend_config['max_concurrent'],
+                'DEVICE': kwargs.get('device') or backend_config['device'],
+                'TORCH_DTYPE': kwargs.get('dtype') or backend_config['dtype'],
+                'ATTN_IMPL': kwargs.get('attn_impl') or backend_config['attn_impl'],
+            })
+        elif backend == "vllm":
+            os.environ.update({
+                'VLLM_MAX_MODEL_LEN': kwargs.get('max_model_len') or backend_config['max_model_len'],
+                'VLLM_QUANTIZATION': kwargs.get('quantization') or backend_config.get('quantization') or '',
+                'VLLM_ENABLE_PREFIX_CACHING': kwargs.get('enable_prefix_caching') or str(backend_config['enable_prefix_caching']),
+                'VLLM_MAX_NUM_SEQS': kwargs.get('max_num_seqs') or backend_config['max_num_seqs'],
+            })
+        else:
+            raise ValueError(f"Unknown backend: {backend}")
 
         uvicorn.run(
-            app="openai_forward.model_serve.app:app",
+            app="openai_forward.model_serve.api.app:app",
             host="0.0.0.0",
-            port=port,
+            port=int(port),
             workers=1,
             app_dir="..",
         )
-
 
     def run_web(self, port=8001, openai_forward_host='localhost', wait=True):
         """
@@ -76,7 +78,7 @@ class Cli:
             self._start_streamlit(port=port, wait=wait)
         except KeyboardInterrupt:
             ...
-        except Exception as e:
+        except Exception:
             raise
 
     def run(self, port=8000, workers=1, webui=False, start_ui=True, ui_port=8001):
@@ -172,9 +174,9 @@ class Cli:
                     ssl_keyfile=ssl_keyfile,
                     ssl_certfile=ssl_certfile,
                 )
-                socket.send(f"Restart success!".encode())
+                socket.send(b"Restart success!")
 
-    def _start_uvicorn(self, port, workers, app: str='openai_forward.app:app', ssl_keyfile=None, ssl_certfile=None):
+    def _start_uvicorn(self, port, workers, app: str = 'openai_forward.app:app', ssl_keyfile=None, ssl_certfile=None):
         from openai_forward.helper import wait_for_serve_start
 
         self.uvicorn_proc = subprocess.Popen(

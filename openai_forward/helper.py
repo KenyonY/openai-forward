@@ -37,18 +37,14 @@ def urljoin(base_url, *relative_urls):
         (string): A string representing the fully concatenated URL.
     """
 
-    if base_url.endswith('/'):
-        base_url = base_url[:-1]
+    base_url = base_url.rstrip("/")
 
     urls = [base_url]
     for relative_url in relative_urls:
         if relative_url == "":
             continue
 
-        if relative_url.startswith('/'):
-            relative_url = relative_url[1:]
-
-        urls.append(relative_url)
+        urls.append(relative_url.strip('/'))
 
     return "/".join(urls)
 
