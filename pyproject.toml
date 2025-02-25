@@ -37,6 +37,7 @@ dependencies = [
     "tomli-w",
     "pyzmq",
     "pyyaml",
+    "litellm",
 ]
 
 dynamic = ["version"]
