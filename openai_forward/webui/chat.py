@@ -12,7 +12,7 @@ def render_chat_log_message(msg: Dict, markdown=True):
         with st.chat_message(name="user", avatar='🧑'):
             for msg_item in messages:
                 # https://github.com/streamlit/streamlit/issues/7978
-                render(f"`{msg_item['role']}`: {msg_item['content']}")
+                render(f"`{msg_item['role']}`: {msg_item.get('content', '')}")
             st.write(msg)
     elif msg.get("assistant_role"):
         with st.chat_message(name="assistant", avatar='🤖'):
